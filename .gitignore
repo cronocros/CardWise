@@ -1,0 +1,49 @@
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.iws
+.project
+.classpath
+.settings/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude Code
+.claude/settings.local.json
+.claude/memory/
+.claude/plans/
+.claude/launch.json
+
+# Superpowers
+.superpowers/
+
+# Frontend
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+
+# Backend
+backend/build/
+backend/.gradle/
+backend/.kotlin/
+backend/bin/
+backend/out/
+
+# Supabase local
+supabase/.branches/
+supabase/.temp/
+
+# Logs
+*.log
+
+# Temp
+*.tmp
+*.swp

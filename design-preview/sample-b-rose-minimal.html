@@ -1,0 +1,1897 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CardWise — Rose Minimal</title>
+
+  <!-- Pretendard Font -->
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <link
+    rel="stylesheet"
+    as="style"
+    href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
+  />
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    /* ─────────────────────────────────────────
+       Reset & Base
+    ───────────────────────────────────────── */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --rose-50:  #fff1f2;
+      --rose-100: #ffe4e6;
+      --rose-200: #fecdd3;
+      --rose-400: #fb7185;
+      --rose-500: #f43f5e;
+      --rose-600: #e11d48;
+      --rose-700: #be123c;
+
+      --gray-50:  #f8fafc;
+      --gray-100: #f1f5f9;
+      --gray-200: #e2e8f0;
+      --gray-300: #cbd5e1;
+      --gray-400: #94a3b8;
+      --gray-500: #64748b;
+      --gray-600: #475569;
+      --gray-700: #334155;
+      --gray-800: #1e293b;
+      --gray-900: #0f172a;
+
+      --white: #ffffff;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,.04);
+      --shadow-md: 0 4px 16px rgba(0,0,0,.07);
+      --shadow-lg: 0 8px 32px rgba(0,0,0,.10);
+
+      --radius-lg: 16px;
+      --radius-xl: 20px;
+      --radius-2xl: 24px;
+
+      --tab-h: 64px;
+      --sidebar-w: 240px;
+      --header-h: 60px;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--gray-50);
+      color: var(--gray-800);
+      -webkit-font-smoothing: antialiased;
+      font-size: 15px;
+    }
+
+    /* ─────────────────────────────────────────
+       Layout Shell
+    ───────────────────────────────────────── */
+    .app-shell {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar — desktop */
+    .sidebar {
+      display: none;
+      flex-direction: column;
+      width: var(--sidebar-w);
+      background: var(--white);
+      border-right: 1px solid var(--gray-200);
+      padding: 28px 0 24px;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      z-index: 100;
+    }
+
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 24px 28px;
+      border-bottom: 1px solid var(--gray-100);
+      margin-bottom: 12px;
+    }
+
+    .sidebar-logo .logo-mark {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--rose-500), var(--rose-400));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff;
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      box-shadow: 0 2px 8px rgba(244,63,94,.30);
+    }
+
+    .sidebar-logo .logo-text {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--gray-900);
+      letter-spacing: -0.5px;
+    }
+
+    .sidebar-nav {
+      list-style: none;
+      padding: 0 12px;
+      flex: 1;
+    }
+
+    .sidebar-nav li a {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: var(--radius-lg);
+      text-decoration: none;
+      color: var(--gray-500);
+      font-size: 14px;
+      font-weight: 500;
+      transition: all .18s ease;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .sidebar-nav li a:hover {
+      background: var(--gray-50);
+      color: var(--gray-700);
+    }
+
+    .sidebar-nav li a.active {
+      background: var(--rose-50);
+      color: var(--rose-500);
+    }
+
+    .sidebar-nav li a.active i {
+      color: var(--rose-500);
+    }
+
+    .sidebar-badge {
+      margin-left: auto;
+      background: var(--rose-500);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 99px;
+    }
+
+    /* Main content area */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Header */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: var(--white);
+      border-bottom: 1px solid var(--gray-200);
+      height: var(--header-h);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 12px;
+      transition: box-shadow .2s ease;
+    }
+
+    .header.scrolled {
+      box-shadow: 0 2px 12px rgba(0,0,0,.08);
+    }
+
+    .header-logo-mobile {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .header-logo-mobile .logo-mark {
+      width: 30px; height: 30px;
+      background: linear-gradient(135deg, var(--rose-500), var(--rose-400));
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      box-shadow: 0 2px 6px rgba(244,63,94,.30);
+    }
+
+    .header-logo-mobile .logo-text {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--gray-900);
+      letter-spacing: -0.4px;
+    }
+
+    .header-spacer { flex: 1; }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      width: 38px; height: 38px;
+      border: none;
+      background: var(--gray-100);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      color: var(--gray-600);
+      transition: all .15s ease;
+    }
+
+    .icon-btn:hover { background: var(--gray-200); }
+    .icon-btn:active { transform: scale(0.94); background: var(--gray-300); }
+
+    .avatar {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--rose-400), var(--rose-600));
+      display: flex; align-items: center; justify-content: center;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform .15s ease;
+    }
+    .avatar:hover { transform: scale(1.05); }
+
+    /* Screens container */
+    .screens-wrapper {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .screens-track {
+      display: flex;
+      width: 300%;
+      height: 100%;
+      transition: transform .32s cubic-bezier(.4,0,.2,1);
+    }
+
+    .screen {
+      width: 33.3333%;
+      height: 100%;
+      overflow-y: auto;
+      padding-bottom: calc(var(--tab-h) + 20px);
+    }
+
+    /* Bottom Tab Bar — mobile */
+    .tab-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: var(--tab-h);
+      background: var(--white);
+      border-top: 1px solid var(--gray-200);
+      display: flex;
+      z-index: 100;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .tab-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      cursor: pointer;
+      color: var(--gray-400);
+      font-size: 11px;
+      font-weight: 500;
+      transition: all .15s ease;
+      border: none;
+      background: transparent;
+      padding: 0;
+    }
+
+    .tab-item.active {
+      color: var(--rose-500);
+    }
+
+    .tab-item.active i { color: var(--rose-500); }
+
+    .tab-item:active { transform: scale(0.92); }
+
+    /* ─────────────────────────────────────────
+       Section helpers
+    ───────────────────────────────────────── */
+    .section {
+      background: var(--white);
+      border-radius: var(--radius-2xl);
+      padding: 20px;
+      margin: 0 16px 16px;
+      border: 1px solid var(--gray-200);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--gray-500);
+      letter-spacing: 0.2px;
+      margin-bottom: 14px;
+    }
+
+    /* ─────────────────────────────────────────
+       HOME SCREEN
+    ───────────────────────────────────────── */
+
+    /* Greeting banner */
+    .greeting-banner {
+      background: linear-gradient(135deg, #fff1f2 0%, #fff8f8 60%, #fff 100%);
+      border-bottom: 1px solid var(--rose-100);
+      padding: 24px 20px 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .greeting-banner::after {
+      content: '';
+      position: absolute;
+      top: -40px; right: -40px;
+      width: 180px; height: 180px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(244,63,94,.10) 0%, transparent 70%);
+    }
+
+    .greeting-name {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--gray-900);
+      letter-spacing: -0.8px;
+      margin-bottom: 4px;
+    }
+
+    .greeting-sub {
+      font-size: 13px;
+      color: var(--gray-500);
+      margin-bottom: 20px;
+    }
+
+    .balance-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .balance-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--gray-500);
+      margin-bottom: 4px;
+    }
+
+    .balance-amount {
+      font-size: 30px;
+      font-weight: 800;
+      color: var(--gray-900);
+      letter-spacing: -1.5px;
+      line-height: 1;
+    }
+
+    .balance-mask-btn {
+      width: 32px; height: 32px;
+      border: 1px solid var(--gray-200);
+      background: var(--white);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      color: var(--gray-400);
+      transition: all .15s ease;
+      margin-top: 4px;
+      flex-shrink: 0;
+    }
+
+    .balance-mask-btn:hover { border-color: var(--rose-200); color: var(--rose-500); }
+    .balance-mask-btn:active { transform: scale(0.92); }
+
+    .balance-change {
+      font-size: 12px;
+      color: var(--rose-500);
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    /* Quick stats */
+    .quick-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 16px 16px 0;
+    }
+
+    .stat-card {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-xl);
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .stat-card-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--gray-500);
+      margin-bottom: 6px;
+    }
+
+    .stat-card-value {
+      font-size: 19px;
+      font-weight: 800;
+      color: var(--gray-900);
+      letter-spacing: -0.8px;
+    }
+
+    .stat-card-sub {
+      font-size: 11px;
+      color: var(--gray-400);
+      margin-top: 3px;
+    }
+
+    .stat-card .icon-wrap {
+      width: 30px; height: 30px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 10px;
+    }
+
+    .icon-wrap.rose { background: var(--rose-50); color: var(--rose-500); }
+    .icon-wrap.blue { background: #eff6ff; color: #3b82f6; }
+    .icon-wrap.green { background: #f0fdf4; color: #22c55e; }
+    .icon-wrap.amber { background: #fffbeb; color: #f59e0b; }
+
+    /* Performance gauge */
+    .perf-section {
+      padding: 16px 16px 0;
+    }
+
+    .perf-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 10px;
+    }
+
+    .perf-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--gray-800);
+    }
+
+    .perf-pct {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--rose-500);
+      letter-spacing: -0.5px;
+    }
+
+    .gauge-track {
+      width: 100%;
+      height: 10px;
+      background: var(--gray-100);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .gauge-fill {
+      height: 100%;
+      border-radius: 99px;
+      background: linear-gradient(90deg, var(--rose-400), var(--rose-500));
+      width: 0%;
+      transition: width .9s cubic-bezier(.4,0,.2,1);
+      box-shadow: 0 0 8px rgba(244,63,94,.30);
+    }
+
+    .perf-detail {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 6px;
+      font-size: 11px;
+      color: var(--gray-500);
+    }
+
+    /* Transaction list */
+    .tx-list {
+      list-style: none;
+    }
+
+    .tx-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--gray-100);
+      position: relative;
+      cursor: pointer;
+      transition: padding-left .2s ease;
+    }
+
+    .tx-item:last-child { border-bottom: none; }
+
+    .tx-item::before {
+      content: '';
+      position: absolute;
+      left: -20px;
+      top: 0; bottom: 0;
+      width: 3px;
+      background: var(--rose-500);
+      border-radius: 0 3px 3px 0;
+      opacity: 0;
+      transition: opacity .18s ease, left .18s ease;
+    }
+
+    .tx-item:hover::before {
+      opacity: 1;
+      left: -20px;
+    }
+
+    .tx-item:hover {
+      padding-left: 6px;
+    }
+
+    .tx-icon {
+      width: 40px; height: 40px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--gray-100);
+      flex-shrink: 0;
+      font-size: 18px;
+    }
+
+    .tx-info { flex: 1; min-width: 0; }
+
+    .tx-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--gray-800);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tx-meta {
+      font-size: 11px;
+      color: var(--gray-400);
+      margin-top: 2px;
+    }
+
+    .tx-amount {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--gray-800);
+      white-space: nowrap;
+      letter-spacing: -0.3px;
+    }
+
+    .tx-amount.income { color: #2563eb; }
+
+    /* ─────────────────────────────────────────
+       CARD SCREEN
+    ───────────────────────────────────────── */
+    .card-screen-header {
+      padding: 24px 20px 16px;
+    }
+
+    .screen-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--gray-900);
+      letter-spacing: -0.8px;
+    }
+
+    .screen-sub {
+      font-size: 13px;
+      color: var(--gray-500);
+      margin-top: 4px;
+    }
+
+    .card-list {
+      padding: 0 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .card-item {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-2xl);
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: box-shadow .2s ease, transform .15s ease;
+    }
+
+    .card-item::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      opacity: 0;
+      transition: opacity .18s ease;
+    }
+
+    .card-item.shinhan::before { background: #0046ff; }
+    .card-item.kb::before { background: #f5a300; }
+    .card-item.samsung::before { background: #1428a0; }
+
+    .card-item:hover::before { opacity: 1; }
+    .card-item:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+    .card-item:active { transform: scale(0.98); }
+
+    .card-item-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .card-chip {
+      width: 46px; height: 32px;
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px;
+      font-weight: 800;
+      color: #fff;
+      flex-shrink: 0;
+      letter-spacing: -0.3px;
+    }
+
+    .card-chip.shinhan { background: linear-gradient(135deg, #0046ff, #003acc); }
+    .card-chip.kb { background: linear-gradient(135deg, #f5a300, #e09500); }
+    .card-chip.samsung { background: linear-gradient(135deg, #1428a0, #0d1d7a); }
+
+    .card-item-info { flex: 1; }
+
+    .card-item-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--gray-900);
+      letter-spacing: -0.3px;
+    }
+
+    .card-item-number {
+      font-size: 12px;
+      color: var(--gray-400);
+      margin-top: 3px;
+      font-family: 'SF Mono', 'Courier New', monospace;
+    }
+
+    .card-badges {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 9px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .badge.rose { background: var(--rose-50); color: var(--rose-600); border: 1px solid var(--rose-100); }
+    .badge.blue { background: #eff6ff; color: #2563eb; border: 1px solid #dbeafe; }
+    .badge.green { background: #f0fdf4; color: #16a34a; border: 1px solid #dcfce7; }
+    .badge.amber { background: #fffbeb; color: #d97706; border: 1px solid #fef3c7; }
+    .badge.gray { background: var(--gray-100); color: var(--gray-600); border: 1px solid var(--gray-200); }
+
+    .badge.new-benefit {
+      animation: pulse-glow 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-glow {
+      0%, 100% {
+        box-shadow: 0 0 0 0 rgba(244,63,94,.25);
+      }
+      50% {
+        box-shadow: 0 0 0 5px rgba(244,63,94,0);
+      }
+    }
+
+    .card-perf-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-perf-label {
+      font-size: 11px;
+      color: var(--gray-500);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .card-gauge-track {
+      flex: 1;
+      height: 6px;
+      background: var(--gray-100);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .card-gauge-fill {
+      height: 100%;
+      border-radius: 99px;
+      width: 0%;
+      transition: width 1s cubic-bezier(.4,0,.2,1) .2s;
+    }
+
+    .card-gauge-fill.shinhan { background: linear-gradient(90deg, #4d7fff, #0046ff); }
+    .card-gauge-fill.kb { background: linear-gradient(90deg, #ffc947, #f5a300); }
+    .card-gauge-fill.samsung { background: linear-gradient(90deg, #4d6bff, #1428a0); }
+
+    .card-perf-pct {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--gray-700);
+      white-space: nowrap;
+      min-width: 36px;
+      text-align: right;
+    }
+
+    .add-card-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 16px;
+      border: 2px dashed var(--gray-200);
+      border-radius: var(--radius-2xl);
+      background: transparent;
+      color: var(--gray-400);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .18s ease;
+      margin-top: 4px;
+    }
+
+    .add-card-btn:hover {
+      border-color: var(--rose-300);
+      color: var(--rose-500);
+      background: var(--rose-50);
+    }
+
+    .add-card-btn:active { transform: scale(0.97); }
+
+    /* ─────────────────────────────────────────
+       VOUCHER SCREEN
+    ───────────────────────────────────────── */
+    .voucher-screen-header {
+      padding: 24px 20px 16px;
+    }
+
+    .voucher-grid {
+      padding: 0 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* 3D Flip Card */
+    .flip-card {
+      perspective: 1200px;
+      height: 180px;
+      cursor: pointer;
+    }
+
+    .flip-card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      transition: transform .55s cubic-bezier(.4,0,.2,1);
+    }
+
+    .flip-card.flipped .flip-card-inner {
+      transform: rotateY(180deg);
+    }
+
+    .flip-card-face {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      border-radius: var(--radius-2xl);
+      border: 1px solid var(--gray-200);
+      overflow: hidden;
+    }
+
+    /* Front face */
+    .flip-card-front {
+      background: var(--white);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .voucher-front-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .voucher-icon {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .voucher-brand {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--gray-400);
+      margin-bottom: 3px;
+    }
+
+    .voucher-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--gray-900);
+      letter-spacing: -0.3px;
+    }
+
+    .voucher-expiry {
+      font-size: 11px;
+      color: var(--gray-400);
+      margin-top: 2px;
+    }
+
+    .voucher-remaining {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: auto;
+    }
+
+    .remaining-dots {
+      display: flex;
+      gap: 4px;
+    }
+
+    .dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      transition: background .2s ease;
+    }
+
+    .dot.used { background: var(--gray-200); }
+    .dot.active { background: var(--rose-500); }
+    .dot.active.starbucks { background: #00704a; }
+    .dot.active.lotte { background: #e5001b; }
+    .dot.active.cgv { background: #e3001c; }
+
+    .remaining-text {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gray-500);
+    }
+
+    .voucher-flip-hint {
+      font-size: 10px;
+      color: var(--gray-300);
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      margin-top: 8px;
+      margin-left: auto;
+    }
+
+    .voucher-exhausted-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,.85);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border-radius: var(--radius-2xl);
+    }
+
+    .exhausted-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--gray-400);
+    }
+
+    /* Back face */
+    .flip-card-back {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      transform: rotateY(180deg);
+      color: var(--white);
+    }
+
+    .back-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: rgba(255,255,255,.5);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 12px;
+    }
+
+    .back-steps {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+    }
+
+    .back-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 13px;
+      color: rgba(255,255,255,.8);
+    }
+
+    .step-num {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--rose-500);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .back-flip-hint {
+      font-size: 10px;
+      color: rgba(255,255,255,.3);
+      margin-top: 10px;
+      text-align: right;
+    }
+
+    /* ─────────────────────────────────────────
+       Buttons
+    ───────────────────────────────────────── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 12px 20px;
+      border-radius: var(--radius-lg);
+      font-size: 14px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      transition: all .15s ease;
+      letter-spacing: -0.2px;
+    }
+
+    .btn:active { transform: scale(0.96); }
+
+    .btn-rose {
+      background: var(--rose-500);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(244,63,94,.30);
+    }
+
+    .btn-rose:hover {
+      background: var(--rose-600);
+      box-shadow: 0 4px 12px rgba(244,63,94,.35);
+    }
+
+    .btn-rose:active {
+      background: var(--rose-700);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--rose-500);
+      border: 1.5px solid var(--rose-200);
+    }
+
+    .btn-outline:hover {
+      background: var(--rose-50);
+      border-color: var(--rose-300);
+    }
+
+    .btn-ghost {
+      background: var(--gray-100);
+      color: var(--gray-700);
+    }
+
+    .btn-ghost:hover { background: var(--gray-200); }
+
+    /* ─────────────────────────────────────────
+       Chevron list items
+    ───────────────────────────────────────── */
+    .list-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--gray-100);
+      cursor: pointer;
+      position: relative;
+      transition: padding-left .2s ease;
+    }
+
+    .list-row:last-child { border-bottom: none; }
+
+    .list-row::before {
+      content: '';
+      position: absolute;
+      left: -20px;
+      top: 0; bottom: 0;
+      width: 3px;
+      background: var(--rose-500);
+      border-radius: 0 3px 3px 0;
+      opacity: 0;
+      transition: opacity .18s ease;
+    }
+
+    .list-row:hover::before { opacity: 1; }
+    .list-row:hover { padding-left: 6px; }
+
+    .list-row-icon {
+      width: 38px; height: 38px;
+      border-radius: 10px;
+      background: var(--gray-100);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .list-row-text { flex: 1; }
+
+    .list-row-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--gray-800);
+    }
+
+    .list-row-sub {
+      font-size: 11px;
+      color: var(--gray-400);
+      margin-top: 2px;
+    }
+
+    /* ─────────────────────────────────────────
+       Utility
+    ───────────────────────────────────────── */
+    .mt-1 { margin-top: 4px; }
+    .mt-2 { margin-top: 8px; }
+    .mt-3 { margin-top: 12px; }
+    .mt-4 { margin-top: 16px; }
+    .mb-4 { margin-bottom: 16px; }
+    .flex { display: flex; }
+    .items-center { align-items: center; }
+    .justify-between { justify-content: space-between; }
+    .gap-2 { gap: 8px; }
+    .text-sm { font-size: 13px; }
+    .text-xs { font-size: 11px; }
+    .font-bold { font-weight: 700; }
+    .text-gray { color: var(--gray-500); }
+    .text-rose { color: var(--rose-500); }
+    .w-full { width: 100%; }
+
+    /* ─────────────────────────────────────────
+       Desktop overrides
+    ───────────────────────────────────────── */
+    @media (min-width: 768px) {
+      .sidebar { display: flex; }
+      .tab-bar { display: none; }
+
+      .main { margin-left: var(--sidebar-w); }
+
+      .header-logo-mobile { display: none; }
+
+      .screen {
+        padding-bottom: 40px;
+      }
+
+      .screens-track {
+        overflow: visible;
+      }
+
+      .greeting-banner {
+        padding: 32px 28px 24px;
+      }
+
+      .section {
+        margin: 0 24px 20px;
+      }
+
+      .quick-stats {
+        grid-template-columns: repeat(4, 1fr);
+        padding: 16px 24px 0;
+      }
+
+      .perf-section {
+        padding: 16px 24px 0;
+      }
+
+      .card-list {
+        padding: 0 24px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .add-card-btn { margin: 0 24px 24px; }
+
+      .voucher-grid {
+        padding: 0 24px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .card-screen-header,
+      .voucher-screen-header {
+        padding: 28px 24px 16px;
+      }
+    }
+
+    /* Scrollbar */
+    .screen::-webkit-scrollbar { width: 4px; }
+    .screen::-webkit-scrollbar-track { background: transparent; }
+    .screen::-webkit-scrollbar-thumb { background: var(--gray-200); border-radius: 99px; }
+  </style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- ── Sidebar (desktop) ── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">CW</div>
+      <span class="logo-text">CardWise</span>
+    </div>
+    <ul class="sidebar-nav">
+      <li>
+        <a class="active" onclick="switchTab(0)" id="nav-0">
+          <i data-lucide="home" style="width:18px;height:18px;"></i>
+          홈
+        </a>
+      </li>
+      <li>
+        <a onclick="switchTab(1)" id="nav-1">
+          <i data-lucide="credit-card" style="width:18px;height:18px;"></i>
+          카드
+        </a>
+      </li>
+      <li>
+        <a onclick="switchTab(2)" id="nav-2">
+          <i data-lucide="gift" style="width:18px;height:18px;"></i>
+          바우처
+          <span class="sidebar-badge">2</span>
+        </a>
+      </li>
+    </ul>
+    <div style="padding:12px 24px; border-top:1px solid var(--gray-100);">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="avatar" style="width:36px;height:36px;font-size:14px;">김</div>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--gray-800);">김지우</div>
+          <div style="font-size:11px;color:var(--gray-400);">jiwoo@email.com</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Main ── -->
+  <div class="main">
+
+    <!-- Header -->
+    <header class="header" id="header">
+      <div class="header-logo-mobile">
+        <div class="logo-mark">CW</div>
+        <span class="logo-text">CardWise</span>
+      </div>
+      <div class="header-spacer"></div>
+      <div class="header-actions">
+        <button class="icon-btn" title="검색">
+          <i data-lucide="search" style="width:17px;height:17px;"></i>
+        </button>
+        <button class="icon-btn" title="알림">
+          <i data-lucide="bell" style="width:17px;height:17px;"></i>
+        </button>
+        <div class="avatar">김</div>
+      </div>
+    </header>
+
+    <!-- Screens -->
+    <div class="screens-wrapper">
+      <div class="screens-track" id="screensTrack">
+
+        <!-- ════════════════════════════════
+             SCREEN 0 — 홈
+        ════════════════════════════════ -->
+        <div class="screen" id="screen-0">
+
+          <!-- Greeting Banner -->
+          <div class="greeting-banner">
+            <p class="greeting-sub">2026년 3월 18일 화요일 ☀️</p>
+            <h2 class="greeting-name">안녕하세요, 김지우님</h2>
+            <div class="balance-label mt-3">총 사용 가능 잔액</div>
+            <div class="balance-row mt-1">
+              <div>
+                <div class="balance-amount" id="balanceDisplay">₩2,847,500</div>
+                <div class="balance-change mt-1">이번달 ₩1,234,800 지출</div>
+              </div>
+              <button class="balance-mask-btn" id="maskBtn" title="잔액 숨기기/보이기">
+                <i data-lucide="eye" id="maskIcon" style="width:15px;height:15px;"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Quick Stats -->
+          <div class="quick-stats">
+            <div class="stat-card">
+              <div class="icon-wrap rose">
+                <i data-lucide="wallet" style="width:15px;height:15px;"></i>
+              </div>
+              <div class="stat-card-label">이번달 지출</div>
+              <div class="stat-card-value">₩1.23M</div>
+              <div class="stat-card-sub">전달 대비 -12%</div>
+            </div>
+            <div class="stat-card">
+              <div class="icon-wrap green">
+                <i data-lucide="star" style="width:15px;height:15px;"></i>
+              </div>
+              <div class="stat-card-label">적립 포인트</div>
+              <div class="stat-card-value">48,300P</div>
+              <div class="stat-card-sub">이번달 +2,150P</div>
+            </div>
+            <div class="stat-card">
+              <div class="icon-wrap blue">
+                <i data-lucide="gift" style="width:15px;height:15px;"></i>
+              </div>
+              <div class="stat-card-label">바우처 잔여</div>
+              <div class="stat-card-value">3건</div>
+              <div class="stat-card-sub">소진 임박 1건</div>
+            </div>
+            <div class="stat-card">
+              <div class="icon-wrap amber">
+                <i data-lucide="trending-up" style="width:15px;height:15px;"></i>
+              </div>
+              <div class="stat-card-label">할인 혜택</div>
+              <div class="stat-card-value">₩42,800</div>
+              <div class="stat-card-sub">이번달 절감액</div>
+            </div>
+          </div>
+
+          <!-- Performance Gauge -->
+          <div class="perf-section mt-4">
+            <div class="section" style="margin-left:0;margin-right:0;">
+              <div class="perf-header">
+                <div>
+                  <div class="perf-title">신한 딥드림 실적</div>
+                  <div style="font-size:12px;color:var(--gray-400);margin-top:3px;">이번달 목표 달성현황</div>
+                </div>
+                <div class="perf-pct" id="perfPct">0%</div>
+              </div>
+              <div class="gauge-track">
+                <div class="gauge-fill" id="mainGauge"></div>
+              </div>
+              <div class="perf-detail">
+                <span>₩1,234,800 지출</span>
+                <span>목표 ₩2,000,000</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Transactions -->
+          <div class="section mt-0">
+            <div class="flex items-center justify-between mb-4">
+              <span class="section-title" style="margin-bottom:0;">최근 지출</span>
+              <button class="btn btn-ghost" style="padding:6px 12px;font-size:12px;">전체보기</button>
+            </div>
+            <ul class="tx-list">
+              <li class="tx-item">
+                <div class="tx-icon">☕</div>
+                <div class="tx-info">
+                  <div class="tx-name">스타벅스 강남R점</div>
+                  <div class="tx-meta">신한 딥드림 · 오늘 09:24</div>
+                </div>
+                <div class="tx-amount">-₩6,500</div>
+              </li>
+              <li class="tx-item">
+                <div class="tx-icon">🛒</div>
+                <div class="tx-info">
+                  <div class="tx-name">이마트 서울역점</div>
+                  <div class="tx-meta">KB 탄탄대로 · 어제 19:05</div>
+                </div>
+                <div class="tx-amount">-₩87,300</div>
+              </li>
+              <li class="tx-item">
+                <div class="tx-icon">🎬</div>
+                <div class="tx-info">
+                  <div class="tx-name">CGV 용산아이파크</div>
+                  <div class="tx-meta">삼성 iD · 어제 14:30</div>
+                </div>
+                <div class="tx-amount">-₩23,000</div>
+              </li>
+              <li class="tx-item">
+                <div class="tx-icon">🍔</div>
+                <div class="tx-info">
+                  <div class="tx-name">맥도날드 배달</div>
+                  <div class="tx-meta">신한 딥드림 · 3월 15일</div>
+                </div>
+                <div class="tx-amount">-₩15,500</div>
+              </li>
+              <li class="tx-item">
+                <div class="tx-icon">💳</div>
+                <div class="tx-info">
+                  <div class="tx-name">급여 입금</div>
+                  <div class="tx-meta">우리은행 · 3월 15일</div>
+                </div>
+                <div class="tx-amount income">+₩3,850,000</div>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Benefits Teaser -->
+          <div class="section">
+            <div class="flex items-center justify-between mb-4">
+              <span class="section-title" style="margin-bottom:0;">놓친 혜택 알림</span>
+              <span class="badge rose new-benefit">NEW</span>
+            </div>
+            <div class="list-row">
+              <div class="list-row-icon" style="background:var(--rose-50);">
+                <i data-lucide="zap" style="width:16px;height:16px;color:var(--rose-500);"></i>
+              </div>
+              <div class="list-row-text">
+                <div class="list-row-title">신한 딥드림 식비 5% 캐시백</div>
+                <div class="list-row-sub">이번달 ₩4,800 추가 혜택 가능</div>
+              </div>
+              <i data-lucide="chevron-right" style="width:15px;height:15px;color:var(--gray-300);flex-shrink:0;"></i>
+            </div>
+            <div class="list-row">
+              <div class="list-row-icon" style="background:#eff6ff;">
+                <i data-lucide="percent" style="width:16px;height:16px;color:#3b82f6;"></i>
+              </div>
+              <div class="list-row-text">
+                <div class="list-row-title">KB 탄탄대로 대중교통 할인</div>
+                <div class="list-row-sub">월 최대 ₩6,000 할인 미활용 중</div>
+              </div>
+              <i data-lucide="chevron-right" style="width:15px;height:15px;color:var(--gray-300);flex-shrink:0;"></i>
+            </div>
+          </div>
+
+        </div>
+        <!-- /SCREEN 0 -->
+
+
+        <!-- ════════════════════════════════
+             SCREEN 1 — 카드
+        ════════════════════════════════ -->
+        <div class="screen" id="screen-1">
+
+          <div class="card-screen-header">
+            <h2 class="screen-title">내 카드</h2>
+            <p class="screen-sub">3장 등록됨 · 이번달 총 ₩1,234,800 지출</p>
+          </div>
+
+          <div class="card-list">
+
+            <!-- 신한 딥드림 -->
+            <div class="card-item shinhan">
+              <div class="card-item-top">
+                <div class="card-chip shinhan">신한</div>
+                <div class="card-item-info">
+                  <div class="card-item-name">딥드림 카드</div>
+                  <div class="card-item-number">●●●● ●●●● ●●●● 3821</div>
+                  <div class="card-badges mt-2">
+                    <span class="badge rose new-benefit">
+                      <i data-lucide="zap" style="width:10px;height:10px;"></i>
+                      NEW 혜택
+                    </span>
+                    <span class="badge blue">식비 5%</span>
+                    <span class="badge green">편의점 3%</span>
+                  </div>
+                </div>
+              </div>
+              <div class="card-perf-row">
+                <span class="card-perf-label">실적</span>
+                <div class="card-gauge-track">
+                  <div class="card-gauge-fill shinhan" data-target="78"></div>
+                </div>
+                <span class="card-perf-pct">78%</span>
+              </div>
+              <div style="font-size:11px;color:var(--gray-400);margin-top:4px;text-align:right;">
+                ₩1,560,000 / ₩2,000,000
+              </div>
+            </div>
+
+            <!-- KB 탄탄대로 -->
+            <div class="card-item kb">
+              <div class="card-item-top">
+                <div class="card-chip kb">KB</div>
+                <div class="card-item-info">
+                  <div class="card-item-name">탄탄대로 카드</div>
+                  <div class="card-item-number">●●●● ●●●● ●●●● 5247</div>
+                  <div class="card-badges mt-2">
+                    <span class="badge amber">교통 ₩6,000</span>
+                    <span class="badge green">마트 2%</span>
+                    <span class="badge gray">주유 1%</span>
+                  </div>
+                </div>
+              </div>
+              <div class="card-perf-row">
+                <span class="card-perf-label">실적</span>
+                <div class="card-gauge-track">
+                  <div class="card-gauge-fill kb" data-target="45"></div>
+                </div>
+                <span class="card-perf-pct">45%</span>
+              </div>
+              <div style="font-size:11px;color:var(--gray-400);margin-top:4px;text-align:right;">
+                ₩450,000 / ₩1,000,000
+              </div>
+            </div>
+
+            <!-- 삼성 iD -->
+            <div class="card-item samsung">
+              <div class="card-item-top">
+                <div class="card-chip samsung">삼성</div>
+                <div class="card-item-info">
+                  <div class="card-item-name">iD 카드</div>
+                  <div class="card-item-number">●●●● ●●●● ●●●● 9073</div>
+                  <div class="card-badges mt-2">
+                    <span class="badge blue">영화 30%</span>
+                    <span class="badge rose">OTT 2,000원</span>
+                  </div>
+                </div>
+              </div>
+              <div class="card-perf-row">
+                <span class="card-perf-label">실적</span>
+                <div class="card-gauge-track">
+                  <div class="card-gauge-fill samsung" data-target="23"></div>
+                </div>
+                <span class="card-perf-pct">23%</span>
+              </div>
+              <div style="font-size:11px;color:var(--gray-400);margin-top:4px;text-align:right;">
+                ₩230,000 / ₩1,000,000
+              </div>
+            </div>
+
+          </div><!-- /card-list -->
+
+          <div style="padding:16px 16px 0;">
+            <button class="add-card-btn" style="margin:0;">
+              <i data-lucide="plus-circle" style="width:18px;height:18px;"></i>
+              카드 추가하기
+            </button>
+          </div>
+
+          <!-- 혜택 요약 -->
+          <div class="section mt-4">
+            <div class="section-title">이번달 혜택 요약</div>
+            <div class="list-row">
+              <div class="list-row-icon rose" style="background:var(--rose-50);">
+                <i data-lucide="credit-card" style="width:16px;height:16px;color:var(--rose-500);"></i>
+              </div>
+              <div class="list-row-text">
+                <div class="list-row-title">신한 딥드림 식비 할인</div>
+                <div class="list-row-sub">스타벅스, 맥도날드 외 8건</div>
+              </div>
+              <div style="font-size:14px;font-weight:700;color:var(--rose-500);">-₩18,400</div>
+            </div>
+            <div class="list-row">
+              <div class="list-row-icon" style="background:#fffbeb;">
+                <i data-lucide="train-front" style="width:16px;height:16px;color:#f59e0b;"></i>
+              </div>
+              <div class="list-row-text">
+                <div class="list-row-title">KB 탄탄대로 교통 할인</div>
+                <div class="list-row-sub">지하철, 버스 외 12건</div>
+              </div>
+              <div style="font-size:14px;font-weight:700;color:#f59e0b;">-₩6,000</div>
+            </div>
+            <div class="list-row">
+              <div class="list-row-icon" style="background:#eff6ff;">
+                <i data-lucide="film" style="width:16px;height:16px;color:#3b82f6;"></i>
+              </div>
+              <div class="list-row-text">
+                <div class="list-row-title">삼성 iD 영화 할인</div>
+                <div class="list-row-sub">CGV 용산 외 2건</div>
+              </div>
+              <div style="font-size:14px;font-weight:700;color:#3b82f6;">-₩18,400</div>
+            </div>
+            <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--gray-100);display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:14px;font-weight:600;color:var(--gray-700);">이번달 총 혜택</span>
+              <span style="font-size:18px;font-weight:800;color:var(--rose-500);letter-spacing:-0.5px;">-₩42,800</span>
+            </div>
+          </div>
+
+        </div>
+        <!-- /SCREEN 1 -->
+
+
+        <!-- ════════════════════════════════
+             SCREEN 2 — 바우처
+        ════════════════════════════════ -->
+        <div class="screen" id="screen-2">
+
+          <div class="voucher-screen-header">
+            <h2 class="screen-title">바우처</h2>
+            <p class="screen-sub">카드를 클릭하면 사용 방법을 확인할 수 있어요</p>
+          </div>
+
+          <div class="voucher-grid">
+
+            <!-- 스타벅스 아메리카노 -->
+            <div class="flip-card" id="voucher-0" onclick="flipVoucher(0)">
+              <div class="flip-card-inner">
+                <div class="flip-card-face flip-card-front">
+                  <div class="voucher-front-top">
+                    <div class="voucher-icon" style="background:#e8f5e9;">☕</div>
+                    <div>
+                      <div class="voucher-brand">Starbucks</div>
+                      <div class="voucher-name">아메리카노 (Tall)</div>
+                      <div class="voucher-expiry">만료: 2026.05.31</div>
+                    </div>
+                  </div>
+                  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+                    <span class="badge green">즉시 사용 가능</span>
+                    <span class="badge gray">모바일 교환권</span>
+                  </div>
+                  <div class="voucher-remaining">
+                    <div class="remaining-dots">
+                      <div class="dot active starbucks"></div>
+                      <div class="dot active starbucks"></div>
+                      <div class="dot used"></div>
+                    </div>
+                    <span class="remaining-text">잔여 2 / 3</span>
+                    <div class="voucher-flip-hint" style="margin-left:auto;">
+                      <i data-lucide="rotate-cw" style="width:10px;height:10px;"></i>
+                      사용 방법
+                    </div>
+                  </div>
+                </div>
+                <div class="flip-card-face flip-card-back">
+                  <div class="back-title">사용 방법</div>
+                  <ol class="back-steps">
+                    <li class="back-step">
+                      <span class="step-num">1</span>
+                      스타벅스 앱 실행 후 [Pay] 탭 진입
+                    </li>
+                    <li class="back-step">
+                      <span class="step-num">2</span>
+                      상단 모바일 교환권 버튼 클릭
+                    </li>
+                    <li class="back-step">
+                      <span class="step-num">3</span>
+                      바코드를 매장 직원에게 제시
+                    </li>
+                  </ol>
+                  <div class="back-flip-hint">다시 클릭하면 앞면으로</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 롯데시네마 -->
+            <div class="flip-card" id="voucher-1" onclick="flipVoucher(1)">
+              <div class="flip-card-inner">
+                <div class="flip-card-face flip-card-front">
+                  <div class="voucher-front-top">
+                    <div class="voucher-icon" style="background:#fff3e0;">🎬</div>
+                    <div>
+                      <div class="voucher-brand">Lotte Cinema</div>
+                      <div class="voucher-name">일반 영화 1인권</div>
+                      <div class="voucher-expiry">만료: 2026.04.15</div>
+                    </div>
+                  </div>
+                  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+                    <span class="badge amber">만료 28일 전</span>
+                    <span class="badge gray">온/오프 모두 가능</span>
+                  </div>
+                  <div class="voucher-remaining">
+                    <div class="remaining-dots">
+                      <div class="dot active lotte"></div>
+                      <div class="dot used"></div>
+                    </div>
+                    <span class="remaining-text">잔여 1 / 2</span>
+                    <div class="voucher-flip-hint" style="margin-left:auto;">
+                      <i data-lucide="rotate-cw" style="width:10px;height:10px;"></i>
+                      사용 방법
+                    </div>
+                  </div>
+                </div>
+                <div class="flip-card-face flip-card-back">
+                  <div class="back-title">사용 방법</div>
+                  <ol class="back-steps">
+                    <li class="back-step">
+                      <span class="step-num">1</span>
+                      롯데시네마 앱 또는 웹사이트 접속
+                    </li>
+                    <li class="back-step">
+                      <span class="step-num">2</span>
+                      예매 시 할인권 코드 입력 또는 제휴카드 결제
+                    </li>
+                    <li class="back-step">
+                      <span class="step-num">3</span>
+                      오프라인 무인발권기에서도 사용 가능
+                    </li>
+                  </ol>
+                  <div class="back-flip-hint">다시 클릭하면 앞면으로</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- CGV (소진) -->
+            <div class="flip-card" id="voucher-2" onclick="flipVoucher(2)">
+              <div class="flip-card-inner">
+                <div class="flip-card-face flip-card-front" style="position:relative;">
+                  <div class="voucher-front-top">
+                    <div class="voucher-icon" style="background:#fce4ec;">🎥</div>
+                    <div>
+                      <div class="voucher-brand">CGV</div>
+                      <div class="voucher-name">콤보 세트 교환권</div>
+                      <div class="voucher-expiry">만료: 2026.03.31</div>
+                    </div>
+                  </div>
+                  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+                    <span class="badge gray">소진 완료</span>
+                  </div>
+                  <div class="voucher-remaining">
+                    <div class="remaining-dots">
+                      <div class="dot used"></div>
+                      <div class="dot used"></div>
+                    </div>
+                    <span class="remaining-text">잔여 0 / 2</span>
+                  </div>
+                  <!-- Exhausted overlay -->
+                  <div class="voucher-exhausted-overlay">
+                    <i data-lucide="check-circle" style="width:28px;height:28px;color:var(--gray-300);"></i>
+                    <span class="exhausted-label">모두 사용됨</span>
+                    <span style="font-size:11px;color:var(--gray-300);">2026.03.10 마지막 사용</span>
+                  </div>
+                </div>
+                <div class="flip-card-face flip-card-back">
+                  <div class="back-title">사용 방법</div>
+                  <ol class="back-steps">
+                    <li class="back-step">
+                      <span class="step-num">1</span>
+                      CGV 앱에서 예매 완료 후 결제화면 진입
+                    </li>
+                    <li class="back-step">
+                      <span class="step-num">2</span>
+                      콤보 세트 교환권 코드 입력
+                    </li>
+                    <li class="back-step">
+                      <span class="step-num">3</span>
+                      매점에서 바코드 스캔 후 수령
+                    </li>
+                  </ol>
+                  <div class="back-flip-hint">다시 클릭하면 앞면으로</div>
+                </div>
+              </div>
+            </div>
+
+          </div><!-- /voucher-grid -->
+
+          <!-- 바우처 안내 -->
+          <div class="section mt-4">
+            <div class="section-title">바우처 안내</div>
+            <div class="list-row">
+              <div class="list-row-icon" style="background:var(--rose-50);">
+                <i data-lucide="info" style="width:16px;height:16px;color:var(--rose-500);"></i>
+              </div>
+              <div class="list-row-text">
+                <div class="list-row-title">롯데시네마 교환권 곧 만료</div>
+                <div class="list-row-sub">28일 후 만료 · 지금 사용하세요</div>
+              </div>
+              <i data-lucide="chevron-right" style="width:15px;height:15px;color:var(--gray-300);flex-shrink:0;"></i>
+            </div>
+            <div class="list-row">
+              <div class="list-row-icon" style="background:#f0fdf4;">
+                <i data-lucide="clock" style="width:16px;height:16px;color:#22c55e;"></i>
+              </div>
+              <div class="list-row-text">
+                <div class="list-row-title">이번달 신규 바우처 2건 도착</div>
+                <div class="list-row-sub">신한카드 · 스타벅스 아메리카노 추가</div>
+              </div>
+              <i data-lucide="chevron-right" style="width:15px;height:15px;color:var(--gray-300);flex-shrink:0;"></i>
+            </div>
+          </div>
+
+        </div>
+        <!-- /SCREEN 2 -->
+
+      </div><!-- /screens-track -->
+    </div><!-- /screens-wrapper -->
+
+    <!-- Bottom Tab Bar (mobile) -->
+    <nav class="tab-bar">
+      <button class="tab-item active" id="tab-0" onclick="switchTab(0)">
+        <i data-lucide="home" style="width:20px;height:20px;"></i>
+        홈
+      </button>
+      <button class="tab-item" id="tab-1" onclick="switchTab(1)">
+        <i data-lucide="credit-card" style="width:20px;height:20px;"></i>
+        카드
+      </button>
+      <button class="tab-item" id="tab-2" onclick="switchTab(2)">
+        <i data-lucide="gift" style="width:20px;height:20px;"></i>
+        바우처
+      </button>
+    </nav>
+
+  </div><!-- /main -->
+</div><!-- /app-shell -->
+
+
+<script>
+  /* ─────────────────────────────────────────
+     Lucide Icons Init
+  ───────────────────────────────────────── */
+  lucide.createIcons();
+
+  /* ─────────────────────────────────────────
+     Tab / Screen Switching with Slide
+  ───────────────────────────────────────── */
+  let currentTab = 0;
+
+  function switchTab(idx) {
+    const track = document.getElementById('screensTrack');
+    const tabs = document.querySelectorAll('.tab-item');
+    const navLinks = document.querySelectorAll('.sidebar-nav li a');
+
+    // Slide direction: current → new
+    track.style.transform = `translateX(-${idx * 33.3333}%)`;
+
+    // Mobile tabs
+    tabs.forEach((t, i) => t.classList.toggle('active', i === idx));
+
+    // Desktop nav
+    navLinks.forEach((a, i) => a.classList.toggle('active', i === idx));
+
+    currentTab = idx;
+
+    // Trigger gauge animations when switching to card screen
+    if (idx === 1) {
+      setTimeout(animateCardGauges, 100);
+    }
+  }
+
+  /* ─────────────────────────────────────────
+     Balance Mask Toggle
+  ───────────────────────────────────────── */
+  let isMasked = false;
+  const balanceReal   = '₩2,847,500';
+  const balanceMasked = '₩•••,•••';
+
+  document.getElementById('maskBtn').addEventListener('click', function () {
+    isMasked = !isMasked;
+    const display = document.getElementById('balanceDisplay');
+    display.textContent = isMasked ? balanceMasked : balanceReal;
+
+    // Re-render icon
+    const iconEl = document.getElementById('maskIcon');
+    iconEl.setAttribute('data-lucide', isMasked ? 'eye-off' : 'eye');
+    lucide.createIcons();
+
+    // Subtle animation
+    display.style.opacity = '0';
+    display.style.transform = 'translateY(-4px)';
+    setTimeout(() => {
+      display.style.transition = 'opacity .18s ease, transform .18s ease';
+      display.style.opacity = '1';
+      display.style.transform = 'translateY(0)';
+    }, 10);
+    setTimeout(() => {
+      display.style.transition = '';
+    }, 200);
+  });
+
+  /* ─────────────────────────────────────────
+     Main Performance Gauge Animation
+  ───────────────────────────────────────── */
+  function animateMainGauge() {
+    const target = 62;
+    const gauge  = document.getElementById('mainGauge');
+    const pctEl  = document.getElementById('perfPct');
+    let current  = 0;
+
+    gauge.style.width = '0%';
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        gauge.style.width = target + '%';
+      });
+    });
+
+    // Counter animation
+    const duration = 900;
+    const startTime = performance.now();
+
+    function tick(now) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      current = Math.round(ease * target);
+      pctEl.textContent = current + '%';
+      if (progress < 1) requestAnimationFrame(tick);
+    }
+
+    requestAnimationFrame(tick);
+  }
+
+  /* ─────────────────────────────────────────
+     Card Gauge Animation
+  ───────────────────────────────────────── */
+  function animateCardGauges() {
+    document.querySelectorAll('.card-gauge-fill').forEach(el => {
+      const target = parseInt(el.getAttribute('data-target') || '0', 10);
+      el.style.width = '0%';
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          el.style.width = target + '%';
+        });
+      });
+    });
+  }
+
+  /* ─────────────────────────────────────────
+     Voucher 3D Flip
+  ───────────────────────────────────────── */
+  function flipVoucher(idx) {
+    const card = document.getElementById('voucher-' + idx);
+    card.classList.toggle('flipped');
+  }
+
+  /* ─────────────────────────────────────────
+     Scroll Header Shadow
+  ───────────────────────────────────────── */
+  const header = document.getElementById('header');
+
+  // Listen on each screen individually
+  document.querySelectorAll('.screen').forEach(screen => {
+    screen.addEventListener('scroll', function () {
+      header.classList.toggle('scrolled', this.scrollTop > 4);
+    });
+  });
+
+  /* ─────────────────────────────────────────
+     On Load
+  ───────────────────────────────────────── */
+  window.addEventListener('DOMContentLoaded', () => {
+    // Animate main gauge on page load
+    setTimeout(animateMainGauge, 300);
+  });
+
+  window.addEventListener('load', () => {
+    // Re-init icons after everything loads
+    lucide.createIcons();
+  });
+</script>
+
+</body>
+</html>
