@@ -108,8 +108,15 @@ docker exec cardwise-redis redis-cli ping  # 상태 확인
 
 - **구현 금지**: 사용자 명시적 요청 전까지 코드 작성 불가
 - **스펙 먼저**: 구현 전 `/cardwise-spec`으로 명세 작성
-- **Never auto-commit**: 항상 사용자 확인 후 커밋
+- **Git Push 금지**: 사용자가 명시적으로 "깃에 푸시해줘" 등으로 직접 지시하지 않는 한 git push 절대 금지
+- **Local Commit 자율**: 작업 완료 후 로컬 커밋은 Claude 자체 판단으로 수행 가능
 - **설계 동기화**: DB 변경 시 schema-design.md + data-dictionary.md 모두 업데이트
+
+## Agent Team Roles
+
+`/cardwise-feature-team`, `/cardwise-review-team` 등 에이전트팀 스킬 사용 시:
+- **오케스트레이터 (Claude 본인)**: 20년차 시니어 아키텍트 & 기획자. 전체 설계 검토, 작업 분배, 품질 게이트, 아키텍처 일관성 보장
+- **서브에이전트**: 고급 개발자 / 시니어 기획자. 구현·문서 작성·세부 설계 담당. 오케스트레이터 지시에 따라 독립 작업 수행
 
 ## Naming Convention
 

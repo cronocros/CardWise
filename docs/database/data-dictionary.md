@@ -2,17 +2,17 @@
 
 > 한국 신용카드 혜택 관리 플랫폼 — 컬럼 수준 상세 명세서
 >
-> PostgreSQL (Supabase) | 35 테이블 | 6 도메인 | 19 ENUM 타입
+> PostgreSQL (Supabase) | 41 테이블 | 6 도메인 | 26 ENUM 타입
 
 ---
 
 ## 목차
 
 1. [ENUM 타입](#enum-타입)
-2. [Domain 1: Card (12 테이블)](#domain-1-card)
+2. [Domain 1: Card (16 테이블)](#domain-1-card)
 3. [Domain 2: Account (4 테이블)](#domain-2-account)
 4. [Domain 3: User Card (5 테이블)](#domain-3-user-card)
-5. [Domain 4: Ledger (7 테이블)](#domain-4-ledger)
+5. [Domain 4: Ledger (9 테이블)](#domain-4-ledger)
 6. [Domain 5: Analytics (4 테이블)](#domain-5-analytics)
 7. [Domain 6: Group (3 테이블)](#domain-6-group)
 
@@ -20,7 +20,7 @@
 
 ## ENUM 타입
 
-총 19개의 사용자 정의 ENUM 타입을 사용한다.
+총 26개의 사용자 정의 ENUM 타입을 사용한다.
 
 
 | #   | ENUM 이름                     | 값                                                                    | 설명            |
@@ -40,17 +40,24 @@
 | 13  | `subscription_plan_enum`    | `FREE`, `PREMIUM`                                                    | 구독 플랜         |
 | 14  | `voucher_action_enum`       | `USE`, `CANCEL`                                                      | 바우처 사용/취소     |
 | 15  | `currency_enum`             | `KRW`, `USD`, `EUR`, `JPY`, `CNY`, `GBP`, `THB`, `VND`, `SGD`, `AUD` | 결제 통화 (10개)   |
-| 16  | `payment_source_enum`       | `MANUAL`, `EMAIL`, `SMS`                                             | 결제 입력 경로      |
+| 16  | `payment_source_enum`       | `MANUAL`, `EMAIL`, `SMS`, `EXCEL`, `MYDATA`                          | 결제 입력 경로 (5개) |
 | 17  | `payment_draft_status_enum` | `PENDING`, `CONFIRMED`, `REJECTED`                                   | 결제 초안 상태      |
 | 18  | `group_role_enum`           | `OWNER`, `MEMBER`                                                    | 그룹 멤버 역할      |
 | 19  | `invitation_status_enum`    | `PENDING`, `ACCEPTED`, `DECLINED`, `EXPIRED`                         | 초대 상태         |
+| 20  | `annual_perf_basis_enum`   | `ISSUANCE_MONTH`, `ISSUANCE_DATE` | 연간 실적 기산 방식 |
+| 21  | `benefit_period_lag_enum`  | `CURRENT_MONTH`, `PREV_MONTH`, `PREV_PREV_MONTH` | 혜택 기준월 lag |
+| 22  | `payment_adjustment_type_enum` | `FX_CORRECTION`, `BILLING_DISCOUNT`, `PAYMENT_DEDUCTION`, `CARD_FEE`, `OTHER` | 결제 보정 유형 |
+| 23  | `card_grade_enum`          | `BASIC`, `CLASSIC`, `GOLD`, `PLATINUM`, `DIAMOND`, `PREMIUM`, `INFINITE` | 카드 등급 |
+| 24  | `benefit_source_enum`      | `ISSUER`, `NETWORK`, `PARTNERSHIP` | 혜택 제공 주체 |
+| 25  | `performance_exclusion_scope_enum` | `MONTHLY_ONLY`, `ANNUAL_ONLY`, `ALL_PERFORMANCE`, `NONE` | 실적 제외 범위 |
+| 26  | `pending_action_type_enum` | `FX_CORRECTION_NEEDED`, `BILLING_DISCOUNT_FOUND`, `PAYMENT_CONFIRMATION`, `DUPLICATE_DETECTED`, `CATEGORY_UNMAPPED`, `EXCEL_REVIEW`, `PERFORMANCE_EXCLUSION_CHECK` | 사용자 확인 유형 |
 
 
 ---
 
 ## Domain 1: Card
 
-카드 상품, 혜택, 가맹점, 크롤링 관련 12개 테이블.
+카드 상품, 혜택, 가맹점, 크롤링, 네트워크, 실적 제외 관련 16개 테이블.
 
 ---
 
@@ -88,6 +95,11 @@
 | is_active       | BOOLEAN         | NO       | true    | -            | 활성 여부        |
 | created_at      | TIMESTAMPTZ     | NO       | now()   | -            | 생성일시         |
 | updated_at      | TIMESTAMPTZ     | NO       | now()   | -            | 수정일시         |
+| annual_perf_basis | annual_perf_basis_enum | NO | 'ISSUANCE_MONTH' | - | 연간 실적 기산 방식 |
+| network_id | BIGINT | YES | - | card_network | 글로벌 네트워크 FK (NULL=국내전용) |
+| card_grade | card_grade_enum | YES | - | - | 카드 등급 (NULL=등급 없음) |
+| has_performance_tier | BOOLEAN | NO | true | - | 실적 추적 여부 (체크카드 false 가능) |
+| card_rules | JSONB | NO | '{}' | - | 그레이스 기간 등 카드 글로벌 정책 (JSON) |
 
 
 ---
@@ -178,6 +190,9 @@
 | valid_until          | DATE                     | YES      | -       | -                | 유효 종료일                    |
 | created_at           | TIMESTAMPTZ              | NO       | now()   | -                | 생성일시                      |
 | updated_at           | TIMESTAMPTZ              | NO       | now()   | -                | 수정일시                      |
+| performance_period_lag | benefit_period_lag_enum | NO | 'PREV_MONTH' | - | 혜택 기준월 lag (전월/전전월) |
+| benefit_source | benefit_source_enum | NO | 'ISSUER' | - | 혜택 제공 주체 (카드사/네트워크/파트너) |
+| activation_rules | JSONB | NO | '{}' | - | 혜택별 활성화 조건 (JSON) |
 
 
 > **CHECK 제약조건**: `target_type`에 따라 FK 컬럼의 NULL 여부가 결정된다.
@@ -207,6 +222,7 @@
 | valid_until     | DATE              | YES      | -       | -    | 유효 종료일      |
 | created_at      | TIMESTAMPTZ       | NO       | now()   | -    | 생성일시        |
 | updated_at      | TIMESTAMPTZ       | NO       | now()   | -    | 수정일시        |
+| unlock_conditions | JSONB | NO | '{}' | - | 바우처 잠금해제 조건 (JSON) |
 
 
 ---
@@ -282,6 +298,83 @@
 | reviewed_at    | TIMESTAMPTZ         | YES      | -         | -         | 검수 일시           |
 | created_at     | TIMESTAMPTZ         | NO       | now()     | -         | 생성일시            |
 
+
+---
+
+### card_network
+
+설명: 글로벌 카드 네트워크 브랜드. VISA, MASTERCARD, UNIONPAY, AMEX 등 카드 결제 네트워크를 관리한다.
+
+
+| Column       | Type            | Nullable | Default | FK  | Description               |
+| ------------ | --------------- | -------- | ------- | --- | ------------------------- |
+| network_id   | BIGINT IDENTITY | NO       | auto    | -   | PK                        |
+| network_code | VARCHAR(20)     | NO       | -       | -   | 네트워크 코드 (VISA, MASTERCARD 등, UNIQUE) |
+| network_name | VARCHAR(50)     | NO       | -       | -   | 네트워크명                     |
+| logo_url     | VARCHAR(500)    | YES      | -       | -   | 로고 URL                    |
+| website_url  | VARCHAR(500)    | YES      | -       | -   | 공식 웹사이트                   |
+| created_at   | TIMESTAMPTZ     | NO       | now()   | -   | 생성일시                      |
+
+
+---
+
+### special_performance_period
+
+설명: 특별 실적 인정 기간. 카드사가 특정 기간 결제에 대해 배율 실적을 인정하는 프로모션 기간을 관리한다.
+
+
+| Column            | Type            | Nullable | Default | FK   | Description            |
+| ----------------- | --------------- | -------- | ------- | ---- | ---------------------- |
+| special_period_id | BIGINT IDENTITY | NO       | auto    | -    | PK                     |
+| card_id           | BIGINT          | NO       | -       | card | 카드 FK                  |
+| period_name       | VARCHAR(100)    | NO       | -       | -    | 기간명 ('2025 연말 특별 인정') |
+| start_date        | DATE            | NO       | -       | -    | 시작일                    |
+| end_date          | DATE            | NO       | -       | -    | 종료일                    |
+| credit_multiplier | NUMERIC(3,2)    | NO       | 1.00    | -    | 실적 배율 (1.5 = 1.5배)    |
+| is_active         | BOOLEAN         | NO       | true    | -    | 활성 여부                  |
+| description       | TEXT            | YES      | -       | -    | 설명                     |
+| created_at        | TIMESTAMPTZ     | NO       | now()   | -    | 생성일시                   |
+| updated_at        | TIMESTAMPTZ     | NO       | now()   | -    | 수정일시                   |
+
+
+> **CHECK 제약조건**: `end_date >= start_date`, `credit_multiplier > 0 AND <= 5.00`
+
+---
+
+### performance_exclusion_code
+
+설명: 실적 제외 유형 마스터 코드. 세금, 상품권, 현금서비스 등 실적 제외 대상 유형을 코드화하여 카드 간 재사용한다.
+
+
+| Column            | Type                              | Nullable | Default          | FK  | Description          |
+| ----------------- | --------------------------------- | -------- | ---------------- | --- | -------------------- |
+| exclusion_code_id | BIGINT IDENTITY                   | NO       | auto             | -   | PK                   |
+| code              | VARCHAR(50)                       | NO       | -                | -   | 코드 (TAX, GIFT_CARD 등, UNIQUE) |
+| name              | VARCHAR(100)                      | NO       | -                | -   | 코드명                  |
+| description       | TEXT                              | YES      | -                | -   | 설명                   |
+| default_scope     | performance_exclusion_scope_enum  | NO       | 'ALL_PERFORMANCE' | -   | 기본 제외 범위             |
+| created_at        | TIMESTAMPTZ                       | NO       | now()            | -   | 생성일시                 |
+
+
+---
+
+### card_performance_exclusion
+
+설명: 카드별 실적 제외 규칙. 카드 상품에 적용되는 실적 제외 코드와 범위를 정의한다. 동일 카드 발급 시 재사용 가능.
+
+
+| Column                 | Type                              | Nullable | Default | FK                      | Description |
+| ---------------------- | --------------------------------- | -------- | ------- | ----------------------- | ----------- |
+| card_perf_exclusion_id | BIGINT IDENTITY                   | NO       | auto    | -                       | PK          |
+| card_id                | BIGINT                            | NO       | -       | card                    | 카드 FK       |
+| exclusion_code_id      | BIGINT                            | NO       | -       | performance_exclusion_code | 제외 코드 FK    |
+| effective_scope        | performance_exclusion_scope_enum  | NO       | -       | -                       | 적용 범위       |
+| is_active              | BOOLEAN                           | NO       | true    | -                       | 활성 여부       |
+| valid_from             | DATE                              | YES      | -       | -                       | 유효 시작일      |
+| valid_until            | DATE                              | YES      | -       | -                       | 유효 종료일      |
+
+
+> **UNIQUE 제약조건**: `(card_id, exclusion_code_id)`
 
 ---
 
@@ -466,7 +559,7 @@
 
 ## Domain 4: Ledger
 
-결제 내역, 태그, 결제 초안, 이메일 파싱, 환율 관련 7개 테이블.
+결제 내역, 태그, 결제 초안, 이메일 파싱, 환율, 보정, 인박스 관련 9개 테이블.
 
 ---
 
@@ -490,6 +583,9 @@
 | exchange_rate_id  | BIGINT              | YES      | -        | exchange_rate_snapshot | 환율 스냅샷 FK           |
 | payment_source    | payment_source_enum | NO       | 'MANUAL' | -                      | 결제 입력 경로            |
 | memo              | TEXT                | YES      | -        | -                      | 메모                  |
+| final_krw_amount | BIGINT | YES | - | - | 보정 후 확정액 (NULL=미보정) |
+| is_adjusted | BOOLEAN | NO | false | - | 보정 완료 여부 |
+| external_transaction_id | VARCHAR(100) | YES | - | - | 마이데이터 트랜잭션 ID (향후) |
 | deleted_at        | TIMESTAMPTZ         | YES      | -        | -                      | 삭제일시 (soft delete)  |
 | created_at        | TIMESTAMPTZ         | NO       | now()    | -                      | 생성일시                |
 | updated_at        | TIMESTAMPTZ         | NO       | now()    | -                      | 수정일시                |
@@ -516,6 +612,7 @@
 | category_id     | BIGINT          | YES      | -       | category     | 카테고리 FK     |
 | card_benefit_id | BIGINT          | YES      | -       | card_benefit | 적용된 혜택 FK   |
 | benefit_amount  | BIGINT          | NO       | 0       | -            | KRW 혜택 금액   |
+| excluded_from_performance | BOOLEAN | NO | false | - | 사용자 직접 실적 제외 설정 |
 | created_at      | TIMESTAMPTZ     | NO       | now()   | -            | 생성일시        |
 
 
@@ -612,6 +709,50 @@
 
 
 > **UNIQUE 제약조건**: `(currency, rate_date)`
+
+---
+
+### payment_adjustment
+
+설명: 결제 금액 보정. 해외결제 환율 확정(매입 전표), 청구할인, 결제대금 차감 등 실제 청구 금액과의 차이를 기록한다.
+
+
+| Column              | Type                         | Nullable | Default | FK      | Description                  |
+| ------------------- | ---------------------------- | -------- | ------- | ------- | ---------------------------- |
+| adjustment_id       | BIGINT IDENTITY              | NO       | auto    | -       | PK                           |
+| payment_id          | BIGINT                       | NO       | -       | payment | 결제 FK                        |
+| adjustment_type     | payment_adjustment_type_enum | NO       | -       | -       | 보정 유형                        |
+| original_krw_amount | BIGINT                       | NO       | -       | -       | 보정 전 금액                      |
+| adjusted_krw_amount | BIGINT                       | NO       | -       | -       | 보정 후 금액                      |
+| difference_amount   | BIGINT (GENERATED STORED)    | NO       | -       | -       | 차액 (adjusted - original, 자동) |
+| reason              | TEXT                         | YES      | -       | -       | 보정 사유                        |
+| billed_at           | DATE                         | YES      | -       | -       | 실제 청구일 (FX 보정 시)             |
+| created_at          | TIMESTAMPTZ                  | NO       | now()   | -       | 생성일시                         |
+
+
+---
+
+### user_pending_action
+
+설명: 사용자 확인 필요 항목. FX 보정, 중복 결제 감지, 카테고리 미분류 등 사용자 액션이 필요한 항목을 관리하는 인박스.
+
+
+| Column            | Type                     | Nullable | Default   | FK      | Description                |
+| ----------------- | ------------------------ | -------- | --------- | ------- | -------------------------- |
+| pending_action_id | BIGINT IDENTITY          | NO       | auto      | -       | PK                         |
+| account_id        | UUID                     | NO       | -         | account | 사용자 FK                     |
+| action_type       | pending_action_type_enum | NO       | -         | -       | 확인 유형                      |
+| reference_table   | VARCHAR(50)              | YES      | -         | -       | 참조 테이블명 (polymorphic)      |
+| reference_id      | BIGINT                   | YES      | -         | -       | 참조 레코드 ID                  |
+| title             | VARCHAR(200)             | NO       | -         | -       | 제목                         |
+| description       | TEXT                     | YES      | -         | -       | 상세 설명                      |
+| status            | VARCHAR(20)              | NO       | 'PENDING' | -       | PENDING/RESOLVED/DISMISSED |
+| priority          | VARCHAR(10)              | NO       | 'MEDIUM'  | -       | HIGH/MEDIUM/LOW            |
+| created_at        | TIMESTAMPTZ              | NO       | now()     | -       | 생성일시                       |
+| resolved_at       | TIMESTAMPTZ              | YES      | -         | -       | 처리 완료일시                    |
+
+
+> **INDEX**: `(account_id, status)` — 미처리 항목 빠른 조회
 
 ---
 
@@ -761,4 +902,48 @@
 | updated_at | TIMESTAMPTZ | NO | now() | - | 수정일시 |
 
 > **비즈니스 규칙**: 만료된 초대(expires_at < now())는 자동으로 EXPIRED 처리 (스케줄러 또는 조회 시 갱신)
+
+---
+
+## JSONB 스키마 문서
+
+> 관계형 우선 + JSONB 보조 전략. 현재는 빈 객체 `{}` 기본값, 카드사별 엣지케이스 발생 시 점진적 활용.
+
+### card.card_rules
+
+| 키 | 타입 | 필수 | 설명 |
+|----|------|------|------|
+| grace_period.enabled | boolean | N | 그레이스 기간 활성화 여부 |
+| grace_period.months | integer | N | 그레이스 기간 (월) |
+| grace_period.min_spend_per_month | integer | N | 그레이스 기간 중 최소 월 사용액 (0=무조건) |
+| grace_period.benefit_scope | string | N | ALL/PARTIAL — 그레이스 기간 중 혜택 범위 |
+| notes | string | N | 기타 참고 사항 |
+
+### card_benefit.activation_rules
+
+| 키 | 타입 | 필수 | 설명 |
+|----|------|------|------|
+| grace_period_exempt | boolean | N | 그레이스 기간 중 이 혜택 면제 여부 |
+| min_single_payment | integer | N | 최소 단건 결제 금액 |
+| max_daily_usage | integer | N | 일일 최대 사용 횟수 |
+| excluded_categories | string[] | N | 제외 카테고리 코드 목록 |
+| time_restriction.days | string[] | N | 적용 요일 (MON~SUN) |
+| time_restriction.start_time | string | N | 적용 시작 시간 (HH:MM) |
+| time_restriction.end_time | string | N | 적용 종료 시간 (HH:MM) |
+| seasonal.active_months | integer[] | N | 적용 월 목록 (1~12) |
+| requires_linked_service | string | N | 필수 연동 서비스 설명 |
+| custom_notes | string | N | 기타 참고 사항 |
+
+### card_voucher.unlock_conditions
+
+| 키 | 타입 | 필수 | 설명 |
+|----|------|------|------|
+| requires_annual_performance | integer | N | 필요 연간 실적 금액 |
+| requires_tier_name | string | N | 필요 실적 구간명 |
+| available_after_months | integer | N | 발급 후 N개월 후 사용 가능 |
+| requires_previous_year_performance | boolean | N | 전년도 실적 필요 여부 |
+| previous_year_min_amount | integer | N | 전년도 최소 실적 금액 |
+| enrollment_required | string | N | 별도 신청 필요 여부 설명 |
+| unlock_type | string | N | AUTO/MANUAL/ADMIN/NONE |
+| notes | string | N | 기타 참고 사항 |
 
