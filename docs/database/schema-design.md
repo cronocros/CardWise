@@ -620,6 +620,8 @@ group_member(account_id) -- 내 그룹 목록
 group_member(group_id) -- 그룹 멤버 목록
 payment(group_id, paid_at DESC) WHERE group_id IS NOT NULL -- 그룹 결제 조회
 group_invitation(invitee_email, invitation_status) -- 초대 조회
+tag(account_id, tag_name) WHERE group_id IS NULL UNIQUE -- 개인 태그명 중복 방지
+tag(group_id, tag_name) WHERE group_id IS NOT NULL UNIQUE -- 그룹 내 태그명 중복 방지
 
 -- 결제 보정
 payment_adjustment(payment_id)
