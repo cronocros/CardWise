@@ -1,6 +1,6 @@
 # CardWise — API 설계
 
-> 최종 갱신: 2026-03-18
+> 최종 갱신: 2026-03-19
 > 구현 단계에서 OpenAPI 3.1 (SpringDoc) 자동 생성 예정
 
 ---
@@ -112,7 +112,7 @@ DELETE /cards/{cardId}           카드 삭제
 PATCH  /cards/{cardId}           카드 정보 수정 (별칭, 색상 등)
 GET    /cards/{cardId}/benefits  카드 혜택 목록
 GET    /cards/{cardId}/tiers     실적 구간 목록 (30만/50만/100만)
-GET    /cards/{cardId}/performance  실적 현황 (연간/월간)
+GET    /cards/{cardId}/performance  실적 현황 (연간/월간, benefitQualification·specialPeriod 포함)
 ```
 
 **GET /cards/{cardId}/tiers 응답 예시**:
@@ -185,6 +185,113 @@ POST   /payments/parse-email     이메일 파싱 트리거 (비동기)
     "appliedBenefits": [
       { "type": "CASHBACK", "amount": 1350, "description": "온라인쇼핑 3% 캐시백" }
     ]
+  }
+}
+```
+
+### 4.2.1 결제 보정 (`/api/v1/payments/{paymentId}/adjustments`)
+
+```
+POST   /payments/{paymentId}/adjustments     보정 생성
+GET    /payments/{paymentId}/adjustments     보정 이력 조회
+```
+
+**POST /payments/{paymentId}/adjustments 요청**:
+```json
+{
+  "adjustmentType": "FX_CORRECTION",
+  "originalKrwAmount": 58500,
+  "adjustedKrwAmount": 57825,
+  "reason": "USD 매입 전표 확정 환율 적용"
+}
+```
+
+**POST /payments/{paymentId}/adjustments 응답** (201):
+```json
+{
+  "data": {
+    "adjustmentId": 1,
+    "paymentId": 123,
+    "adjustmentType": "FX_CORRECTION",
+    "originalKrwAmount": 58500,
+    "adjustedKrwAmount": 57825,
+    "differenceAmount": -675,
+    "reason": "USD 매입 전표 확정 환율 적용",
+    "createdAt": "2026-03-19T10:00:00Z"
+  }
+}
+```
+
+### 4.2.2 사용자 인박스 (`/api/v1/pending-actions`)
+
+```
+GET    /pending-actions                       확인 필요 목록
+GET    /pending-actions/count                 미처리 건수 (배지용)
+PATCH  /pending-actions/{actionId}/resolve    처리 완료
+PATCH  /pending-actions/{actionId}/dismiss    무시
+```
+
+**GET /pending-actions 쿼리 파라미터**:
+```
+?status=PENDING        (PENDING | RESOLVED | DISMISSED)
+&priority=HIGH         (HIGH | MEDIUM | LOW)
+&cursor=<base64>
+&limit=20
+```
+
+**GET /pending-actions 응답**:
+```json
+{
+  "data": [
+    {
+      "pendingActionId": 1,
+      "actionType": "FX_CORRECTION_NEEDED",
+      "referenceTable": "payment",
+      "referenceId": 123,
+      "title": "USD 결제 환율 확정 필요",
+      "description": "Amazon $45.00 → 확정 환율 적용 대기 중",
+      "status": "PENDING",
+      "priority": "HIGH",
+      "createdAt": "2026-03-17T14:00:00Z"
+    }
+  ],
+  "meta": {
+    "pagination": { "nextCursor": "...", "hasMore": true, "limit": 20 }
+  }
+}
+```
+
+**PATCH /pending-actions/{actionId}/resolve 요청**:
+```json
+{
+  "resolution": {
+    "action": "APPLY_FX_CORRECTION",
+    "adjustedAmount": 57825
+  }
+}
+```
+
+### 4.2.3 엑셀 업로드 (`/api/v1/payments/upload`)
+
+```
+GET    /payments/upload/template            엑셀 템플릿 다운로드
+POST   /payments/upload                      엑셀 파일 업로드
+```
+
+**POST /payments/upload 요청**: `multipart/form-data`
+- `file`: .xlsx 파일
+
+**POST /payments/upload 응답** (202):
+```json
+{
+  "data": {
+    "uploadId": "upload_01HX...",
+    "totalRows": 45,
+    "validRows": 42,
+    "duplicateRows": 2,
+    "errorRows": 1,
+    "status": "REVIEW_NEEDED",
+    "pendingActionId": 15
   }
 }
 ```

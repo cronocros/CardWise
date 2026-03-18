@@ -1,6 +1,6 @@
 # F4 - 연간/월간 실적 추적
 
-> 최종 갱신: 2026-03-18
+> 최종 갱신: 2026-03-19
 
 ---
 
@@ -8,13 +8,27 @@
 
 ### 목적
 
-사용자가 보유한 카드의 연간/월간 실적을 시각적으로 추적하고, 실적 구간 달성 여부와 다음 구간까지 남은 금액을 확인할 수 있는 기능을 정의한다. 핵심은 카드 발급일(issued_at) 기준 연간 계산이며, 달력 연도(1월~12월)가 아닌 발급 기준 12개월 주기(예: 6월 발급 → 6월~5월)를 사용한다. 결제 입력(PaymentCreatedEvent) 시 자동으로 실적이 갱신되며, 구간 변경 시 알림이 발행된다.
+사용자가 보유한 카드의 연간/월간 실적을 시각적으로 추적하고, 실적 구간 달성 여부와 다음 구간까지 남은 금액을 확인할 수 있는 기능을 정의한다.
+
+**연간 실적 기산**은 카드 상품별 `card.annual_perf_basis`에 따라 두 가지 방식을 지원한다:
+- **ISSUANCE_MONTH**: 발급월 1일 ~ 11개월 후 말일 (예: 6월 발급 → 6/1~5/31)
+- **ISSUANCE_DATE**: 발급일 ~ 1년 후 전날 (예: 6/15 발급 → 6/15~다음해 6/14)
+
+**혜택 기준월 lag** (`card_benefit.performance_period_lag`)에 따라 당월/전월/전전월 실적이 혜택 활성화에 사용된다. 가장 일반적인 패턴은 전월(PREV_MONTH) 실적 기준이다.
+
+**그레이스 기간**: 신규 발급 카드는 `card.card_rules.grace_period` 설정에 따라 발급 후 N개월간 무실적으로도 전체 혜택이 활성화될 수 있다.
+
+**실적 제외**: 세금, 상품권, 현금서비스 등 카드사별로 실적에서 제외되는 결제 유형이 있으며, 자동 제외(코드 기반)와 사용자 직접 제외(토글 기반) 이중 구조로 관리된다.
+
+결제 입력(PaymentCreatedEvent) 시 자동으로 실적이 갱신되며, 구간 변경 시 알림이 발행된다.
 
 ### 대상 사용자
 
 - 카드 실적 달성 현황을 확인하려는 회원
 - 다음 실적 구간까지 남은 금액을 확인하여 소비 계획을 세우려는 회원
 - 월별 사용 추이를 비교하려는 회원
+- 그레이스 기간 혜택 상태를 확인하려는 신규 카드 발급 회원
+- 실적 제외 항목을 직접 관리하려는 회원
 
 ---
 
@@ -28,6 +42,9 @@
 | F4-US-04 | 회원 | 실적 구간을 달성하면 축하 알림을 받고 싶다 | 동기 부여, 혜택 활성화 인지 |
 | F4-US-05 | 회원 | 카드별로 실적을 비교하여 어떤 카드를 더 사용해야 할지 판단하고 싶다 | 최적 소비 전략 |
 | F4-US-06 | 회원 | 연간 기간(발급일 기준)이 언제부터 언제까지인지 명확히 확인하고 싶다 | 혼동 방지 |
+| F4-US-07 | 회원 | 신규 발급 카드의 그레이스 기간이 언제까지이고 어떤 혜택을 받는지 확인하고 싶다 | 그레이스 기간 내 혜택 누락 방지 |
+| F4-US-08 | 회원 | 세금, 상품권 등 실적에서 제외되는 항목을 확인하고 직접 토글로 관리하고 싶다 | 실적 정확도 향상, 투명성 |
+| F4-US-09 | 회원 | 카드사 이벤트로 실적이 배율 인정되는 특별 기간을 확인하고 싶다 | 이벤트 기간 활용 극대화 |
 
 ---
 
@@ -41,11 +58,15 @@
 | 요소명 | 유형 | 필수 | 검증 규칙 |
 |--------|------|------|----------|
 | 카드 미니 썸네일 + 카드명 | Header | - | 60px 썸네일, 별칭 우선 표시 |
-| 연간 기간 표시 | Text (caption) | - | "2025.06 ~ 2026.05 (발급일 기준)" |
+| 연간 기간 표시 | Text (caption) | - | "2025.06 ~ 2026.05 (발급월 기준)" 또는 "2025.06.15 ~ 2026.06.14 (발급일 기준)" — annual_perf_basis에 따라 다름 |
+| 그레이스 기간 안내 | Banner (info) | - | 그레이스 기간 활성 시: "신규 발급 혜택 기간: ~2025.09 (실적 없이 모든 혜택 활성화)" + 남은 일수. 비활성 시 미표시 |
+| 특별 기간 배지 | Badge (event) | - | 특별 실적 기간 진행 중일 때: "이벤트 기간 x1.5" 또는 "이벤트 기간 x2.0" 배지 표시. 없으면 미표시 |
 | 연간 실적 게이지 | RadialGauge (반원형) | - | 현재 금액 / 최고 구간 금액, % 표시 |
 | 현재 달성 구간 | Badge (success) | - | "50만원 구간 달성" |
 | 다음 구간 안내 | Text (body-sm) | - | "100만원 구간까지 ₩180,000 남음" (없으면 "최고 구간 달성!") |
 | 실적 구간 트랙 (PerformanceTierTrack) | TierTrack | - | 구간별 노드 + 마스코트 위치 + 달성 뱃지 |
+| 실적 제외 토글 | ToggleSection | - | "실적 제외 항목 관리" 섹션. 자동 제외 항목(코드 기반)은 읽기 전용 표시, 사용자 직접 제외 항목은 토글 ON/OFF 가능. 토글 변경 시 실적 즉시 재계산 |
+| 혜택 기준월 안내 | Text (caption) | - | "이 카드는 전월 실적 기준으로 혜택이 적용됩니다" — performance_period_lag에 따라 |
 | 월별 실적 차트 | BarChart (세로) | - | 연간 기간 내 12개월 막대 |
 | 월별 실적 목록 | List | - | 월별 사용 금액 + 전월 대비 증감 (화살표) |
 | 전월 대비 변동 | Text (body-md) | - | "+₩120,000 (+15%)" 또는 "-₩50,000 (-8%)" |
@@ -75,12 +96,14 @@
 - 미래 월은 빈 막대 (점선 border)
 - 현재 월은 rose-400 강조
 - 과거 월은 rose-200
+- 특별 실적 기간에 해당하는 월은 막대 상단에 "x1.5" 등 배율 라벨 표시
 - 탭 진입 시 staggered 애니메이션
 
 **사용자 인터랙션**:
 1. 게이지 탭 → 상세 금액 정보 바텀시트 (연간 누적, 현재 구간 혜택 목록)
 2. 월별 차트 막대 탭 → 해당 월 상세 (금액, 결제 건수, 전월 대비)
 3. 구간 노드 탭 → 해당 구간 혜택 상세 목록
+4. 실적 제외 토글 변경 → 확인 다이얼로그 → 실적 재계산 → 게이지/구간 즉시 갱신
 
 ---
 
@@ -199,6 +222,54 @@ Then  6월부터 3월까지 10개 월의 실적 막대가 표시되고
       3월(현재)이 rose-400으로 강조된다
 ```
 
+### AC-07: 그레이스 기간 혜택 활성화
+
+```
+Given 카드의 card_rules.grace_period = { enabled: true, months: 3, min_spend_per_month: 0 }이고
+      발급일이 2026-01-15이며 현재 2026-03-18인 상태 (발급 후 3개월 이내)
+When  실적 트래커를 조회하면
+Then  "신규 발급 혜택 기간: ~2026.04 (실적 없이 모든 혜택 활성화)" 배너가 표시되고
+      연간 누적 실적이 0원이더라도 모든 실적 구간 혜택이 활성화 상태로 표시되고
+      그레이스 기간 남은 일수가 표시된다
+```
+
+### AC-08: 실적 제외 항목 토글
+
+```
+Given 카드에 "TAX(세금)" 실적 제외 코드가 자동 적용되어 있고
+      사용자가 ₩50,000 세금 결제를 입력한 상태
+When  실적 제외 토글 섹션을 확인하면
+Then  "세금" 항목이 자동 제외로 표시되고 (읽기 전용)
+      해당 ₩50,000은 실적 합산에서 제외되어 있다
+---
+Given 사용자가 특정 결제 건의 payment_item.excluded_from_performance를 ON으로 토글하면
+When  실적이 재계산되면
+Then  해당 금액이 monthly_spent 및 annual_accumulated에서 차감되고
+      구간 변경 여부가 재판별된다
+```
+
+### AC-09: 특별 실적 기간 배율 적용
+
+```
+Given 카드에 2026-03-01 ~ 2026-03-31 기간 credit_multiplier=1.5인 특별 기간이 설정되어 있고
+      2026-03-18에 ₩100,000 결제를 입력하면
+When  실적이 계산될 때
+Then  해당 결제의 실적 인정 금액은 ₩150,000 (100,000 x 1.5)으로 반영되고
+      실적 트래커에 "이벤트 기간 x1.5" 배지가 표시되고
+      월별 차트에서 해당 월 막대 상단에 배율 라벨이 표시된다
+```
+
+### AC-10: 혜택 기준월 lag 적용
+
+```
+Given 카드의 혜택 performance_period_lag = 'PREV_MONTH'이고
+      2026-02 월간 실적이 ₩600,000 (50만 구간 달성)이며
+      2026-03 월간 실적이 ₩200,000 (30만 이하)인 상태
+When  2026-03에 혜택 활성화를 판별하면
+Then  전월(2026-02) 실적 ₩600,000 기준으로 50만 구간 혜택이 적용되고
+      "이 카드는 전월 실적 기준으로 혜택이 적용됩니다" 안내가 표시된다
+```
+
 ---
 
 ## 5. Edge Cases & 에러 시나리오
@@ -215,6 +286,9 @@ Then  6월부터 3월까지 10개 월의 실적 막대가 표시되고
 | E-08 | **performance_tier가 없는 카드** | 실적 구간 트랙 미표시. "이 카드는 실적 구간이 없습니다" 안내 |
 | E-09 | **동시 결제 입력 시 실적 충돌** | DB 레벨에서 user_performance UPDATE 시 낙관적 잠금(updated_at 비교) 또는 직렬화. 동시성 이슈 방지 |
 | E-10 | **환불 처리 시 실적 차감** | 환불 결제(음수 금액)가 입력되면 실적에서 차감. 구간이 하락할 수 있음 (하락 시 별도 알림 없음) |
+| E-11 | **그레이스 기간 만료 후 전환** | 그레이스 기간 종료 시점에 실제 실적 기반으로 구간 재판별. 실적 미달 시 구간 하락 발생 가능. 만료 7일 전 "그레이스 기간 종료 예정" 알림 발송. 만료 후 첫 조회 시 변경된 구간/혜택 상태를 안내 |
+| E-12 | **실적 제외 항목 토글 시 재계산** | 사용자가 payment_item.excluded_from_performance를 ON→OFF 또는 OFF→ON 변경 시, 해당 금액을 포함/제외하여 monthly_spent 및 annual_accumulated 즉시 재계산. 구간 상승/하락 모두 발생 가능. 토글 변경 전 확인 다이얼로그 표시 ("이 변경으로 실적 구간이 변경될 수 있습니다") |
+| E-13 | **특별 기간 종료 후 배율 원복** | 특별 실적 기간(special_performance_period) 종료 후 신규 결제는 기본 배율(x1.0) 적용. 이미 배율 적용된 기존 실적은 변경하지 않음. 기간 종료일 다음 날부터 "이벤트 기간" 배지 자동 제거 |
 
 ---
 
@@ -235,7 +309,8 @@ GET /api/v1/cards/{userCardId}/performance
     "annualPeriod": {
       "from": "2025-06",
       "to": "2026-05",
-      "issuedAt": "2025-06-15"
+      "issuedAt": "2025-06-15",
+      "basis": "ISSUANCE_MONTH"
     },
     "currentMonth": {
       "yearMonth": "2026-03",
@@ -255,6 +330,25 @@ GET /api/v1/cards/{userCardId}/performance
         "minAmount": 1000000,
         "remainingAmount": 180000
       }
+    },
+    "benefitQualification": {
+      "periodLag": "PREV_MONTH",
+      "periodLagLabel": "전월 실적 기준",
+      "referenceMonth": "2026-02",
+      "referenceMonthSpent": 180000,
+      "qualifiedTierName": "30만원",
+      "gracePeriod": {
+        "active": false,
+        "expiresAt": null,
+        "remainingDays": null
+      }
+    },
+    "specialPeriod": {
+      "active": true,
+      "name": "봄맞이 실적 2배 이벤트",
+      "from": "2026-03-01",
+      "to": "2026-03-31",
+      "creditMultiplier": 1.5
     },
     "monthlyBreakdown": [
       { "yearMonth": "2025-06", "spent": 45000 },
@@ -326,18 +420,29 @@ GET /api/v1/cards/{userCardId}/tiers
 | `user_card` | 사용자 카드 (issued_at으로 연간 기간 산출) |
 | `user_performance` | 월별 실적 (monthly_spent, annual_accumulated) |
 | `performance_tier` | 실적 구간 정의 (min_amount, max_amount) |
-| `card_benefit` | 구간별 혜택 (performance_tier_id FK) |
-| `payment` | 결제 건 (krw_amount → 실적 합산) |
+| `card_benefit` | 구간별 혜택 (performance_tier_id FK, performance_period_lag) |
+| `payment` | 결제 건 (krw_amount → 실적 합산, paid_at 기준) |
+| `payment_item` | 결제 품목 (excluded_from_performance 사용자 직접 토글) |
+| `card` | 카드 상품 (annual_perf_basis, card_rules JSONB — 그레이스 기간 등) |
+| `special_performance_period` | 특별 실적 인정 기간 (배율 적용, credit_multiplier) |
+| `performance_exclusion_code` | 실적 제외 유형 마스터 코드 (TAX, GIFT_CARD, CASH_ADVANCE 등) |
+| `card_performance_exclusion` | 카드별 실적 제외 규칙 (코드 참조, effective_scope) |
+| `payment_adjustment` | 결제 보정 (FX 환율 확정, 청구할인 등 — 실적 재계산 트리거) |
 
 ### 핵심 로직: 연간 기간 계산
 
 ```
+# ISSUANCE_MONTH 방식 (발급월 기준)
 issued_at = 2025-06-15
-현재 날짜 = 2026-03-18
+연간 시작: 2025-06-01 (발급월 1일)
+연간 종료: 2026-05-31 (11개월 후 말일)
 
-연간 시작: 2025-06 (issued_at의 연-월)
-연간 종료: 2026-05 (시작 + 11개월)
+# ISSUANCE_DATE 방식 (발급일 기준)
+issued_at = 2025-06-15
+연간 시작: 2025-06-15
+연간 종료: 2026-06-14 (1년 후 전날)
 
+현재 날짜 = 2026-03-18 (ISSUANCE_MONTH 예시)
 경과 월수: 10개월 (6,7,8,9,10,11,12,1,2,3)
 남은 월수: 2개월 (4,5)
 ```
@@ -348,10 +453,21 @@ issued_at = 2025-06-15
 PaymentCreatedEvent
   → UserCard Module
     → payment.user_card_id로 user_card 조회
-    → issued_at 기준 해당 year_month 산출
+    → card.annual_perf_basis 확인 (ISSUANCE_MONTH / ISSUANCE_DATE)
+    → issued_at + annual_perf_basis 기준 해당 year_month 산출
+    → 실적 제외 판별:
+        1) card_performance_exclusion 자동 제외 코드 매칭
+        2) payment_item.excluded_from_performance 사용자 제외 확인
+        3) 제외 대상이면 실적 합산에서 skip
+    → 특별 실적 기간 확인:
+        special_performance_period에서 payment.paid_at 포함 기간 조회
+        → 해당 시 credit_multiplier 배율 적용
     → user_performance UPSERT:
-        monthly_spent += payment.krw_amount
+        monthly_spent += payment.krw_amount * credit_multiplier (제외 항목 제외)
         annual_accumulated = SUM(monthly_spent) for 연간 기간 내 모든 월
+    → 그레이스 기간 확인:
+        card.card_rules.grace_period 조회
+        → 활성 시 구간 판별 skip, 최고 구간으로 강제 설정
     → performance_tier 재판별:
         SELECT * FROM performance_tier
         WHERE card_id = $cardId AND min_amount <= $annual
@@ -392,4 +508,146 @@ FROM user_performance up
 WHERE up.user_card_id = $userCardId
   AND up.year_month BETWEEN $annualStart AND $annualEnd
 ORDER BY up.year_month;
+
+-- 특별 실적 기간 조회
+SELECT spp.*
+FROM special_performance_period spp
+WHERE spp.card_id = $cardId
+  AND spp.start_date <= $paymentDate
+  AND spp.end_date >= $paymentDate;
+
+-- 실적 제외 코드 조회 (카드별)
+SELECT pec.code, pec.display_name, cpe.effective_scope
+FROM card_performance_exclusion cpe
+JOIN performance_exclusion_code pec ON pec.id = cpe.exclusion_code_id
+WHERE cpe.card_id = $cardId;
+
+-- 혜택 기준월 lag 반영 실적 조회
+SELECT up.monthly_spent
+FROM user_performance up
+WHERE up.user_card_id = $userCardId
+  AND up.year_month = $referenceMonth;  -- lag 적용된 기준월
 ```
+
+---
+
+## 8. 비즈니스 규칙 상세
+
+### 8.1 연간 실적 기산 방식 (annual_perf_basis_enum)
+
+카드 상품별로 `card.annual_perf_basis` 컬럼에 설정된다.
+
+| 값 | 기산 규칙 | 예시 (발급일 2025-06-15) |
+|---|---------|----------------------|
+| `ISSUANCE_MONTH` | 발급월 1일 ~ 11개월 후 말일 | 2025-06-01 ~ 2026-05-31 |
+| `ISSUANCE_DATE` | 발급일 ~ 1년 후 전날 | 2025-06-15 ~ 2026-06-14 |
+
+- 대부분의 카드사는 `ISSUANCE_MONTH` 방식 사용
+- `ISSUANCE_DATE` 방식은 일부 프리미엄 카드에서 사용
+- 연간 기간 만료 후 자동으로 다음 연간 기간 시작 (이전 기간 이력 보존)
+
+### 8.2 월간 실적 기간
+
+- 매월 1일 00:00:00 ~ 말일 23:59:59 (KST) 기준
+- `payment.paid_at` 타임스탬프 기준으로 해당 월 판별
+- 해외 결제의 경우 `payment.paid_at`은 현지 결제 시점이 아닌 카드사 매입 처리 시점
+- 윤년 2월은 29일까지 포함
+
+### 8.3 혜택 기준월 lag (benefit_period_lag_enum)
+
+`card_benefit.performance_period_lag` 컬럼으로 혜택별 설정된다.
+
+| 값 | 의미 | 설명 |
+|---|------|------|
+| `CURRENT_MONTH` | 당월 실적 → 당월 혜택 | 실시간 반영. 일부 체크카드에서 사용 |
+| `PREV_MONTH` | 전월 실적 → 당월 혜택 | 가장 일반적. 대부분의 신용카드 |
+| `PREV_PREV_MONTH` | 전전월 실적 → 당월 혜택 | 일부 은행계 카드 |
+
+- 동일 카드 내에서도 혜택별로 lag가 다를 수 있음
+- lag 기준월의 실적으로 해당 혜택의 활성화 구간을 판별
+- 예: PREV_MONTH이고 현재 3월이면 → 2월 실적으로 3월 혜택 결정
+
+### 8.4 특별 실적 기간 (special_performance_period 테이블)
+
+카드사 이벤트 등으로 특정 기간 동안 실적 배율을 적용하는 기능.
+
+| 필드 | 설명 |
+|------|------|
+| `card_id` | 대상 카드 상품 FK |
+| `start_date` / `end_date` | 이벤트 기간 |
+| `credit_multiplier` | 실적 배율 (예: 1.5, 2.0) |
+| `description` | 이벤트 설명 ("봄맞이 실적 2배 이벤트") |
+
+- 배율은 실적 합산 시 곱셈 적용: `실제 결제 금액 x credit_multiplier`
+- 기간 중복 시 가장 높은 배율 적용 (MAX)
+- UI에 "이벤트 기간 x1.5" 형태의 배지 표시
+- 이벤트 기간 종료 후 신규 결제는 기본 배율(x1.0) 적용, 기존 배율 적용 실적은 유지
+
+### 8.5 그레이스 기간 (card.card_rules JSONB)
+
+신규 발급 카드에 대해 일정 기간 무실적으로도 전체 혜택을 제공하는 정책.
+
+**card_rules JSONB 구조**:
+```json
+{
+  "grace_period": {
+    "enabled": true,
+    "months": 3,
+    "min_spend_per_month": 0
+  }
+}
+```
+
+| 필드 | 설명 |
+|------|------|
+| `enabled` | 그레이스 기간 활성 여부 |
+| `months` | 발급 후 적용 개월 수 |
+| `min_spend_per_month` | 월 최소 사용 금액 (0이면 무조건 적용) |
+
+- 그레이스 기간 내에는 실적 구간 0원이어도 모든 혜택이 활성화됨
+- `min_spend_per_month > 0`인 경우, 해당 월 최소 사용 조건 충족 필요
+- 그레이스 기간 만료 7일 전 알림 발송
+- 만료 후 실제 실적 기반으로 구간 재판별 (구간 하락 가능)
+
+### 8.6 실적 제외 규칙
+
+이중 구조로 실적 제외를 관리한다.
+
+**자동 제외 (코드 기반)**:
+
+`performance_exclusion_code` 마스터 테이블:
+
+| 코드 | 설명 |
+|------|------|
+| `TAX` | 세금 (국세, 지방세) |
+| `GIFT_CARD` | 상품권 구매 |
+| `CASH_ADVANCE` | 현금서비스 |
+| `INSURANCE_PREMIUM` | 보험료 |
+| `PREPAID_CARD` | 선불카드 충전 |
+
+`card_performance_exclusion` 테이블로 카드별 적용:
+
+| effective_scope | 의미 |
+|----------------|------|
+| `MONTHLY_ONLY` | 월간 실적에서만 제외 |
+| `ANNUAL_ONLY` | 연간 실적에서만 제외 |
+| `ALL_PERFORMANCE` | 월간 + 연간 모두 제외 |
+| `NONE` | 제외하지 않음 (오버라이드) |
+
+**사용자 직접 제외 (토글 기반)**:
+
+- `payment_item.excluded_from_performance`: 사용자가 UI에서 직접 ON/OFF 토글
+- 토글 변경 시 해당 금액 포함/제외하여 실적 즉시 재계산
+- 자동 제외와 독립적으로 동작 (자동 제외 + 사용자 제외 모두 적용)
+
+### 8.7 자동 vs 셀프서비스 구분
+
+| 구분 | 동작 | 사용자 개입 |
+|------|------|-----------|
+| **자동** | 실적 구간 판별, 혜택 활성화/비활성화, 실적 제외 코드 자동 매칭 | 없음 |
+| **사용자 (셀프서비스)** | 실적 제외 토글 (payment_item), 결제 보정 확인 (payment_adjustment) | 직접 조작 |
+| **반자동** | 바우처 잠금해제 (조건 충족 시 알림 → 사용자 확인 후 활성화) | 확인만 |
+
+- 자동 처리 결과는 항상 사용자에게 투명하게 표시
+- 셀프서비스 변경은 확인 다이얼로그를 거쳐 실행
+- 반자동은 조건 충족 시 푸시 알림/인앱 알림으로 안내, 사용자가 명시적으로 확인해야 완료
