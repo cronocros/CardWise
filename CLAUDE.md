@@ -53,9 +53,9 @@ docs/
 
 ## Tech Stack
 
-- Frontend: Next.js 15 (App Router) + TypeScript + Tailwind CSS + shadcn/ui
+- Frontend: Next.js 16 (App Router) + TypeScript + Tailwind CSS + shadcn/ui
 - Backend: Spring Boot (Kotlin) + Hexagonal Architecture
-- DB: Supabase PostgreSQL (35 tables, 19 ENUMs)
+- DB: Supabase PostgreSQL (41 tables, 26 ENUMs)
 - Auth: Supabase Auth (JWT)
 - Cache: Redis (로컬: Docker / 스테이징·운영: Upstash)
 - 배포: Vercel (FE) + Cloud Run (BE)

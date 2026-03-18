@@ -3,7 +3,7 @@
 > 다른 AI LLM(GPT-4, Gemini, Claude 등)이 이 프로젝트를 이어받을 때 시스템 프롬프트로 붙여넣으세요.
 > CLAUDE.md는 Claude Code 전용 지침이며, 이 파일은 **모든 LLM**을 위한 범용 컨텍스트입니다.
 >
-> Last updated: 2026-03-18
+> Last updated: 2026-03-19
 
 ---
 
@@ -32,13 +32,13 @@ The mascot is a cute honey badger character (similar to provided images: round/c
 ## 2. Current Project State
 
 ```
-Phase: 0 — Design Complete, No Code Written Yet
-Date: 2026-03-18
+Phase: 0.5 — Design + Scaffold, Core Business Implementation Pending
+Date: 2026-03-19
 ```
 
 **What IS complete** (design documents only):
 - ✅ Functional requirements (F1~F8, F12 features)
-- ✅ DB schema (35 tables, 19 ENUMs, full ERD)
+- ✅ DB schema (41 tables, 26 ENUMs, full ERD)
 - ✅ System/Application/Frontend architecture
 - ✅ Tech stack decisions
 - ✅ Design system (colors, typography, components)
@@ -48,17 +48,16 @@ Date: 2026-03-18
 - ✅ 9 Claude Code skill commands
 
 **What is NOT done** (pending user's explicit implementation request):
-- ❌ Any production code (Kotlin, TypeScript)
-- ❌ Database creation / Supabase project setup
-- ❌ Next.js project initialization
-- ❌ Spring Boot project initialization
+- ❌ Core business implementation (domain/service/controller logic)
+- ❌ Database actual apply on Supabase project
+- ❌ Feature-level integration and E2E flows
 
 ---
 
 ## 3. Tech Stack
 
 ### Frontend
-- **Framework**: Next.js 15 (App Router, Server Components)
+- **Framework**: Next.js 16 (App Router, Server Components)
 - **Language**: TypeScript 5.x
 - **Styling**: Tailwind CSS 4.x
 - **Components**: shadcn/ui (Radix primitives)
@@ -188,63 +187,24 @@ Distinct from benefits. Vouchers are:
 
 1. **NO CODE without explicit permission**: Do NOT write ANY implementation code (Kotlin, TypeScript, SQL DDL) until the user explicitly says "구현해줘", "implement this", or equivalent. Design documents and HTML prototypes are OK.
 
-2. **NO AUTO-COMMIT**: Always show the user what will be committed (git diff summary) and ask for explicit approval before running `git commit`. Never use `git commit` autonomously.
+2. **NO GIT PUSH without explicit permission**: Never run `git push` unless the user explicitly asks for it.
 
-3. **NO NEXT_PUBLIC_ for secrets**: Environment variables like `ANTHROPIC_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET` must NEVER have `NEXT_PUBLIC_` prefix. They must only be accessed server-side.
+3. **Local commit is allowed by judgment**: You may create a local commit when a coherent unit of work is complete.
 
-4. **RLS on every table**: Every Supabase table must have Row Level Security enabled. No exceptions. Always verify with `ALTER TABLE ... ENABLE ROW LEVEL SECURITY`.
+4. **NO NEXT_PUBLIC_ for secrets**: Environment variables like `ANTHROPIC_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET` must NEVER have `NEXT_PUBLIC_` prefix. They must only be accessed server-side.
 
-5. **Sync docs on DB changes**: When changing DB schema, ALWAYS update BOTH `docs/database/schema-design.md` AND `docs/database/data-dictionary.md`.
+5. **RLS on every table**: Every Supabase table must have Row Level Security enabled. No exceptions. Always verify with `ALTER TABLE ... ENABLE ROW LEVEL SECURITY`.
 
-6. **Spec before implementation**: Before implementing any feature, use `/cardwise-spec` skill to create a feature specification document first.
+6. **Sync docs on DB changes**: When changing DB schema, ALWAYS update BOTH `docs/database/schema-design.md` AND `docs/database/data-dictionary.md`.
+
+7. **Spec before implementation**: Before implementing any feature, use `/cardwise-spec` skill to create a feature specification document first.
 
 ---
 
-## 7. File Structure
+## 7. Source Of Truth
 
-```
-E:/Dev_ai/CardWise/         ← Project root
-├── CLAUDE.md                Claude Code specific instructions
-├── docker-compose.yml       Redis local dev (docker compose up -d redis)
-├── docs/
-│   ├── README.md            Project overview
-│   ├── STATUS.md            Current status & LLM handoff
-│   ├── overview/
-│   │   └── tech-stack.md
-│   ├── architecture/
-│   │   ├── system-architecture.md
-│   │   ├── application-architecture.md
-│   │   └── frontend-architecture.md
-│   ├── requirements/
-│   │   ├── functional-requirements.md
-│   │   └── non-functional-requirements.md
-│   ├── database/
-│   │   ├── schema-design.md       (35 tables, 19 ENUMs)
-│   │   └── data-dictionary.md
-│   ├── design/
-│   │   └── design-system.md
-│   ├── testing/
-│   │   └── test-strategy.md
-│   ├── risk/
-│   │   └── risk-register.md
-│   ├── api/
-│   │   └── api-design.md
-│   ├── deployment/
-│   │   └── deployment-guide.md
-│   ├── monitoring/
-│   │   └── observability.md
-│   ├── prompts/
-│   │   ├── ui-design-prompts.md   (English prompts for AI design tools)
-│   │   └── llm-context-prompt.md  ← THIS FILE
-│   └── archive/
-│       └── eda-kafka-design.md    (Phase 2 reference)
-├── design-preview/
-│   ├── sample-a-rose-glass.html   (Dark glassmorphism prototype)
-│   ├── sample-b-rose-blossom.html (Light pink blossom prototype)
-│   └── serve.js                   (node serve.js → localhost:3001)
-└── .claude/
-    └── commands/                  (9 CardWise skills)
-```
+- 최신 구조/진행상태는 `docs/STATUS.md`를 단일 진실원천으로 참조한다.
+- 개요는 `docs/README.md`, 상세 설계는 `docs/architecture/*`, `docs/database/*`를 우선 참조한다.
 
 ---
 

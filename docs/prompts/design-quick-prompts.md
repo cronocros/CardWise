@@ -1,5 +1,6 @@
 # CardWise — 디자인 AI 빠른 프롬프트 모음
 
+> `ui-design-prompts.md` 빠른 참조 버전
 > 복사해서 바로 던지는 용도. Midjourney / DALL-E / Firefly / v0.dev / Bolt / Lovable / GPT-4o 등에 사용.
 > 상세 스펙이 필요하면 `ui-design-prompts.md` 참조.
 > 최종 수정: 2026-03-18
