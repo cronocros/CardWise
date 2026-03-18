@@ -7,9 +7,9 @@
 
 ## 최종 갱신
 
-- **날짜**: 2026-03-18
+- **날짜**: 2026-03-19
 - **갱신자**: Claude (AI Assistant)
-- **내용**: 다중통화 MVP 승격, 가족/그룹 공유 가계부 도메인 신설 (3 테이블, 2 ENUM), 태그 교차 분석 설계, Auth/OAuth 설계 보강, 기능별 상세 기획서 작성, 문서 구조 정리 (mvp-scope.md → planning/), API 테스팅(Swagger/SpringDoc) 문서화, Git 초기화
+- **내용**: Phase F~J 반영 (최종 스키마 41 테이블/26 ENUM 정합화), 증분 마이그레이션 추가, F1/F2/F3/F4/F6 + API/요구사항 동기화, MVP Phase 1 수치 32 테이블 현행화, LLM 컨텍스트/프롬프트 정리, MEMORY.md 추가
 
 ---
 
@@ -25,7 +25,7 @@
 |---|------|--------|--------|
 | 1 | 핵심 요구사항 정의 | 2026-03-17 | requirements/functional-requirements.md |
 | 2 | 기술 스택 확정 | 2026-03-17 | overview/tech-stack.md |
-| 3 | DB 스키마 설계 (35 tables, 19 ENUMs) | 2026-03-17 | database/schema-design.md, data-dictionary.md |
+| 3 | DB 스키마 설계 (41 tables, 26 ENUMs) | 2026-03-17 | database/schema-design.md, data-dictionary.md |
 | 4 | 아키텍처 설계 (시스템 + 어플리케이션) | 2026-03-17 | architecture/*.md |
 | 5 | 프론트엔드 아키텍처 설계 | 2026-03-17 | architecture/frontend-architecture.md |
 | 6 | 프로세스 흐름 도식화 (F1~F8, F12) | 2026-03-17 | requirements/functional-requirements.md |
@@ -54,6 +54,7 @@
 | 29 | API 테스팅 전략 (Swagger/SpringDoc) | 2026-03-18 | docs/api/api-design.md |
 | 30 | 문서 구조 정리 & 일관성 확보 | 2026-03-18 | CLAUDE.md, STATUS.md, README.md |
 | 31 | Git 초기화 & 첫 커밋 | 2026-03-18 | .gitignore, git init |
+| 32 | Phase F~J 문서·스키마 정합화 | 2026-03-19 | MEMORY.md, supabase/migrations/20260319010000_phase_fj_schema_upgrade.sql, docs 전반 |
 
 ---
 
@@ -67,13 +68,13 @@
 
 | 우선순위 | 작업 | 전제 조건 |
 |---------|------|----------|
-| 1 | Supabase 프로젝트 초기화 + Phase 1 26개 테이블 마이그레이션 | 사용자 구현 지시 |
+| 1 | Supabase 프로젝트 초기화 + Phase 1 32개 테이블 마이그레이션 | 사용자 구현 지시 |
 | 2 | Spring Boot 프로젝트 초기화 (Gradle + 9모듈 패키지) | 사용자 구현 지시 |
 | 3 | Next.js 프로젝트 초기화 (App Router + shadcn/ui) | 사용자 구현 지시 |
 | 4 | GitHub Actions CI/CD 파이프라인 구성 | 구현 지시 후 |
 | 5 | Sprint 1 시작: Auth + 카드 등록 (F1) | 위 3개 완료 후 |
 
-> **MVP 구현 범위**: `docs/planning/mvp-scope.md` 참조 (Phase 1 = 26 테이블 + F1/F2/F4/F5/F6/F8/F12 + Auth + 다중통화)
+> **MVP 구현 범위**: `docs/planning/mvp-scope.md` 참조 (Phase 1 = 32 테이블 + F1/F2/F3/F4/F5/F6/F8/F12 + Auth + 다중통화 + 엑셀 업로드)
 
 ---
 
@@ -118,7 +119,7 @@ E:\Dev_ai\CardWise\
 |   |   +-- functional-requirements.md  기능 요구사항 + 프로세스 (F1~F12)
 |   |   +-- non-functional-requirements.md
 |   +-- database/
-|   |   +-- schema-design.md            ERD + 도메인 스키마 (35 tables, 19 ENUMs)
+|   |   +-- schema-design.md            ERD + 도메인 스키마 (41 tables, 26 ENUMs)
 |   |   +-- data-dictionary.md          컬럼 상세 명세
 |   +-- specs/                          기능별 상세 기획서
 |   |   +-- AUTH-signup-login.md

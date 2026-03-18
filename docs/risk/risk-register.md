@@ -27,7 +27,7 @@
 | R-T4 | Upstash Redis 무료 한도 초과 (일 10,000 req) | L | M | 🟢 Low | 캐시 TTL 최적화, 불필요한 캐시 조회 제거, 월간 요청 수 추이 모니터링 |
 | R-T5 | JWT Secret 또는 API Key 노출 (코드/로그) | L | H | 🟡 Med | GitHub Secret Scanning 활성화, 로그 마스킹 필수, Secret Rotation 절차 수립 |
 | R-T6 | Claude API 비용 급증 (토큰 사용량 폭증) | M | M | 🟡 Med | 입력 토큰 제한 (2,000 tokens), 추천 결과 Redis 캐시 30분, 월 $50 예산 알림 설정 |
-| R-T7 | Next.js 15 / shadcn/ui 호환성 이슈 | L | L | 🟢 Low | 라이브러리 업데이트 전 staging 검증, 버전 고정 (package-lock.json) |
+| R-T7 | Next.js 16 / shadcn/ui 호환성 이슈 | L | L | 🟢 Low | 라이브러리 업데이트 전 staging 검증, 버전 고정 (package-lock.json) |
 
 ---
 

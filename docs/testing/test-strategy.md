@@ -178,7 +178,7 @@ describe('CardThumbnail', () => {
 
 ### 4.2 서버 컴포넌트 테스트
 
-Next.js 15 App Router의 Server Component는 통합 테스트로:
+Next.js 16 App Router의 Server Component는 통합 테스트로:
 - Playwright 기반 실제 렌더링 검증
 - MSW(Mock Service Worker)로 API 응답 모킹
 

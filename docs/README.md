@@ -72,7 +72,7 @@ Payment (1건의 결제)
     HTTPS (REST API)
          |
 +--------v----------+        +------------------+
-|  Next.js 15       |        |  Supabase Auth   |
+|  Next.js 16       |        |  Supabase Auth   |
 |  (Vercel)         |<------>|  (JWT 인증)       |
 |                   |        +------------------+
 |  - App Router     |
@@ -93,7 +93,7 @@ Payment (1건의 결제)
 |  |Module| |Module| |fit  ||     +------------------+
 |  +------+ +------+ +-----+|<--->|  Supabase        |
 |  +------+ +------+ +-----+|     |  PostgreSQL      |
-|  |Vouch-| |Crawl-| |Noti-||     |  - 32 tables     |
+|  |Vouch-| |Crawl-| |Noti-||     |  - 41 tables     |
 |  |er    | |er    | |fy   ||     |  - RLS           |
 |  +------+ +------+ +-----+|     +------------------+
 +----------------------------+
@@ -105,9 +105,9 @@ Payment (1건의 결제)
 
 | 레이어 | 기술 |
 |--------|------|
-| Frontend | Next.js 15 + TypeScript + Tailwind CSS + shadcn/ui |
+| Frontend | Next.js 16 + TypeScript + Tailwind CSS + shadcn/ui |
 | Backend | Spring Boot (Kotlin) + Hexagonal Architecture |
-| Database | Supabase PostgreSQL (35 tables, 19 ENUMs) |
+| Database | Supabase PostgreSQL (41 tables, 26 ENUMs) |
 | Auth | Supabase Auth (JWT) |
 | Cache | Redis (Upstash) |
 | 배포 | Vercel (FE) + Cloud Run (BE) |
@@ -140,7 +140,7 @@ docs/
 |   +-- non-functional-requirements.md  성능 / 보안 / 가용성
 |
 +-- database/
-|   +-- schema-design.md                ERD + 도메인별 스키마 (35 tables, 19 ENUMs)
+|   +-- schema-design.md                ERD + 도메인별 스키마 (41 tables, 26 ENUMs)
 |   +-- data-dictionary.md              테이블/컬럼 상세 명세
 |
 +-- design/

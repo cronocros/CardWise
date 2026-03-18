@@ -12,7 +12,7 @@
 +------------------+         HTTPS          +---------------------+
 |                  |  <-------------------> |                     |
 |   사용자 브라우저  |                        |   Vercel (Edge)     |
-|                  |                        |   Next.js 15        |
+|                  |                        |   Next.js 16        |
 +------------------+                        |   (SSR + Static)    |
                                             +----------+----------+
                                                        |
@@ -54,12 +54,12 @@
 
 ### 2.1 Compute
 
-#### Frontend: Vercel + Next.js 15
+#### Frontend: Vercel + Next.js 16
 
 | 항목 | 내용 |
 |------|------|
 | 플랫폼 | Vercel |
-| 프레임워크 | Next.js 15 (App Router) |
+| 프레임워크 | Next.js 16 (App Router) |
 | 런타임 | Edge Runtime + Node.js (SSR) |
 | 정적 자산 | Vercel CDN (글로벌 Edge) |
 | 빌드 도구 | Bun |

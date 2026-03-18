@@ -29,14 +29,14 @@
 |                  CardWise Frontend                |
 +--------------------------------------------------+
 |  Runtime        : Bun                            |
-|  Framework      : Next.js 15 (App Router)        |
+|  Framework      : Next.js 16 (App Router)        |
 |  Language        : TypeScript (strict mode)       |
 |  Styling        : Tailwind CSS + shadcn/ui       |
 |  Package Manager : Bun                            |
 +--------------------------------------------------+
 ```
 
-### Next.js 15 App Router 선택 이유
+### Next.js 16 App Router 선택 이유
 
 | 기능 | 설명 | CardWise 활용 |
 |------|------|---------------|

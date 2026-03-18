@@ -84,6 +84,12 @@
 - Aggregate 간 참조는 ID로만 한다.
 - 도메인 이벤트를 통한 최종 일관성(Eventual Consistency)을 보장한다.
 
+### 1.5 규칙 엔진 전략 (관계형 우선 + JSONB 보조)
+
+- 카드사 공통 규칙은 **관계형 컬럼/테이블**로 우선 모델링한다.
+- 카드사별 예외/엣지케이스는 `card.card_rules`, `card_benefit.activation_rules`, `card_voucher.unlock_conditions` 같은 **JSONB 보조 컬럼**으로 점진 반영한다.
+- 운영 초기에는 JSONB 기본값 `{}` 중심으로 사용하고, 실데이터에서 반복되는 패턴만 정식 스키마로 승격한다.
+
 ---
 
 ## 2. DDD Bounded Context Map
@@ -96,7 +102,7 @@
 | 2 | **UserCard** | 내 카드 관리 | 사용자 보유 카드, 실적, 바우처, 혜택 사용량 | UserCard, UserPerformance, UserVoucher, UserBenefitUsage |
 | 3 | **Ledger** | 가계부 | 결제 내역 기록 및 관리 | Payment, PaymentItem, PaymentDraft, Tag |
 | 4 | **Benefit** | 혜택 검색/추천 | 혜택 조회 및 최적 카드 추천 | (Read-only service, 자체 Aggregate 없음) |
-| 5 | **Crawler** | 데이터 수집 | 카드사 웹사이트 크롤링 | CrawlSource, CrawlLog, CrawlDraft |
+| 5 | **Crawler** | 데이터 수집 | Phase 1: 초기 시드/관리자 입력 보조, Phase 2: 백오피스 자동 크롤링 | CrawlSource, CrawlLog, CrawlDraft |
 | 6 | **EmailParser** | 이메일 파싱 | 결제 알림 이메일 파싱 -> PaymentDraft 생성 | (EmailMessage 처리 후 Ledger로 전달) |
 | 7 | **Notification** | 알림 | 이벤트 기반 알림 발송 | (이벤트 구독 후 알림 채널로 전달) |
 | 8 | **Analytics** | 통계 | 소비 패턴 분석, 혜택 사용 통계 | (Read-heavy, 비정규화된 요약 데이터) |

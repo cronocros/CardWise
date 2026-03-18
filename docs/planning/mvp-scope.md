@@ -1,7 +1,7 @@
 # CardWise — MVP 범위 & 구현 우선순위
 
 > Phase 0 설계를 기반으로 실제 구현 시 무엇을 먼저 할지, 무엇이 과도한 설계(오버엔지니어링)인지 정리한 문서.
-> 최종 갱신: 2026-03-18
+> 최종 갱신: 2026-03-19
 
 ---
 
@@ -10,8 +10,8 @@
 | 영역 | 판정 | 비고 |
 |------|------|------|
 | 전체 아키텍처 방향 | ✅ 적절 | 모듈러 모놀리스 + Hexagonal은 팀 성장 대비 합리적 |
-| DB 스키마 (35 테이블) | ⚠️ 일부 선제적 | 9개 테이블은 Phase 1에서 불필요 |
-| 기능 범위 F1~F12 | ⚠️ F3은 과도 | 이메일 파싱은 Phase 1.5로 분리 권고 |
+| DB 스키마 (41 테이블) | ✅ 정리 완료 | MVP Phase 1은 32개, 확장 9개는 단계 도입 |
+| 기능 범위 F1~F12 | ✅ 정리 완료 | F3는 인박스(MVP), 이메일 파싱은 F3-Legacy로 Phase 1.5 |
 | 배포 전략 | ⚠️ 카나리 과도 | MVP는 단순 롤아웃으로 충분 |
 | 모니터링/알림 | ⚠️ PagerDuty 과도 | MVP는 Slack 단일 채널로 시작 |
 | 테스트 커버리지 목표 | ⚠️ 약간 높음 | 재무 로직만 100%, 나머지 완화 |
@@ -34,6 +34,8 @@
 | **F5** 혜택 검색 (룰 기반) | 핵심 차별점 #2 — 단, AI 없이 룰 기반부터 | card_benefit, merchant, merchant_alias |
 | **F6** 바우처 관리 | 핵심 사용자 니즈 (혜택 소멸 방지) | user_voucher, user_voucher_log |
 | **F8** 대시보드 + 태그 통계 | 가치 확인 창구 — analytics 테이블 없이 직접 계산 + 태그 교차 분석 | payment, user_performance, user_voucher, tag, payment_item_tag |
+| **F3** 가계부 인박스 | 결제 보정/중복/분류 미확정 항목 확인 허브 | user_pending_action, payment_adjustment |
+| **F2** 가계부 + 엑셀 업로드 | 수동 입력 외 대량 입력 경로 확보, 실사용 전환 속도 향상 | payment, payment_item, payment_source_enum(EXCEL) |
 | Auth | 없으면 서비스 불가 | account, account_profile, subscription |
 | **다중 통화** | Amazon/AliExpress 해외결제 및 해외여행 결제 빈번 | payment(currency, original_amount, krw_amount), exchange_rate_snapshot |
 | **F12** 가족/그룹 공유 가계부 | 가족 공동 가계부는 핵심 사용 시나리오 | ledger_group, group_member, group_invitation |
@@ -42,7 +44,7 @@
 
 | 기능 | 이유 | 비고 |
 |------|------|------|
-| **F2** 가계부 (수동 입력 + 해외결제) | 실적/대시보드 정확도에 필수 | merchant_alias fuzzy search, 통화 선택 UI |
+| **F2** 가계부 고도화 (분할입력/태그 UX) | 운영 초기 품질 개선 | 기본 입력/엑셀은 Must에서 선반영 |
 | **F7** 인앱 알림 | 바우처 만료, 실적 구간 알림 | 이메일/Push 제외, in-app만 |
 | 카드 데이터 (관리자 수동) | 혜택 정보 없으면 F5/F6 동작 불가 | Admin 패널 또는 시드 데이터로 대체 |
 
@@ -50,9 +52,9 @@
 
 | 기능 | 이유 | 비고 |
 |------|------|------|
-| **F3** 이메일 파싱 | 복잡하고 유지보수 부담 큼 | card company별 파싱 규칙 관리 어려움 |
+| **F3-Legacy 이메일 파싱** | 카드사별 포맷 유지보수 비용 큼 | card company별 파싱 규칙 관리 어려움 |
 | **F5** AI 추천 (Claude API) | 룰 기반으로 충분히 MVP 가능 | 비용 + 레이턴시 추가 |
-| Analytics 집계 테이블 | 100명 규모에서는 직접 계산으로 충분 | 성능 문제 발생 시 추가 |
+| Analytics 집계 고도화 (배치/캐시) | 초기에는 실시간 집계로 충분 | 성능 이슈 발생 시 배치/캐시 활성화 |
 | 이메일 알림 (PREMIUM) | In-app 먼저 검증 후 | Resend/SES 연동 필요 |
 
 ### Won't Have Phase 1 — 명시적 보류
@@ -72,58 +74,56 @@
 
 ## 3. DB 테이블 단계별 구현
 
-### Phase 1 — 즉시 구현 (26 테이블)
+### Phase 1 — 즉시 구현 (32 테이블)
 
-**Account 도메인 (4)**
+**Card 도메인 (12)**
 ```
-account, account_profile, subscription, notification_setting
-```
-
-**Card 도메인 — 마스터 데이터 (6)**
-```
-card_company, card, performance_tier, category, card_benefit, card_voucher
+card_company, card, performance_tier, category, merchant, merchant_alias,
+card_benefit, card_voucher, card_benefit_history, crawl_source, crawl_log, crawl_draft
 ```
 
-**UserCard 도메인 (5)**
+**Account + UserCard 도메인 (9)**
 ```
+account, account_profile, subscription, notification_setting,
 user_card, user_performance, user_voucher, user_voucher_log, user_benefit_usage
 ```
 
-**Ledger 도메인 — 핵심 (7)**
+**Ledger 도메인 (7)**
 ```
-payment, payment_item, tag, payment_item_tag, merchant, merchant_alias, exchange_rate_snapshot
-```
-
-**Group 도메인 — 가족/그룹 공유 (3)**
-```
-ledger_group, group_member, group_invitation
+exchange_rate_snapshot, payment, payment_item, tag, payment_item_tag, payment_draft, email_parse_rule
 ```
 
-> 총 26개 테이블 (19 ENUM) → 핵심 기능 F1/F2/F4/F5/F6/F8/F12 + Auth + 다중통화 구현 가능
-
-### Phase 1.5 — 기능 확장 (3 테이블)
-
-| 테이블 | 용도 | 전제 기능 |
-|--------|------|----------|
-| `payment_draft` | 이메일 파싱 Draft | F3 구현 시 |
-| `email_parse_rule` | 카드사별 파싱 규칙 | F3 구현 시 |
-| `card_benefit_history` | 혜택 변경 이력 | 감사 추적 필요 시 |
-
-### Phase 1.5 — Analytics 집계 (4 테이블)
-
+**Analytics 도메인 (4)**
 ```
 user_monthly_summary, user_category_summary, user_tag_summary, user_card_summary
 ```
 
-> 대시보드 성능 이슈 발생 시 도입. MVP에서는 `payment` 직접 집계.
+> 총 32개 테이블 (MVP Phase 1 baseline) → F1/F2/F3/F4/F5/F6/F8 + Auth + 다중통화 + 엑셀 업로드 구현 가능
 
-### Phase 2 — 크롤러 인프라 (3 테이블)
+### Phase 1.5 — 확장 스키마 (9 테이블)
+
+**Card 고도화 (4)**
+```
+card_network, special_performance_period, performance_exclusion_code, card_performance_exclusion
+```
+
+**Ledger/Inbox 고도화 (2)**
+```
+payment_adjustment, user_pending_action
+```
+
+**Group 공유 가계부 (3)**
+```
+ledger_group, group_member, group_invitation
+```
+
+### Phase 2 — 채널/운영 확장
 
 ```
-crawl_source, crawl_log, crawl_draft
+MyData 연동, SMS 파싱, 자동 크롤러 운영, Push 알림
 ```
 
-> 카드 데이터 자동 수집 시 도입. MVP는 관리자 수동 입력.
+> 마이데이터는 `payment_source_enum = MYDATA` 채널로 도입한다.
 
 ---
 
@@ -210,7 +210,7 @@ Cloud Logging + Sentry (에러 추적) + Slack (#alerts 단일 채널)
 
 | 항목 | 상황 | 권고 |
 |------|------|------|
-| 35 테이블 전체 스키마 | Phase 1에서 모두 필요하지 않음 | DB는 미리 설계했으니 테이블만 단계적으로 추가 |
+| 41 테이블 전체 스키마 | Phase 1에서 모두 필요하지 않음 | MVP는 32개로 시작하고 확장 9개를 단계 도입 |
 | Benefit 검색 캐싱 (Redis) | 100명 규모에서는 캐시 없어도 괜찮음 | 성능 이슈 시 추가. 코드는 캐시 레이어 추상화해두기 |
 | card_benefit_history (이력 추적) | Phase 1에서 즉시 필요하진 않음 | 혜택 변경 시 문제 발생하면 도입 |
 | non-functional SLO (99.5% uptime) | MVP에선 Managed Service 의존이라 자동 달성 거의 됨 | 측정 지표로는 유지 |
@@ -222,7 +222,7 @@ Cloud Logging + Sentry (에러 추적) + Slack (#alerts 단일 채널)
 |------|--------|------|
 | **이메일 파싱 (F3)** | 카드사마다 HTML 구조 다름, 유지보수 비용 큼. 파싱 실패 시 신뢰도 손상 | F2 수동 입력으로 MVP 검증 후 도입 |
 | **크롤러 자동화** | 카드사 웹이 자주 바뀜. 법적 이슈 가능성 | 관리자 수동 입력 UI로 시작 |
-| **Analytics 집계 테이블 (4개)** | 100명 규모에서 실시간 계산으로 충분. 미리 만들면 동기화 복잡성 추가 | payment 직접 집계 → 성능 이슈 시 materialized view 도입 |
+| **Analytics 배치 갱신 로직** | 100명 규모에서 실시간 계산으로 충분. 배치 파이프라인 조기 도입 시 운영 복잡성 증가 | 실시간 집계 유지 → 성능 이슈 시 배치/머터리얼라이즈드 뷰 활성화 |
 | **Claude AI 혜택 추천** | 룰 기반으로도 충분한 MVP 가치 제공 가능. API 비용 + 레이턴시 추가 | 룰 기반 먼저 → 사용자 요청 시 AI 추가 |
 | **카나리 배포 (10/50/100%)** | MVP 트래픽에서는 의미 없음. 오히려 롤백 복잡성 증가 | 단순 Cloud Run revision 교체 |
 | **PagerDuty** | 결제/건강 등 핵심 서비스가 아닌 MVP에서 과도 | Slack 단일 채널 → 사용자 늘면 PagerDuty 추가 |
@@ -234,7 +234,7 @@ Cloud Logging + Sentry (에러 추적) + Slack (#alerts 단일 채널)
 ```
 Sprint 0 (1주) — 프로젝트 초기화
 ├── Supabase 프로젝트 생성
-├── Phase 1 26개 테이블 마이그레이션 실행
+├── Phase 1 32개 테이블 마이그레이션 실행
 ├── 시드 데이터 (카드사 3, 카드 5, 혜택 20개)
 ├── Spring Boot 프로젝트 초기화 (Gradle + 9 모듈 패키지 구조)
 ├── Next.js 프로젝트 초기화 (App Router + shadcn/ui)
@@ -274,7 +274,7 @@ Sprint 5 (2주) — 품질 + 런치 준비
 Phase 1.5 — 피드백 기반 확장
 ├── F3: 이메일 파싱 (사용자 요청 시)
 ├── F5: AI 추천 (Claude API 연동)
-├── Analytics 집계 테이블 도입
+├── Analytics 배치 갱신 활성화
 └── PagerDuty 연동
 ```
 
@@ -305,7 +305,7 @@ Phase 1.5 — 피드백 기반 확장
 
 | 설계 문서 내용 | Phase 1 구현 여부 | 비고 |
 |---------------|-----------------|------|
-| 35 테이블 전체 스키마 | 26개 구현 | 나머지 9개는 스키마만 보존 |
+| 41 테이블 전체 스키마 | 32개 구현 | 나머지 9개는 단계 도입 |
 | 9 Bounded Context | 6개로 시작 | 코드 패키지는 9개 만들어도 됨 |
 | Hexagonal 전 레이어 | ✅ 구현 | Port/Adapter 패턴 유지 |
 | @EventListener 패턴 | ✅ 구현 | Kafka 아님 |
@@ -317,7 +317,7 @@ Phase 1.5 — 피드백 기반 확장
 | 태그 교차 분석 | ✅ 구현 | 실시간 쿼리 (집계 테이블 없이) |
 | 카나리 배포 | ❌ 단순 롤아웃 사용 | |
 | PagerDuty | ❌ Slack 대체 | |
-| Analytics 집계 테이블 | ❌ 직접 집계 쿼리 사용 | |
+| Analytics 집계 테이블 (스키마) | ✅ Phase 1 스키마 포함 | 기본은 실시간 집계, 배치 갱신은 단계 도입 |
 | 이메일 파싱 | ❌ Phase 1.5 | |
 | Claude AI 추천 | ❌ 룰 기반 대체 | |
 
@@ -329,9 +329,9 @@ Phase 1.5 — 피드백 기반 확장
 
 1. **아키텍처 패턴은 유지** — Hexagonal + DDD + 모듈러 모놀리스는 MVP부터 적용해도 이득이 더 크다.
 
-2. **DB 스키마는 26개 테이블로 시작** — 나머지 9개는 테이블 없이 마이그레이션 파일만 준비.
+2. **DB 스키마는 32개 테이블로 시작** — 확장 9개는 운영 시점에 단계 도입.
 
-3. **기능은 F1/F2/F4/F5/F6/F8/F12 + Auth + 다중통화 + 태그 먼저** — 이메일 파싱(F3)과 AI 추천은 사용자 피드백 후 결정.
+3. **기능은 F1/F2/F3/F4/F5/F6/F8/F12 + Auth + 다중통화 + 엑셀 업로드 + 태그 먼저** — F3-Legacy 이메일 파싱과 AI 추천은 사용자 피드백 후 결정.
 
 4. **운영 도구는 최소화** — Sentry + Slack으로 시작, 사용자 증가 시 고도화.
 
@@ -348,7 +348,7 @@ Phase 1.5 — 피드백 기반 확장
 | F9 SMS 파싱 | 설계 미착수 | Phase 2 | 모바일 앱 출시 결정 후 |
 | F10 크롤러 자동화 | 설계 완료 (archive/) | Phase 2 | 관리 카드 100종+ 돌파 시 |
 | F11 사후 시뮬레이션 | 설계 미착수 | Phase 3 | 활성 사용자 1000명+ |
-| Analytics 집계 테이블 (4개) | 스키마 설계 완료 | Phase 1.5 | 대시보드 응답 1초 초과 시 |
+| Analytics 배치 갱신 활성화 | 스키마 반영 완료 | Phase 1.5 | 대시보드 응답 1초 초과 시 |
 | Kafka/EDA | 설계 완료 (archive/) | Phase 2 | MSA 분리 결정 시 |
 | MSA 분리 | 아키텍처 준비 완료 | Phase 3 | 팀 3명+ 또는 트래픽 분리 필요 시 |
 | Push 알림 | 설계 미착수 | Phase 2 | 모바일 앱 출시 결정 후 |

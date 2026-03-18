@@ -8,7 +8,7 @@
 +-----------+     +-----------+     +-----------+     +-----------+
 | Frontend  |     | Backend   |     | Database  |     | Cache     |
 |           |     |           |     |           |     |           |
-| Next.js15 |<--->| Spring    |<--->| Supabase  |     | Redis     |
+| Next.js16 |<--->| Spring    |<--->| Supabase  |     | Redis     |
 | TypeScript|     | Boot      |     | PostgreSQL|     | (Upstash) |
 | Tailwind  |     | Kotlin    |     |           |     |           |
 | shadcn/ui |     |           |     |           |     |           |
@@ -22,7 +22,7 @@
 
 | 항목 | 기술 | 버전 | 선택 이유 |
 |------|------|------|----------|
-| 프레임워크 | Next.js | 15 | App Router, RSC, SSR/SSG, Vercel 최적화 |
+| 프레임워크 | Next.js | 16 | App Router, RSC, SSR/SSG, Vercel 최적화 |
 | 언어 | TypeScript | 5.x | 타입 안전성, IDE 지원 |
 | 스타일링 | Tailwind CSS | 4.x | 유틸리티 퍼스트, 빠른 개발 |
 | UI 컴포넌트 | shadcn/ui | latest | 커스터마이징 가능, 접근성 내장 |
@@ -77,8 +77,9 @@
 
 ### DB 규모
 
-- 35 테이블 (6개 도메인)
-- 19 ENUM 타입
+- 41 테이블 (6개 도메인, 최종 설계)
+- 26 ENUM 타입
+- MVP Phase 1 기준 32 테이블 운영
 - 해외결제 다중통화 지원
 
 ---
@@ -123,7 +124,7 @@
 
 | 항목 | 최소 버전 | 비고 |
 |------|----------|------|
-| Node.js | 20.x | Next.js 15 요구사항 |
+| Node.js | 20.x | Next.js 16 요구사항 |
 | Bun | 1.x | Frontend 패키지 매니저 |
 | JDK | 21 | Spring Boot 3.x 요구사항 |
 | Kotlin | 2.0+ | JDK 21 호환 |
