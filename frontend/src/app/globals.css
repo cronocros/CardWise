@@ -1,21 +1,145 @@
 @import "tailwindcss";
 
 :root {
-  --background: #07111f;
-  --foreground: #ecf2ff;
-  --muted: #9aa7c6;
-  --panel: rgba(15, 23, 42, 0.82);
-  --panel-strong: rgba(7, 14, 27, 0.94);
-  --accent: #34d399;
-  --accent-soft: rgba(52, 211, 153, 0.12);
-  --danger: #fb7185;
+  --font-cardwise-sans: "Pretendard Variable", Pretendard, "Noto Sans KR", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-cardwise-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+
+  --primary-50: #fff1f2;
+  --primary-100: #ffe4e6;
+  --primary-200: #fecdd3;
+  --primary-300: #fda4af;
+  --primary-400: #fb7185;
+  --primary-500: #f43f5e;
+  --primary-600: #e11d48;
+  --primary-700: #be123c;
+  --primary-900: #9f1239;
+
+  --neutral-0: #ffffff;
+  --neutral-50: #f8fafc;
+  --neutral-100: #f1f5f9;
+  --neutral-200: #e2e8f0;
+  --neutral-300: #cbd5e1;
+  --neutral-400: #94a3b8;
+  --neutral-500: #64748b;
+  --neutral-700: #334155;
+  --neutral-900: #0f172a;
+
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --info: #3b82f6;
+
+  --glass-bg: rgba(255, 255, 255, 0.12);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --glass-shadow: 0 4px 20px rgba(251, 113, 133, 0.12);
+  --dark-base: #1a0010;
+
+  --app-bg: linear-gradient(180deg, #fff8fa 0%, #fff2f5 48%, #fffafc 100%);
+  --app-orb-a: rgba(251, 113, 133, 0.18);
+  --app-orb-b: rgba(244, 63, 94, 0.08);
+  --app-orb-c: rgba(255, 255, 255, 0.8);
+  --surface-base: rgba(255, 255, 255, 0.84);
+  --surface-card: rgba(255, 255, 255, 0.94);
+  --surface-soft: rgba(255, 241, 242, 0.92);
+  --surface-elevated: rgba(255, 255, 255, 0.98);
+  --surface-border: rgba(244, 114, 182, 0.14);
+  --surface-border-strong: rgba(244, 63, 94, 0.22);
+  --surface-shadow: 0 14px 40px rgba(190, 24, 60, 0.08);
+  --surface-shadow-strong: 0 22px 70px rgba(190, 24, 60, 0.12);
+  --text-strong: var(--neutral-900);
+  --text-body: #475569;
+  --text-muted: #7a6171;
+  --text-soft: #b08a98;
+  --accent: var(--primary-400);
+  --accent-strong: var(--primary-500);
+  --accent-soft: rgba(251, 113, 133, 0.12);
+  --accent-ghost: rgba(255, 255, 255, 0.66);
+  --success-soft: rgba(16, 185, 129, 0.12);
+  --warning-soft: rgba(245, 158, 11, 0.12);
+  --danger-soft: rgba(239, 68, 68, 0.12);
+  --app-radius-xl: 32px;
+  --app-radius-lg: 24px;
+  --app-radius-md: 18px;
+  --app-radius-sm: 14px;
+  --app-max-mobile: 430px;
+  --sidebar-width: 252px;
+  --header-height: 72px;
+  --bottom-nav-height: 86px;
+}
+
+.theme-blossom,
+[data-cardwise-theme="blossom"] {
+  --app-bg: linear-gradient(180deg, #fff9fb 0%, #fff2f6 46%, #fffafc 100%);
+  --surface-base: rgba(255, 255, 255, 0.82);
+  --surface-card: rgba(255, 255, 255, 0.94);
+  --surface-soft: rgba(255, 241, 242, 0.94);
+  --surface-border: rgba(244, 114, 182, 0.14);
+  --surface-border-strong: rgba(244, 63, 94, 0.22);
+  --surface-shadow: 0 14px 38px rgba(225, 29, 72, 0.08);
+  --surface-shadow-strong: 0 24px 60px rgba(225, 29, 72, 0.14);
+  --text-strong: #21111a;
+  --text-body: #534050;
+  --text-muted: #8d7080;
+  --text-soft: #c2a0ae;
+  --accent: var(--primary-400);
+  --accent-strong: var(--primary-500);
+  --accent-soft: rgba(251, 113, 133, 0.12);
+  --accent-ghost: rgba(255, 255, 255, 0.72);
+}
+
+.theme-minimal,
+[data-cardwise-theme="minimal"] {
+  --app-bg: linear-gradient(180deg, #fcfdff 0%, #f8fafc 100%);
+  --app-orb-a: rgba(251, 113, 133, 0.08);
+  --app-orb-b: rgba(148, 163, 184, 0.08);
+  --app-orb-c: rgba(255, 255, 255, 0.84);
+  --surface-base: rgba(255, 255, 255, 0.88);
+  --surface-card: rgba(255, 255, 255, 0.98);
+  --surface-soft: rgba(248, 250, 252, 0.98);
+  --surface-elevated: rgba(255, 255, 255, 1);
+  --surface-border: rgba(226, 232, 240, 0.92);
+  --surface-border-strong: rgba(203, 213, 225, 1);
+  --surface-shadow: 0 10px 28px rgba(15, 23, 42, 0.05);
+  --surface-shadow-strong: 0 18px 40px rgba(15, 23, 42, 0.08);
+  --text-strong: var(--neutral-900);
+  --text-body: var(--neutral-700);
+  --text-muted: var(--neutral-500);
+  --text-soft: var(--neutral-400);
+  --accent-soft: rgba(251, 113, 133, 0.08);
+}
+
+.theme-glass,
+[data-cardwise-theme="glass"] {
+  --app-bg:
+    radial-gradient(circle at top left, rgba(251, 113, 133, 0.22), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(168, 85, 247, 0.18), transparent 24%),
+    linear-gradient(180deg, #2b0517 0%, #14010c 100%);
+  --app-orb-a: rgba(251, 113, 133, 0.3);
+  --app-orb-b: rgba(168, 85, 247, 0.16);
+  --app-orb-c: rgba(255, 255, 255, 0.08);
+  --surface-base: rgba(255, 255, 255, 0.09);
+  --surface-card: rgba(255, 255, 255, 0.12);
+  --surface-soft: rgba(255, 255, 255, 0.08);
+  --surface-elevated: rgba(255, 255, 255, 0.16);
+  --surface-border: rgba(255, 255, 255, 0.18);
+  --surface-border-strong: rgba(255, 255, 255, 0.28);
+  --surface-shadow: var(--glass-shadow);
+  --surface-shadow-strong: 0 18px 60px rgba(17, 2, 11, 0.45);
+  --text-strong: #fff7fb;
+  --text-body: rgba(255, 244, 247, 0.86);
+  --text-muted: rgba(255, 226, 234, 0.66);
+  --text-soft: rgba(255, 228, 236, 0.5);
+  --accent: var(--primary-300);
+  --accent-strong: var(--primary-400);
+  --accent-soft: rgba(251, 113, 133, 0.18);
+  --accent-ghost: rgba(255, 255, 255, 0.1);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--surface-base);
+  --color-foreground: var(--text-strong);
+  --font-sans: var(--font-cardwise-sans);
+  --font-mono: var(--font-cardwise-mono);
 }
 
 * {
@@ -23,21 +147,46 @@
 }
 
 html {
-  background:
-    radial-gradient(circle at top left, rgba(52, 211, 153, 0.16), transparent 24%),
-    radial-gradient(circle at top right, rgba(251, 113, 133, 0.12), transparent 20%),
-    linear-gradient(180deg, #09111f 0%, #040814 100%);
+  min-height: 100%;
+  background: #fff6f9;
 }
 
 body {
   min-height: 100vh;
   margin: 0;
-  color: var(--foreground);
-  background:
-    radial-gradient(circle at 20% 20%, rgba(52, 211, 153, 0.08), transparent 28%),
-    radial-gradient(circle at 80% 0%, rgba(251, 191, 36, 0.08), transparent 24%),
-    linear-gradient(180deg, rgba(7, 17, 31, 0.98), rgba(4, 8, 20, 1));
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  color: var(--text-strong);
+  background: var(--app-bg);
+  font-family: var(--font-cardwise-sans);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  position: relative;
+}
+
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  inset: auto;
+  border-radius: 999px;
+  pointer-events: none;
+  filter: blur(18px);
+  z-index: 0;
+}
+
+body::before {
+  width: 16rem;
+  height: 16rem;
+  top: -2rem;
+  right: -2rem;
+  background: radial-gradient(circle, var(--app-orb-a) 0%, transparent 70%);
+}
+
+body::after {
+  width: 20rem;
+  height: 20rem;
+  left: -4rem;
+  bottom: 8rem;
+  background: radial-gradient(circle, var(--app-orb-b) 0%, transparent 72%);
 }
 
 a {
@@ -45,29 +194,92 @@ a {
   text-decoration: none;
 }
 
-::selection {
-  background: rgba(52, 211, 153, 0.28);
-  color: #fff;
-}
-
+button,
 input,
 select,
-textarea,
-button {
+textarea {
   font: inherit;
 }
 
-@keyframes floatIn {
+input,
+textarea,
+select {
+  color: inherit;
+}
+
+::selection {
+  background: rgba(251, 113, 133, 0.18);
+  color: var(--text-strong);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: rgba(244, 63, 94, 0.22);
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.cw-page {
+  position: relative;
+  z-index: 1;
+}
+
+.cw-glass {
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  box-shadow: var(--surface-shadow);
+  backdrop-filter: blur(18px);
+}
+
+.cw-card-gradient {
+  background:
+    linear-gradient(140deg, rgba(255, 255, 255, 0.96), rgba(255, 241, 242, 0.88)),
+    linear-gradient(135deg, rgba(251, 113, 133, 0.08), transparent 60%);
+}
+
+.theme-glass .cw-card-gradient,
+[data-cardwise-theme="glass"] .cw-card-gradient {
+  background:
+    linear-gradient(140deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.08)),
+    linear-gradient(135deg, rgba(251, 113, 133, 0.2), transparent 60%);
+}
+
+@keyframes cardwise-fade-up {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(14px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
+@keyframes cardwise-soft-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(251, 113, 133, 0.15);
+  }
+
+  50% {
+    box-shadow: 0 0 0 12px rgba(251, 113, 133, 0);
+  }
+}
+
 .animate-float-in {
-  animation: floatIn 0.35s ease-out both;
+  animation: cardwise-fade-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-soft-pulse {
+  animation: cardwise-soft-pulse 2.4s ease-in-out infinite;
 }
