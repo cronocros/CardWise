@@ -1,7 +1,7 @@
 {
   "version": 1,
   "project": "CardWise",
-  "updated_at": "2026-03-19T10:54:00+09:00",
+  "updated_at": "2026-03-19T11:02:00+09:00",
   "phases": [
     {
       "phase": "P0",
@@ -25,7 +25,7 @@
       "phase": "P3",
       "title": "통합 검증과 원격 스모크",
       "status": "IN_PROGRESS",
-      "summary": "로컬 정적 검증과 Supabase 원격 스모크는 완료했고, 스프링 런타임은 원격 DB 연결 후 스키마 매핑 수정까지 반영한 상태입니다."
+      "summary": "로컬 정적 검증과 Supabase 원격 스모크는 완료했고, 스프링 런타임은 원격 pooler 인증 정보 검증과 재기동 확인 단계입니다."
     }
   ],
   "agents": [
@@ -605,7 +605,7 @@
       "dependencies": [
         "P3-2"
       ],
-      "blocker": "원격 pooler 연결 뒤 user_performance.year_month의 CHAR(7) 매핑을 코드에 반영했고, 재기동 최종 확인이 남아 있습니다.",
+      "blocker": "remote-env.ps1의 pooler 사용자명이 프로젝트 ref와 일치해야 합니다. 현재 인증 정보 재검증 후 재기동 확인이 남아 있습니다.",
       "evidence": [
         "supabase/.temp/project-ref",
         "supabase/.temp/pooler-url",
@@ -721,6 +721,12 @@
       "agent": "Orchestrator",
       "type": "DECISION",
       "message": "원격 pooler 연결은 성공했고, user_performance.year_month의 CHAR(7) 스키마와 맞도록 JPA 매핑을 수정했습니다."
+    },
+    {
+      "ts": "2026-03-19T11:02:00+09:00",
+      "agent": "Orchestrator",
+      "type": "DECISION",
+      "message": "boot-remote 스크립트에 Supabase pooler 사용자명과 issuer 선검사를 추가해 잘못된 remote-env 설정을 즉시 막도록 보강했습니다."
     }
   ],
   "questions": [
