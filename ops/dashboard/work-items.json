@@ -1,7 +1,7 @@
 {
   "version": 1,
   "project": "CardWise",
-  "updated_at": "2026-03-19T09:42:42+09:00",
+  "updated_at": "2026-03-19T10:12:31+09:00",
   "phases": [
     {
       "phase": "P0",
@@ -12,19 +12,19 @@
     {
       "phase": "P1",
       "title": "Ledger inbox and adjustments",
-      "status": "TODO",
+      "status": "DONE",
       "summary": "Implement F2/F3 flows and trace R3 / payments / pending actions."
     },
     {
       "phase": "P2",
       "title": "Performance and voucher",
-      "status": "TODO",
+      "status": "DONE",
       "summary": "Implement F4/F6 flows and trace R2 / performance / voucher unlock."
     },
     {
       "phase": "P3",
       "title": "Integration hardening",
-      "status": "TODO",
+      "status": "IN_PROGRESS",
       "summary": "Contract checks, RLS/policy verification, docs sync, seed validation."
     }
   ],
@@ -33,37 +33,37 @@
       "name": "Orchestrator",
       "role": "coordination",
       "status": "IN_PROGRESS",
-      "progress": 80
+      "progress": 92
     },
     {
       "name": "BE-Platform",
       "role": "backend",
-      "status": "TODO",
-      "progress": 0
+      "status": "DONE",
+      "progress": 100
     },
     {
       "name": "BE-Ledger",
       "role": "backend",
-      "status": "TODO",
-      "progress": 0
+      "status": "DONE",
+      "progress": 100
     },
     {
       "name": "BE-Performance",
       "role": "backend",
-      "status": "TODO",
-      "progress": 0
+      "status": "DONE",
+      "progress": 100
     },
     {
       "name": "FE-Foundation",
       "role": "frontend",
-      "status": "TODO",
-      "progress": 0
+      "status": "DONE",
+      "progress": 100
     },
     {
       "name": "FE-Features",
       "role": "frontend",
-      "status": "TODO",
-      "progress": 0
+      "status": "DONE",
+      "progress": 100
     }
   ],
   "work_items": [
@@ -162,11 +162,54 @@
       ]
     },
     {
+      "todo_id": "P1-0",
+      "title": "Establish backend platform foundation",
+      "priority": "P1",
+      "owner_agent": "BE-Platform",
+      "status": "DONE",
+      "feature_refs": [
+        "F2",
+        "F3",
+        "F4",
+        "F6"
+      ],
+      "requirement_refs": [
+        "R2",
+        "R3"
+      ],
+      "api_refs": [
+        "POST /payments/{paymentId}/adjustments",
+        "GET /pending-actions",
+        "GET /cards/{cardId}/performance"
+      ],
+      "db_refs": [
+        "common api",
+        "security",
+        "jsonb converter"
+      ],
+      "acceptance": [
+        "Shared API response wrapper exists",
+        "Global error handling exists",
+        "Request account resolution is consistent",
+        "Security defaults allow local development"
+      ],
+      "dependencies": [
+        "P0-1"
+      ],
+      "blocker": null,
+      "evidence": [
+        "backend/src/main/kotlin/com/cardwise/common/api/ApiResponse.kt",
+        "backend/src/main/kotlin/com/cardwise/common/config/SecurityConfig.kt",
+        "backend/src/main/kotlin/com/cardwise/common/exception/ApiExceptionHandler.kt",
+        "backend/src/main/kotlin/com/cardwise/common/web/RequestAccountIdResolver.kt"
+      ]
+    },
+    {
       "todo_id": "P1-1",
       "title": "Implement ledger inbox flow",
       "priority": "P1",
       "owner_agent": "BE-Ledger",
-      "status": "TODO",
+      "status": "DONE",
       "feature_refs": [
         "F3"
       ],
@@ -191,14 +234,19 @@
         "P0-3"
       ],
       "blocker": null,
-      "evidence": []
+      "evidence": [
+        "backend/src/main/kotlin/com/cardwise/ledger/api/LedgerController.kt",
+        "backend/src/main/kotlin/com/cardwise/ledger/application/LedgerService.kt",
+        "backend/src/main/kotlin/com/cardwise/ledger/repository/PendingActionRepository.kt",
+        "backend/src/test/kotlin/com/cardwise/ledger/LedgerServiceTest.kt"
+      ]
     },
     {
       "todo_id": "P1-2",
       "title": "Implement payment adjustments",
       "priority": "P1",
       "owner_agent": "BE-Ledger",
-      "status": "TODO",
+      "status": "DONE",
       "feature_refs": [
         "F2"
       ],
@@ -221,14 +269,19 @@
         "P0-3"
       ],
       "blocker": null,
-      "evidence": []
+      "evidence": [
+        "backend/src/main/kotlin/com/cardwise/ledger/dto/LedgerDtos.kt",
+        "backend/src/main/kotlin/com/cardwise/ledger/repository/PaymentRepository.kt",
+        "backend/src/main/kotlin/com/cardwise/ledger/repository/PaymentAdjustmentRepository.kt",
+        "backend/src/test/kotlin/com/cardwise/ledger/LedgerServiceTest.kt"
+      ]
     },
     {
       "todo_id": "P2-1",
       "title": "Implement performance rules engine",
       "priority": "P2",
       "owner_agent": "BE-Performance",
-      "status": "TODO",
+      "status": "DONE",
       "feature_refs": [
         "F4"
       ],
@@ -253,14 +306,19 @@
         "P0-3"
       ],
       "blocker": null,
-      "evidence": []
+      "evidence": [
+        "backend/src/main/kotlin/com/cardwise/performance/application/PerformanceService.kt",
+        "backend/src/main/kotlin/com/cardwise/performance/api/PerformanceDtos.kt",
+        "backend/src/main/kotlin/com/cardwise/performance/infrastructure/PerformanceEntities.kt",
+        "backend/src/test/kotlin/com/cardwise/performance/PerformanceServiceTest.kt"
+      ]
     },
     {
       "todo_id": "P2-2",
       "title": "Implement voucher unlock conditions",
       "priority": "P2",
       "owner_agent": "BE-Performance",
-      "status": "TODO",
+      "status": "DONE",
       "feature_refs": [
         "F6"
       ],
@@ -282,14 +340,99 @@
         "P0-3"
       ],
       "blocker": null,
-      "evidence": []
+      "evidence": [
+        "backend/src/main/kotlin/com/cardwise/performance/application/PerformanceService.kt",
+        "backend/src/main/kotlin/com/cardwise/performance/infrastructure/PerformanceRepositories.kt",
+        "frontend/src/app/performance/[userCardId]/page.tsx",
+        "frontend/src/lib/cardwise-api.ts"
+      ]
+    },
+    {
+      "todo_id": "P1-3",
+      "title": "Implement frontend BFF and ledger surfaces",
+      "priority": "P1",
+      "owner_agent": "FE-Foundation",
+      "status": "DONE",
+      "feature_refs": [
+        "F2",
+        "F3"
+      ],
+      "requirement_refs": [
+        "R3"
+      ],
+      "api_refs": [
+        "POST /payments/{paymentId}/adjustments",
+        "GET /payments/{paymentId}/adjustments",
+        "GET /pending-actions",
+        "GET /pending-actions/count",
+        "PATCH /pending-actions/{actionId}/resolve",
+        "PATCH /pending-actions/{actionId}/dismiss"
+      ],
+      "db_refs": [
+        "payment",
+        "payment_adjustment",
+        "user_pending_action"
+      ],
+      "acceptance": [
+        "BFF proxies backend APIs",
+        "Inbox UI resolves and dismisses actions",
+        "Adjustments UI lists and creates entries"
+      ],
+      "dependencies": [
+        "P1-0"
+      ],
+      "blocker": null,
+      "evidence": [
+        "frontend/src/app/api/pending-actions/route.ts",
+        "frontend/src/app/api/pending-actions/count/route.ts",
+        "frontend/src/app/api/payments/[paymentId]/adjustments/route.ts",
+        "frontend/src/app/inbox/page.tsx",
+        "frontend/src/app/adjustments/page.tsx",
+        "frontend/src/components/inbox-client.tsx",
+        "frontend/src/components/adjustments-client.tsx"
+      ]
+    },
+    {
+      "todo_id": "P2-3",
+      "title": "Implement frontend performance surfaces",
+      "priority": "P2",
+      "owner_agent": "FE-Features",
+      "status": "DONE",
+      "feature_refs": [
+        "F4",
+        "F6"
+      ],
+      "requirement_refs": [
+        "R2"
+      ],
+      "api_refs": [
+        "GET /cards/{cardId}/performance"
+      ],
+      "db_refs": [
+        "user_performance",
+        "card_voucher"
+      ],
+      "acceptance": [
+        "Performance detail page renders annual and monthly sections",
+        "Voucher unlock and grace period state are visible"
+      ],
+      "dependencies": [
+        "P1-0"
+      ],
+      "blocker": null,
+      "evidence": [
+        "frontend/src/app/performance/[userCardId]/page.tsx",
+        "frontend/src/app/page.tsx",
+        "frontend/src/components/app-shell.tsx",
+        "frontend/src/lib/cardwise-api.ts"
+      ]
     },
     {
       "todo_id": "P3-1",
       "title": "Validate contracts and policies",
       "priority": "P3",
       "owner_agent": "Orchestrator",
-      "status": "TODO",
+      "status": "IN_PROGRESS",
       "feature_refs": [
         "F1",
         "F2",
@@ -323,7 +466,11 @@
         "P2-2"
       ],
       "blocker": null,
-      "evidence": []
+      "evidence": [
+        "backend: ./gradlew test",
+        "frontend: npm run lint",
+        "frontend: npm run build"
+      ]
     },
     {
       "todo_id": "P0-4",
@@ -409,10 +556,40 @@
       "message": "P0-3 completed: feature, requirement, API, and DB traceability map is published."
     },
     {
+      "ts": "2026-03-19T09:50:00+09:00",
+      "agent": "Orchestrator",
+      "type": "DECISION",
+      "message": "Execution moved into implementation: backend platform, ledger, performance, and frontend streams are now in progress."
+    },
+    {
       "ts": "2026-03-19T09:42:42+09:00",
       "agent": "Orchestrator",
       "type": "DECISION",
       "message": "P0-4 completed: realistic seed dataset applied to linked Supabase project."
+    },
+    {
+      "ts": "2026-03-19T10:12:31+09:00",
+      "agent": "BE-Ledger",
+      "type": "DECISION",
+      "message": "F2/F3 backend endpoints are implemented with adjustment, inbox, resolve, dismiss, and performance-exclusion handling."
+    },
+    {
+      "ts": "2026-03-19T10:12:31+09:00",
+      "agent": "BE-Performance",
+      "type": "DECISION",
+      "message": "F4/F6 performance response now includes annual basis, lag, grace period, special period, and voucher unlock summaries."
+    },
+    {
+      "ts": "2026-03-19T10:12:31+09:00",
+      "agent": "FE-Foundation",
+      "type": "DECISION",
+      "message": "BFF routes and ledger/performance surfaces build cleanly on Next.js 16."
+    },
+    {
+      "ts": "2026-03-19T10:12:31+09:00",
+      "agent": "Orchestrator",
+      "type": "DECISION",
+      "message": "Backend tests and frontend lint/build passed after integrating voucher unlock state into the performance surface."
     }
   ],
   "questions": [

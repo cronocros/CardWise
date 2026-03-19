@@ -47,3 +47,6 @@ supabase/.temp/
 # Temp
 *.tmp
 *.swp
+
+# Ops dashboard runtime
+ops/dashboard/runtime/
