@@ -1,7 +1,7 @@
 {
   "version": 1,
   "project": "CardWise",
-  "updated_at": "2026-03-19T12:05:26+09:00",
+  "updated_at": "2026-03-19T18:30:43+09:00",
   "phases": [
     {
       "phase": "P0",
@@ -36,7 +36,7 @@
     {
       "phase": "P5",
       "title": "대시보드 우선 공개",
-      "status": "IN_PROGRESS",
+      "status": "DONE",
       "summary": "라이브 대시보드를 먼저 공개하기 위해 레이아웃, 시계, 카운트다운, Quick Links, Swagger 연결을 병렬 진행 중입니다."
     }
   ],
@@ -45,7 +45,7 @@
       "name": "Orchestrator",
       "role": "coordination",
       "status": "IN_PROGRESS",
-      "progress": 90
+      "progress": 72
     },
     {
       "name": "BE-Platform",
@@ -92,38 +92,38 @@
     {
       "name": "Senior Designer",
       "role": "frontend",
-      "status": "IN_PROGRESS",
-      "progress": 28
+      "status": "DONE",
+      "progress": 100
     },
     {
       "name": "FE-Theme",
       "role": "frontend",
       "status": "IN_PROGRESS",
-      "progress": 55
+      "progress": 85
     },
     {
       "name": "FE-AppShell",
       "role": "frontend",
-      "status": "IN_PROGRESS",
-      "progress": 45
+      "status": "DONE",
+      "progress": 100
     },
     {
       "name": "FE-Route-A",
       "role": "frontend",
-      "status": "TODO",
-      "progress": 0
+      "status": "DONE",
+      "progress": 100
     },
     {
       "name": "FE-Route-B",
       "role": "frontend",
-      "status": "TODO",
-      "progress": 0
+      "status": "DONE",
+      "progress": 100
     },
     {
       "name": "FE-Route-C",
       "role": "frontend",
-      "status": "TODO",
-      "progress": 0
+      "status": "DONE",
+      "progress": 100
     },
     {
       "name": "FE-MotionAssets",
@@ -759,7 +759,7 @@
       "title": "앱 셸과 라우트 재배치 준비",
       "priority": "P1",
       "owner_agent": "FE-AppShell",
-      "status": "IN_PROGRESS",
+      "status": "DONE",
       "feature_refs": [
         "F1",
         "F2",
@@ -788,7 +788,9 @@
       "evidence": [
         "frontend/src/components/app-shell.tsx",
         "frontend/src/app/layout.tsx",
-        "frontend/src/app/globals.css"
+        "frontend/src/app/globals.css",
+        "frontend/src/app/page.tsx",
+        "frontend/src/app/dashboard/page.tsx"
       ]
     },
     {
@@ -796,7 +798,7 @@
       "title": "카드와 실적 화면 리디자인",
       "priority": "P2",
       "owner_agent": "FE-Route-A",
-      "status": "TODO",
+      "status": "DONE",
       "feature_refs": [
         "F1",
         "F4",
@@ -822,14 +824,21 @@
         "P4-3"
       ],
       "blocker": null,
-      "evidence": []
+      "evidence": [
+        "frontend/src/app/dashboard/page.tsx",
+        "frontend/src/app/cards/page.tsx",
+        "frontend/src/app/performance/[userCardId]/page.tsx",
+        "http://127.0.0.1:3000/dashboard",
+        "http://127.0.0.1:3000/cards",
+        "http://127.0.0.1:3000/performance/1"
+      ]
     },
     {
       "todo_id": "P4-5",
       "title": "가계부 허브와 인박스/조정 화면 리디자인",
       "priority": "P2",
       "owner_agent": "FE-Route-B",
-      "status": "TODO",
+      "status": "DONE",
       "feature_refs": [
         "F2",
         "F3"
@@ -855,14 +864,24 @@
         "P4-3"
       ],
       "blocker": null,
-      "evidence": []
+      "evidence": [
+        "frontend/src/app/ledger/page.tsx",
+        "frontend/src/app/inbox/page.tsx",
+        "frontend/src/app/adjustments/page.tsx",
+        "frontend/src/components/route-b-ledger.tsx",
+        "frontend/src/components/route-b-inbox.tsx",
+        "frontend/src/components/route-b-adjustments.tsx",
+        "http://127.0.0.1:3000/ledger",
+        "http://127.0.0.1:3000/inbox",
+        "http://127.0.0.1:3000/adjustments"
+      ]
     },
     {
       "todo_id": "P4-6",
       "title": "혜택, 바우처, 설정 화면 리디자인",
       "priority": "P2",
       "owner_agent": "FE-Route-C",
-      "status": "TODO",
+      "status": "DONE",
       "feature_refs": [
         "F5",
         "F6"
@@ -888,7 +907,15 @@
         "P4-3"
       ],
       "blocker": null,
-      "evidence": []
+      "evidence": [
+        "frontend/src/app/benefits/page.tsx",
+        "frontend/src/app/vouchers/page.tsx",
+        "frontend/src/app/settings/page.tsx",
+        "frontend/src/components/vouchers-client.tsx",
+        "http://127.0.0.1:3000/benefits",
+        "http://127.0.0.1:3000/vouchers",
+        "http://127.0.0.1:3000/settings"
+      ]
     },
     {
       "todo_id": "P4-7",
@@ -926,7 +953,7 @@
       "title": "반응형 퍼블리싱 QA",
       "priority": "P3",
       "owner_agent": "FE-Theme",
-      "status": "TODO",
+      "status": "IN_PROGRESS",
       "feature_refs": [
         "F1",
         "F2",
@@ -955,7 +982,12 @@
         "P4-6"
       ],
       "blocker": null,
-      "evidence": []
+      "evidence": [
+        "npm run lint",
+        "npm run build",
+        "http://127.0.0.1:3000/dashboard",
+        "http://127.0.0.1:3000/vouchers"
+      ]
     },
     {
       "todo_id": "P5-1",
@@ -1037,7 +1069,9 @@
       "blocker": null,
       "evidence": [
         "ops/dashboard/dashboard-lib.js",
-        "http://127.0.0.1:4173/"
+        "http://127.0.0.1:4173/",
+        "http://127.0.0.1:8080/swagger-ui.html",
+        "http://127.0.0.1:8080/v3/api-docs"
       ]
     },
     {
@@ -1306,6 +1340,36 @@
       "agent": "Senior Designer",
       "type": "DONE",
       "message": "Rose Blossom을 기본 앱 UI, Rose Minimal을 고밀도 리스트, Rose Glass를 특별 순간에만 쓰는 스킨 규칙과 Pretendard 우선 폰트 전략을 고정했습니다."
+    },
+    {
+      "timestamp": "2026-03-19T18:30:43+09:00",
+      "agent": "FE-AppShell",
+      "type": "DONE",
+      "summary": "앱 셸을 문서 IA 기준 5탭 구조와 /dashboard 진입으로 정리했다"
+    },
+    {
+      "timestamp": "2026-03-19T18:30:43+09:00",
+      "agent": "FE-Route-A",
+      "type": "DONE",
+      "summary": "/dashboard, /cards, /performance를 Rose Blossom 앱 구조로 재구성했다"
+    },
+    {
+      "timestamp": "2026-03-19T18:30:43+09:00",
+      "agent": "FE-Route-B",
+      "type": "DONE",
+      "summary": "/ledger 허브와 /inbox, /adjustments를 앱 흐름 안으로 편입했다"
+    },
+    {
+      "timestamp": "2026-03-19T18:30:43+09:00",
+      "agent": "FE-Route-C",
+      "type": "DONE",
+      "summary": "/benefits, /vouchers, /settings를 앱 표면으로 정리했다"
+    },
+    {
+      "timestamp": "2026-03-19T18:30:43+09:00",
+      "agent": "Orchestrator",
+      "type": "IN_PROGRESS",
+      "summary": "프론트 lint/build와 주요 라우트 및 대시보드/Swagger 링크 응답을 검증했다"
     }
   ],
   "questions": [

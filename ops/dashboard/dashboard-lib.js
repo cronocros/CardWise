@@ -11,8 +11,8 @@ const QUICK_LINKS = [
   { label: 'Backend Health', href: 'http://127.0.0.1:8080/actuator/health', note: '런타임 헬스', status: 'live' },
   { label: 'Backend Info', href: 'http://127.0.0.1:8080/actuator/info', note: '액추에이터 정보', status: 'live' },
   { label: 'API Base', href: 'http://127.0.0.1:8080/api/v1', note: '백엔드 기본 경로', status: 'live' },
-  { label: 'Swagger UI', href: 'http://127.0.0.1:8080/swagger-ui.html', note: 'SpringDoc 연결 대상', status: 'planned' },
-  { label: 'OpenAPI JSON', href: 'http://127.0.0.1:8080/v3/api-docs', note: '스키마 확인', status: 'planned' },
+  { label: 'Swagger UI', href: 'http://127.0.0.1:8080/swagger-ui.html', note: 'SpringDoc 연결 대상', status: 'live' },
+  { label: 'OpenAPI JSON', href: 'http://127.0.0.1:8080/v3/api-docs', note: '스키마 확인', status: 'live' },
   { label: 'BFF Pending Count', href: 'http://127.0.0.1:3000/api/pending-actions/count?status=PENDING', note: 'BFF 스모크', status: 'live' },
   { label: 'BFF Active Vouchers', href: 'http://127.0.0.1:3000/api/vouchers?status=active', note: '바우처 스모크', status: 'live' },
   { label: 'BFF Performance', href: 'http://127.0.0.1:3000/api/cards/1/performance', note: '실적 스모크', status: 'live' }

@@ -8,10 +8,7 @@ import {
   Panel,
   TextField,
 } from "@/components/app-shell";
-import type {
-  VoucherHistoryEntry,
-  VoucherRecord,
-} from "@/lib/cardwise-api";
+import type { VoucherHistoryEntry, VoucherRecord } from "@/lib/cardwise-api";
 import {
   formatCurrency,
   formatDate,
@@ -67,7 +64,7 @@ function categoryTone(value: string | null | undefined) {
   if (normalized === "LOUNGE") return "violet";
   if (normalized === "INSURANCE") return "amber";
   if (normalized === "SERVICE") return "emerald";
-  if (normalized === "COUPON") return "slate";
+  if (normalized === "COUPON") return "rose";
   return "slate";
 }
 
@@ -104,20 +101,13 @@ function resolveDaysUntilExpiry(item: VoucherRecord) {
     return null;
   }
 
-  const diff = Math.ceil(
-    (new Date(item.validUntil).getTime() - Date.now()) / (24 * 60 * 60 * 1000),
-  );
-
+  const diff = Math.ceil((new Date(item.validUntil).getTime() - Date.now()) / (24 * 60 * 60 * 1000));
   return Number.isFinite(diff) ? diff : null;
 }
 
 function toReasonMessage(value: unknown) {
-  if (value instanceof Error) {
-    return value.message;
-  }
-  if (typeof value === "string") {
-    return value;
-  }
+  if (value instanceof Error) return value.message;
+  if (typeof value === "string") return value;
   return "Unexpected voucher error";
 }
 
@@ -183,9 +173,7 @@ export function VouchersClient({
           : expiredVouchers;
 
     return source.filter((item) => {
-      if (category === "ALL") {
-        return true;
-      }
+      if (category === "ALL") return true;
       return normalizeCategory(item.voucherType) === category;
     });
   }, [activeVouchers, expiredVouchers, category, scope]);
@@ -193,9 +181,7 @@ export function VouchersClient({
   const filteredExpiringVouchers = useMemo(
     () =>
       expiringVouchers.filter((item) => {
-        if (category === "ALL") {
-          return true;
-        }
+        if (category === "ALL") return true;
         return normalizeCategory(item.voucherType) === category;
       }),
     [category, expiringVouchers],
@@ -204,33 +190,34 @@ export function VouchersClient({
   const filteredSelectedCardVouchers = useMemo(
     () =>
       selectedCardVouchers.filter((item) => {
-        if (category === "ALL") {
-          return true;
-        }
+        if (category === "ALL") return true;
         return normalizeCategory(item.voucherType) === category;
       }),
     [category, selectedCardVouchers],
   );
 
-  const selectedVoucher = useMemo(() => {
-    if (selectedVoucherId === null) {
-      return null;
-    }
+  const mergedVouchers = useMemo(
+    () => mergeVoucherLists(activeVouchers, expiredVouchers, expiringVouchers, selectedCardVouchers),
+    [activeVouchers, expiredVouchers, expiringVouchers, selectedCardVouchers],
+  );
 
-    return (
-      selectedCardVouchers.find((item) => item.userVoucherId === selectedVoucherId) ??
-      mergeVoucherLists(activeVouchers, expiredVouchers, expiringVouchers, selectedCardVouchers).find(
-        (item) => item.userVoucherId === selectedVoucherId,
-      ) ??
-      null
-    );
-  }, [activeVouchers, expiredVouchers, expiringVouchers, selectedCardVouchers, selectedVoucherId]);
+  const selectedVoucher = useMemo(() => {
+    if (selectedVoucherId === null) return null;
+    return mergedVouchers.find((item) => item.userVoucherId === selectedVoucherId) ?? null;
+  }, [mergedVouchers, selectedVoucherId]);
+
+  const stats = useMemo(() => {
+    const locked = selectedCardVouchers.filter((item) => item.unlockState === "LOCKED").length;
+    const eligible = selectedCardVouchers.filter((item) => item.unlockState === "ELIGIBLE").length;
+    const expiringSoon = filteredExpiringVouchers.length;
+    return { locked, eligible, expiringSoon };
+  }, [filteredExpiringVouchers.length, selectedCardVouchers]);
 
   async function loadHistory(userVoucherId: number) {
     setHistoryLoading(true);
     try {
-      const items = await fetchVoucherHistory(`/api/user-vouchers/${userVoucherId}/history`);
-      setHistory(items);
+      const nextHistory = await fetchVoucherHistory(`/api/user-vouchers/${userVoucherId}/history`);
+      setHistory(nextHistory);
     } catch (err) {
       setHistory([]);
       setError(toReasonMessage(err));
@@ -239,7 +226,7 @@ export function VouchersClient({
     }
   }
 
-  async function refreshData(nextSelectedUserCardId = selectedUserCardId) {
+  async function refreshData(userCardId = selectedUserCardId) {
     setLoading(true);
     setRefreshing(true);
     setError(null);
@@ -249,31 +236,30 @@ export function VouchersClient({
         fetchVoucherList("/api/vouchers?status=active"),
         fetchVoucherList("/api/vouchers?status=expired"),
         fetchVoucherList("/api/vouchers/expiring?days=7"),
-        nextSelectedUserCardId
-          ? fetchVoucherList(`/api/user-cards/${encodeURIComponent(nextSelectedUserCardId)}/vouchers`)
-          : Promise.resolve([] as VoucherRecord[]),
+        fetchVoucherList(`/api/user-cards/${userCardId}/vouchers`),
       ]);
 
-      const nextActive =
-        activeResult.status === "fulfilled" ? activeResult.value : initialActiveVouchers;
-      const nextExpired =
-        expiredResult.status === "fulfilled" ? expiredResult.value : initialExpiredVouchers;
-      const nextExpiring =
-        expiringResult.status === "fulfilled" ? expiringResult.value : initialExpiringVouchers;
-      const nextCardVouchers =
-        cardResult.status === "fulfilled" ? cardResult.value : [];
+      const nextActive = activeResult.status === "fulfilled" ? activeResult.value : [];
+      const nextExpired = expiredResult.status === "fulfilled" ? expiredResult.value : [];
+      const nextExpiring = expiringResult.status === "fulfilled" ? expiringResult.value : [];
+      const nextCardVouchers = cardResult.status === "fulfilled" ? cardResult.value : [];
+      const nextMergedVouchers = mergeVoucherLists(
+        nextActive,
+        nextExpired,
+        nextExpiring,
+        nextCardVouchers,
+      );
 
       setActiveVouchers(nextActive);
       setExpiredVouchers(nextExpired);
       setExpiringVouchers(nextExpiring);
       setSelectedCardVouchers(nextCardVouchers);
 
-      const selectedStillExists =
+      const nextSelectedVoucherId =
         selectedVoucherId !== null &&
-        nextCardVouchers.some((item) => item.userVoucherId === selectedVoucherId);
-      const nextSelectedVoucherId = selectedStillExists
-        ? selectedVoucherId
-        : nextCardVouchers[0]?.userVoucherId ?? null;
+        nextMergedVouchers.some((item) => item.userVoucherId === selectedVoucherId)
+          ? selectedVoucherId
+          : nextCardVouchers[0]?.userVoucherId ?? nextMergedVouchers[0]?.userVoucherId ?? null;
       setSelectedVoucherId(nextSelectedVoucherId);
 
       const failures = [activeResult, expiredResult, expiringResult, cardResult].filter(
@@ -297,10 +283,7 @@ export function VouchersClient({
 
   async function selectCard(cardId: string) {
     const normalized = cardId.trim();
-    if (!normalized) {
-      return;
-    }
-
+    if (!normalized) return;
     setSelectedUserCardId(normalized);
   }
 
@@ -343,14 +326,8 @@ export function VouchersClient({
   }
 
   function canUnuseVoucher(voucher: VoucherRecord) {
-    if (voucher.totalCount === null || voucher.totalCount === undefined) {
-      return false;
-    }
-
-    if (voucher.remainingCount === null || voucher.remainingCount === undefined) {
-      return false;
-    }
-
+    if (voucher.totalCount === null || voucher.totalCount === undefined) return false;
+    if (voucher.remainingCount === null || voucher.remainingCount === undefined) return false;
     return voucher.remainingCount < voucher.totalCount;
   }
 
@@ -359,9 +336,7 @@ export function VouchersClient({
     const remainingCount = item.remainingCount ?? null;
     const totalCount = item.totalCount ?? null;
     const usedCount =
-      remainingCount !== null && totalCount !== null
-        ? Math.max(totalCount - remainingCount, 0)
-        : null;
+      remainingCount !== null && totalCount !== null ? Math.max(totalCount - remainingCount, 0) : null;
     const progressPercent =
       remainingCount !== null && totalCount !== null && totalCount > 0
         ? Math.min(100, Math.max(0, (remainingCount / totalCount) * 100))
@@ -375,25 +350,18 @@ export function VouchersClient({
     return (
       <article
         key={item.userVoucherId}
-        className={`rounded-[22px] border p-4 transition ${
+        className={`rounded-[28px] border p-4 shadow-[0_14px_30px_rgba(190,24,60,0.06)] transition ${
           isSelected
-            ? "border-emerald-300/30 bg-emerald-300/10"
-            : "border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10"
+            ? "border-[var(--surface-border-strong)] bg-[linear-gradient(180deg,#fff8fa,#ffffff)]"
+            : "border-[var(--surface-border)] bg-white hover:-translate-y-0.5 hover:border-[var(--surface-border-strong)]"
         }`}
       >
-        <div
-          role="button"
-          tabIndex={0}
+        <button
+          type="button"
           onClick={() => void selectVoucher(item.userVoucherId)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" || event.key === " ") {
-              event.preventDefault();
-              void selectVoucher(item.userVoucherId);
-            }
-          }}
-          className="block w-full cursor-pointer text-left outline-none"
+          className="block w-full text-left"
         >
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="space-y-3">
               <div className="flex flex-wrap gap-2">
                 <Chip tone={unlockTone(item.unlockState)}>{item.unlockState ?? "UNKNOWN"}</Chip>
@@ -401,37 +369,40 @@ export function VouchersClient({
                 <Chip tone={expiryTone(daysUntilExpiry)}>
                   {expired ? "Expired" : formatDaysUntilExpiry(daysUntilExpiry)}
                 </Chip>
-                <Chip tone="slate">{item.periodType ?? "UNKNOWN"}</Chip>
               </div>
               <div>
-                <h3 className="text-base font-semibold text-white">{item.voucherName}</h3>
-                <p className="mt-1 text-sm leading-6 text-slate-300">
+                <h3 className="text-[17px] font-semibold tracking-[-0.04em] text-[var(--text-strong)]">
+                  {item.voucherName}
+                </h3>
+                <p className="mt-1 text-[13px] leading-6 text-[var(--text-body)]">
                   {item.cardName}
                   {item.cardNickname ? ` · ${item.cardNickname}` : ""}
                 </p>
-                <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-400">
+                <p className="mt-2 max-w-3xl text-[13px] leading-6 text-[var(--text-muted)]">
                   {item.description ?? "No description available."}
                 </p>
               </div>
             </div>
-            <div className="flex shrink-0 flex-col gap-2 lg:w-64">
-              <div className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3">
-                <div className="flex items-center justify-between text-xs uppercase tracking-[0.2em] text-slate-400">
+
+            <div className="flex shrink-0 flex-col gap-2 lg:w-72">
+              <div className="rounded-[22px] border border-[var(--surface-border)] bg-[linear-gradient(135deg,#fff4f6,#ffffff)] px-4 py-3">
+                <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.22em] text-[var(--text-soft)]">
                   <span>Usage</span>
                   <span>{totalCount === null ? "Unlimited" : `${usedCount ?? 0}/${totalCount}`}</span>
                 </div>
                 {progressPercent !== null ? (
-                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
+                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--primary-100)]">
                     <div
-                      className="h-full rounded-full bg-emerald-300/80"
+                      className="h-full rounded-full bg-[linear-gradient(90deg,var(--primary-300),var(--primary-400))]"
                       style={{ width: `${progressPercent}%` }}
                     />
                   </div>
                 ) : (
-                  <div className="mt-3 text-sm text-slate-300">No fixed counter</div>
+                  <div className="mt-3 text-sm text-[var(--text-muted)]">No fixed counter</div>
                 )}
               </div>
-              <div className="grid gap-1 text-sm text-slate-300">
+
+              <div className="grid gap-1 text-sm text-[var(--text-body)]">
                 <div className="flex justify-between gap-4">
                   <span>Valid from</span>
                   <span>{formatDate(item.validFrom)}</span>
@@ -443,7 +414,7 @@ export function VouchersClient({
               </div>
             </div>
           </div>
-        </div>
+        </button>
 
         {showActions ? (
           <div className="mt-4 flex flex-wrap gap-2">
@@ -467,9 +438,7 @@ export function VouchersClient({
             >
               Unuse
             </ActionButton>
-            {item.unlockState === "ELIGIBLE" ? (
-              <Chip tone="amber">Unlock request needed</Chip>
-            ) : null}
+            {item.unlockState === "ELIGIBLE" ? <Chip tone="amber">Unlock request needed</Chip> : null}
           </div>
         ) : null}
       </article>
@@ -484,25 +453,13 @@ export function VouchersClient({
     <div className="grid gap-5">
       <Panel
         title="Voucher control"
-        subtitle="Switch between all vouchers and the selected card, then open history, use, or unuse actions directly from the list."
+        subtitle="Switch cards, filter categories, and act on vouchers without leaving the screen."
       >
         <div className="grid gap-4 md:grid-cols-4">
           <MetricCard label="Active" value={String(activeVouchers.length)} helper="Current live list" />
-          <MetricCard
-            label="Expiring"
-            value={String(filteredExpiringVouchers.length)}
-            helper="D-7 window"
-          />
-          <MetricCard
-            label="Selected card"
-            value={String(filteredSelectedCardVouchers.length)}
-            helper={selectedCardLabel}
-          />
-          <MetricCard
-            label="Locked"
-            value={String(selectedCardLockedCount)}
-            helper="Unlock conditions pending"
-          />
+          <MetricCard label="Expiring" value={String(filteredExpiringVouchers.length)} helper="D-7 window" />
+          <MetricCard label="Selected card" value={String(filteredSelectedCardVouchers.length)} helper={selectedCardLabel} />
+          <MetricCard label="Locked" value={String(selectedCardLockedCount)} helper="Unlock conditions pending" />
         </div>
 
         <div className="mt-5 grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
@@ -536,8 +493,8 @@ export function VouchersClient({
                 }}
                 className={`rounded-full border px-4 py-2 text-sm transition ${
                   String(card.userCardId) === selectedUserCardId
-                    ? "border-emerald-300/30 bg-emerald-300/15 text-emerald-50"
-                    : "border-white/10 bg-white/5 text-slate-200 hover:border-white/20 hover:bg-white/10"
+                    ? "border-[var(--surface-border-strong)] bg-[var(--accent-soft)] text-[var(--accent-strong)]"
+                    : "border-[var(--surface-border)] bg-white text-[var(--text-body)] hover:border-[var(--surface-border-strong)]"
                 }`}
               >
                 {card.label}
@@ -554,8 +511,8 @@ export function VouchersClient({
               onClick={() => setScope(value)}
               className={`rounded-full border px-4 py-2 text-sm transition ${
                 scope === value
-                  ? "border-emerald-300/30 bg-emerald-300/15 text-emerald-50"
-                  : "border-white/10 bg-white/5 text-slate-200 hover:border-white/20 hover:bg-white/10"
+                  ? "border-[var(--surface-border-strong)] bg-[var(--accent-soft)] text-[var(--accent-strong)]"
+                  : "border-[var(--surface-border)] bg-white text-[var(--text-body)] hover:border-[var(--surface-border-strong)]"
               }`}
             >
               {value === "all" ? "All" : value === "active" ? "Active" : "Expired"}
@@ -568,8 +525,8 @@ export function VouchersClient({
               onClick={() => setCategory(item.value)}
               className={`rounded-full border px-4 py-2 text-sm transition ${
                 category === item.value
-                  ? "border-emerald-300/30 bg-emerald-300/15 text-emerald-50"
-                  : "border-white/10 bg-white/5 text-slate-200 hover:border-white/20 hover:bg-white/10"
+                  ? "border-[var(--surface-border-strong)] bg-[var(--accent-soft)] text-[var(--accent-strong)]"
+                  : "border-[var(--surface-border)] bg-white text-[var(--text-body)] hover:border-[var(--surface-border-strong)]"
               }`}
             >
               {item.label}
@@ -577,21 +534,24 @@ export function VouchersClient({
           ))}
         </div>
 
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Chip tone="rose">Locked {stats.locked}</Chip>
+          <Chip tone="amber">Eligible {stats.eligible}</Chip>
+          <Chip tone="emerald">Expiring {stats.expiringSoon}</Chip>
+        </div>
+
         {error ? (
-          <div className="mt-4 rounded-2xl border border-rose-400/20 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">
+          <div className="mt-4 rounded-[20px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
             {error}
           </div>
         ) : null}
       </Panel>
 
       <div className="grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
-        <Panel
-          title="Expiring soon"
-          subtitle="Vouchers due within seven days are surfaced here for quick review."
-        >
+        <Panel title="Expiring soon" subtitle="Vouchers due within seven days are surfaced here for quick review.">
           <div className="grid gap-3">
             {filteredExpiringVouchers.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-white/10 bg-white/5 px-5 py-10 text-center text-sm text-slate-400">
+              <div className="rounded-[22px] border border-dashed border-[var(--surface-border)] bg-[var(--surface-soft)] px-5 py-10 text-center text-sm text-[var(--text-muted)]">
                 No vouchers are expiring soon.
               </div>
             ) : (
@@ -606,7 +566,7 @@ export function VouchersClient({
         >
           <div className="grid gap-3">
             {filteredSelectedCardVouchers.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-white/10 bg-white/5 px-5 py-10 text-center text-sm text-slate-400">
+              <div className="rounded-[22px] border border-dashed border-[var(--surface-border)] bg-[var(--surface-soft)] px-5 py-10 text-center text-sm text-[var(--text-muted)]">
                 This card currently has no vouchers loaded.
               </div>
             ) : (
@@ -620,7 +580,7 @@ export function VouchersClient({
         <Panel title="All vouchers" subtitle="Combined active and expired lists from the BFF proxy.">
           <div className="grid gap-3">
             {filteredGlobalVouchers.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-white/10 bg-white/5 px-5 py-10 text-center text-sm text-slate-400">
+              <div className="rounded-[22px] border border-dashed border-[var(--surface-border)] bg-[var(--surface-soft)] px-5 py-10 text-center text-sm text-[var(--text-muted)]">
                 No vouchers match the current filter.
               </div>
             ) : (
@@ -631,26 +591,24 @@ export function VouchersClient({
 
         <Panel
           title="Voucher details"
-          subtitle="Open a voucher to inspect unlock state, remaining counts, and the use / unuse history timeline."
+          subtitle="Open a voucher to inspect unlock state, counts, and the use / unuse history timeline."
         >
           {selectedVoucher ? (
             <div className="grid gap-4">
-              <div className="rounded-[22px] border border-white/10 bg-white/5 p-4">
+              <div className="rounded-[24px] border border-[var(--surface-border)] bg-[linear-gradient(135deg,#fff5f7,#ffffff)] p-4">
                 <div className="flex flex-wrap gap-2">
-                  <Chip tone={unlockTone(selectedVoucher.unlockState)}>
-                    {selectedVoucher.unlockState ?? "UNKNOWN"}
-                  </Chip>
-                  <Chip tone={categoryTone(selectedVoucher.voucherType)}>
-                    {categoryLabel(selectedVoucher.voucherType)}
-                  </Chip>
+                  <Chip tone={unlockTone(selectedVoucher.unlockState)}>{selectedVoucher.unlockState ?? "UNKNOWN"}</Chip>
+                  <Chip tone={categoryTone(selectedVoucher.voucherType)}>{categoryLabel(selectedVoucher.voucherType)}</Chip>
                   <Chip tone="slate">{selectedVoucher.periodType ?? "UNKNOWN"}</Chip>
                 </div>
-                <h3 className="mt-3 text-lg font-semibold text-white">{selectedVoucher.voucherName}</h3>
-                <p className="mt-1 text-sm text-slate-300">
+                <h3 className="mt-3 text-lg font-semibold tracking-[-0.04em] text-[var(--text-strong)]">
+                  {selectedVoucher.voucherName}
+                </h3>
+                <p className="mt-1 text-sm text-[var(--text-body)]">
                   {selectedVoucher.cardName}
                   {selectedVoucher.cardNickname ? ` · ${selectedVoucher.cardNickname}` : ""}
                 </p>
-                <p className="mt-3 text-sm leading-6 text-slate-300">
+                <p className="mt-3 text-sm leading-6 text-[var(--text-muted)]">
                   {selectedVoucher.description ?? "No description available."}
                 </p>
               </div>
@@ -672,7 +630,7 @@ export function VouchersClient({
                 />
               </div>
 
-              <div className="grid gap-2 rounded-[22px] border border-white/10 bg-white/5 p-4 text-sm text-slate-300">
+              <div className="grid gap-2 rounded-[24px] border border-[var(--surface-border)] bg-white p-4 text-sm text-[var(--text-body)]">
                 <div className="flex justify-between gap-4">
                   <span>Annual requirement</span>
                   <span>{formatCurrency(selectedVoucher.requiredAnnualPerformance)}</span>
@@ -700,15 +658,15 @@ export function VouchersClient({
               </div>
 
               <div>
-                <div className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
+                <div className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-[var(--text-soft)]">
                   History
                 </div>
                 {historyLoading ? (
-                  <div className="rounded-2xl border border-dashed border-white/10 bg-white/5 px-5 py-10 text-center text-sm text-slate-400">
+                  <div className="rounded-[22px] border border-dashed border-[var(--surface-border)] bg-[var(--surface-soft)] px-5 py-10 text-center text-sm text-[var(--text-muted)]">
                     Loading history...
                   </div>
                 ) : history.length === 0 ? (
-                  <div className="rounded-2xl border border-dashed border-white/10 bg-white/5 px-5 py-10 text-center text-sm text-slate-400">
+                  <div className="rounded-[22px] border border-dashed border-[var(--surface-border)] bg-[var(--surface-soft)] px-5 py-10 text-center text-sm text-[var(--text-muted)]">
                     No history entries yet.
                   </div>
                 ) : (
@@ -716,16 +674,15 @@ export function VouchersClient({
                     {history.map((entry, index) => (
                       <div
                         key={`${entry.voucherHistoryId ?? entry.createdAt}-${index}`}
-                        className="rounded-2xl border border-white/10 bg-white/5 p-4"
+                        className="rounded-[22px] border border-[var(--surface-border)] bg-white p-4"
                       >
                         <div className="flex flex-wrap gap-2">
                           <Chip tone="slate">{entry.action ?? "UPDATE"}</Chip>
                           <Chip tone="slate">{formatDateTime(entry.createdAt)}</Chip>
                         </div>
-                        <p className="mt-3 text-sm text-slate-300">{entry.memo ?? "-"}</p>
-                        {entry.beforeRemainingCount !== undefined ||
-                        entry.afterRemainingCount !== undefined ? (
-                          <p className="mt-2 text-xs text-slate-400">
+                        <p className="mt-3 text-sm text-[var(--text-body)]">{entry.memo ?? "-"}</p>
+                        {entry.beforeRemainingCount !== undefined || entry.afterRemainingCount !== undefined ? (
+                          <p className="mt-2 text-xs text-[var(--text-muted)]">
                             {entry.beforeRemainingCount ?? "-"} → {entry.afterRemainingCount ?? "-"}
                           </p>
                         ) : null}
@@ -736,7 +693,7 @@ export function VouchersClient({
               </div>
             </div>
           ) : (
-            <div className="rounded-2xl border border-dashed border-white/10 bg-white/5 px-5 py-10 text-center text-sm text-slate-400">
+            <div className="rounded-[22px] border border-dashed border-[var(--surface-border)] bg-[var(--surface-soft)] px-5 py-10 text-center text-sm text-[var(--text-muted)]">
               Select a voucher from the list to inspect its details and history.
             </div>
           )}

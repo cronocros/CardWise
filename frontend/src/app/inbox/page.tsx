@@ -1,5 +1,5 @@
 import { AppShell } from "@/components/app-shell";
-import { InboxClient } from "@/components/inbox-client";
+import { RouteBInbox } from "@/components/route-b-inbox";
 import {
   getPendingCount,
   tryFetchBackendJson,
@@ -22,10 +22,10 @@ export default async function InboxPage() {
     <AppShell
       active="inbox"
       eyebrow="Ledger inbox"
-      title="Confirm or dismiss system actions"
-      description="This page mirrors the pending-actions workflow from the spec: FX correction, billing discount, duplicate detection, category mapping, Excel review, and performance exclusion checks."
+      title="Review and resolve pending actions"
+      description="The inbox now follows the Blossom language: soft surfaces, dense but readable cards, and quick triage controls."
     >
-      <InboxClient initialActions={initialActions} initialCount={initialCount} />
+      <RouteBInbox initialActions={initialActions} initialCount={initialCount} />
     </AppShell>
   );
 }

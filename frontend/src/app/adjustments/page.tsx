@@ -1,5 +1,5 @@
 import { AppShell } from "@/components/app-shell";
-import { AdjustmentsClient } from "@/components/adjustments-client";
+import { RouteBAdjustments } from "@/components/route-b-adjustments";
 
 export const dynamic = "force-dynamic";
 
@@ -16,9 +16,9 @@ export default async function AdjustmentsPage(props: PageProps<"/adjustments">) 
       active="adjustments"
       eyebrow="Payment adjustments"
       title="Create and review settlement corrections"
-      description="Use the BFF proxy to create FX corrections, billing discounts, and other amount adjustments tied to a payment record."
+      description="The adjustment surface stays lightweight and app-first while preserving the existing BFF flow."
     >
-      <AdjustmentsClient initialPaymentId={paymentId} />
+      <RouteBAdjustments initialPaymentId={paymentId} />
     </AppShell>
   );
 }

@@ -3,6 +3,7 @@ import type {
   ButtonHTMLAttributes,
   InputHTMLAttributes,
   ReactNode,
+  SelectHTMLAttributes,
   SVGProps,
   TextareaHTMLAttributes,
 } from "react";
@@ -29,12 +30,23 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
-  { href: "/", label: "홈", key: "home", icon: HomeIcon },
-  { href: "/inbox", label: "인박스", key: "inbox", icon: InboxIcon },
-  { href: "/adjustments", label: "조정", key: "adjustments", icon: LedgerIcon },
-  { href: "/vouchers", label: "바우처", key: "vouchers", icon: TicketIcon },
-  { href: "/performance/1", label: "실적", key: "performance", icon: SparkIcon },
+  { href: "/dashboard", label: "홈", key: "dashboard", icon: HomeIcon },
+  { href: "/cards", label: "카드", key: "cards", icon: CardIcon },
+  { href: "/ledger", label: "가계부", key: "ledger", icon: LedgerIcon },
+  { href: "/benefits", label: "혜택", key: "benefits", icon: SparkIcon },
+  { href: "/settings", label: "마이", key: "settings", icon: UserIcon },
 ];
+
+function resolveActiveNav(active: NavKey): Exclude<NavKey, "home" | "inbox" | "adjustments" | "vouchers" | "performance"> {
+  if (active === "home") return "dashboard";
+  if (active === "performance") return "cards";
+  if (active === "inbox" || active === "adjustments") return "ledger";
+  if (active === "vouchers") return "benefits";
+  return active;
+}
+
+const fieldClassName =
+  "h-12 rounded-[16px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] px-4 text-sm text-[var(--text-strong)] outline-none transition placeholder:text-[var(--text-soft)] focus:border-[var(--surface-border-strong)] focus:ring-4 focus:ring-[rgba(251,113,133,0.12)]";
 
 export function AppShell({
   title,
@@ -53,6 +65,8 @@ export function AppShell({
   active: NavKey;
   theme?: ThemeKey;
 }) {
+  const currentNav = resolveActiveNav(active);
+
   return (
     <div className="cw-page">
       <div
@@ -75,18 +89,23 @@ export function AppShell({
           </div>
 
           <div className="mb-5 rounded-[24px] border border-[var(--surface-border)] bg-[var(--surface-soft)] px-4 py-4">
-            <p className="text-[11px] font-medium uppercase tracking-[0.26em] text-[var(--text-soft)]">
-              Current Surface
-            </p>
-            <h2 className="mt-2 text-[18px] font-semibold tracking-[-0.04em] text-[var(--text-strong)]">
-              {title}
-            </h2>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-medium uppercase tracking-[0.26em] text-[var(--text-soft)]">
+                  Current Surface
+                </p>
+                <h2 className="mt-2 text-[18px] font-semibold tracking-[-0.04em] text-[var(--text-strong)]">
+                  {title}
+                </h2>
+              </div>
+              <MascotAvatar pose="waving" size={42} />
+            </div>
             <p className="mt-2 text-[13px] leading-6 text-[var(--text-body)]">{description}</p>
           </div>
 
           <nav className="flex flex-1 flex-col gap-1">
             {navItems.map((item) => {
-              const isActive = active === item.key;
+              const isActive = currentNav === item.key;
               const Icon = item.icon;
 
               return (
@@ -129,6 +148,18 @@ export function AppShell({
             <p className="mt-3 text-[13px] leading-6 text-[var(--text-body)]">
               Blossom를 기본으로 두고 Minimal, Glass 스킨을 페이지 단위로 덮어쓸 수 있게 준비했습니다.
             </p>
+            <div className="mt-4 rounded-[18px] border border-[var(--surface-border)] bg-[var(--surface-soft)] px-3 py-3">
+              <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">
+                Primary IA
+              </div>
+              <div className="mt-2 grid gap-2 text-[13px] text-[var(--text-body)]">
+                <span>/dashboard</span>
+                <span>/cards</span>
+                <span>/ledger</span>
+                <span>/benefits</span>
+                <span>/settings</span>
+              </div>
+            </div>
           </div>
         </aside>
 
@@ -137,7 +168,7 @@ export function AppShell({
             <div className="flex flex-col gap-5">
               <div className="flex items-start gap-4">
                 <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[20px] bg-[linear-gradient(140deg,var(--accent-strong),#fb923c)] text-white shadow-[0_18px_32px_rgba(244,63,94,0.22)]">
-                  <SparkIcon className="h-6 w-6" />
+                  <MascotAvatar pose="waving" size={36} compact />
                 </div>
 
                 <div className="min-w-0 flex-1">
@@ -156,7 +187,7 @@ export function AppShell({
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <nav className="flex gap-2 overflow-x-auto pb-1 lg:hidden">
                   {navItems.map((item) => {
-                    const isActive = active === item.key;
+                    const isActive = currentNav === item.key;
 
                     return (
                       <Link
@@ -195,7 +226,7 @@ export function AppShell({
 
           <nav className="cw-glass fixed inset-x-3 bottom-3 z-30 mx-auto flex max-w-[430px] items-center justify-between rounded-[26px] border border-[var(--surface-border)] bg-[var(--surface-card)] px-2 py-2 shadow-[0_20px_45px_rgba(190,24,60,0.14)] lg:hidden">
             {navItems.map((item) => {
-              const isActive = active === item.key;
+              const isActive = currentNav === item.key;
               const Icon = item.icon;
 
               return (
@@ -357,8 +388,30 @@ export function TextField({
       </span>
       <input
         {...props}
-        className="h-12 rounded-[16px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] px-4 text-sm text-[var(--text-strong)] outline-none transition placeholder:text-[var(--text-soft)] focus:border-[var(--surface-border-strong)] focus:ring-4 focus:ring-[rgba(251,113,133,0.12)]"
+        className={fieldClassName}
       />
+    </label>
+  );
+}
+
+export function SelectField({
+  label,
+  className = "",
+  children,
+  ...props
+}: SelectHTMLAttributes<HTMLSelectElement> & {
+  label: string;
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <label className={`flex flex-col gap-2 ${className}`}>
+      <span className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">
+        {label}
+      </span>
+      <select {...props} className={fieldClassName}>
+        {children}
+      </select>
     </label>
   );
 }
@@ -388,21 +441,60 @@ function ThemeSwatch({ className }: { className: string }) {
   return <span className={`h-8 w-8 rounded-full ring-1 ring-black/5 ${className}`} />;
 }
 
+function MascotAvatar({
+  pose,
+  size,
+  compact = false,
+}: {
+  pose: "waving" | "celebrating" | "thinking";
+  size: number;
+  compact?: boolean;
+}) {
+  const arm = pose === "celebrating" ? 1 : pose === "thinking" ? 0.1 : 0.55;
+
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 100 100"
+      fill="none"
+      aria-hidden="true"
+      className={compact ? "drop-shadow-[0_6px_16px_rgba(255,255,255,0.25)]" : ""}
+    >
+      {!compact ? <circle cx="50" cy="50" r="48" fill="rgba(255,255,255,0.68)" /> : null}
+      <ellipse cx="52" cy="58" rx="27" ry="23" fill="#1f1721" />
+      <path d="M30 50C31 29 44 16 61 18C71 19 79 28 79 43V56H33L30 50Z" fill="#f8fafc" />
+      <ellipse cx="49" cy="48" rx="23" ry="18" fill="#fffafc" />
+      <circle cx="45" cy="46" r="3.6" fill="#0f172a" />
+      <circle cx="63" cy="46" r="3.6" fill="#0f172a" />
+      <path d="M50 57C53 59 57 59 60 57" stroke="#0f172a" strokeWidth="2.6" strokeLinecap="round" />
+      <path d="M31 60C25 58 20 60 18 66" stroke="#1f1721" strokeWidth="6" strokeLinecap="round" />
+      <path
+        d={`M71 ${compact ? 59 : 58}C77 ${53 - arm * 12} 82 ${48 - arm * 18} 87 ${42 - arm * 8}`}
+        stroke="#f8fafc"
+        strokeWidth="6"
+        strokeLinecap="round"
+      />
+      <path d="M37 77C36 84 34 88 30 92" stroke="#1f1721" strokeWidth="6" strokeLinecap="round" />
+      <path d="M63 77C63 84 66 88 70 92" stroke="#1f1721" strokeWidth="6" strokeLinecap="round" />
+      {pose === "thinking" ? (
+        <path d="M60 58C64 60 66 65 66 70" stroke="#f8fafc" strokeWidth="5" strokeLinecap="round" />
+      ) : null}
+      {pose === "celebrating" ? (
+        <>
+          <circle cx="18" cy="22" r="3" fill="rgba(251,113,133,0.8)" />
+          <circle cx="84" cy="18" r="3" fill="rgba(245,158,11,0.8)" />
+        </>
+      ) : null}
+    </svg>
+  );
+}
+
 function HomeIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
       <path d="M3 10.5 12 3l9 7.5" />
       <path d="M5.5 9.5V20h13V9.5" />
-    </svg>
-  );
-}
-
-function InboxIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
-      <path d="M4 5.5h16v11H15l-3 3-3-3H4z" />
-      <path d="M8 9h8" />
-      <path d="M8 12.5h5" />
     </svg>
   );
 }
@@ -418,21 +510,30 @@ function LedgerIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-function TicketIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
-      <path d="M5 7.5A2.5 2.5 0 0 1 7.5 5H19v4a2 2 0 0 0 0 4v4H7.5A2.5 2.5 0 0 1 5 18.5v-11Z" />
-      <path d="M5 11.5a2 2 0 0 0 0 4v-8a2 2 0 0 1 0 4Z" />
-      <path d="M12 8.5v7" strokeDasharray="2.4 2.4" />
-    </svg>
-  );
-}
-
 function SparkIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
       <path d="m12 3 1.7 4.8L18.5 9l-4.8 1.2L12 15l-1.7-4.8L5.5 9l4.8-1.2Z" />
       <path d="M18.5 15.5 19.4 18l2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9Z" />
+    </svg>
+  );
+}
+
+function CardIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
+      <rect x="3" y="5" width="18" height="14" rx="3" />
+      <path d="M3 10.5h18" />
+      <path d="M7 15h4" />
+    </svg>
+  );
+}
+
+function UserIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
+      <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
+      <path d="M5 20a7 7 0 0 1 14 0" />
     </svg>
   );
 }
