@@ -54,6 +54,10 @@ if (-not [string]::IsNullOrWhiteSpace($projectRef)) {
     }
 }
 
+if (-not (Get-Item "Env:SPRING_JPA_HIBERNATE_DDL_AUTO" -ErrorAction SilentlyContinue)) {
+    $env:SPRING_JPA_HIBERNATE_DDL_AUTO = "none"
+}
+
 Set-Location $backendRoot
 
 & .\gradlew.bat --stop

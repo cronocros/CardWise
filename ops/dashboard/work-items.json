@@ -1,7 +1,7 @@
 {
   "version": 1,
   "project": "CardWise",
-  "updated_at": "2026-03-19T11:02:00+09:00",
+  "updated_at": "2026-03-19T11:10:00+09:00",
   "phases": [
     {
       "phase": "P0",
@@ -24,16 +24,16 @@
     {
       "phase": "P3",
       "title": "통합 검증과 원격 스모크",
-      "status": "IN_PROGRESS",
-      "summary": "로컬 정적 검증과 Supabase 원격 스모크는 완료했고, 스프링 런타임은 원격 pooler 인증 정보 검증과 재기동 확인 단계입니다."
+      "status": "DONE",
+      "summary": "로컬 정적 검증, Supabase 원격 스모크, 그리고 원격 DB를 붙인 스프링 런타임/API 확인까지 완료했습니다."
     }
   ],
   "agents": [
     {
       "name": "Orchestrator",
       "role": "coordination",
-      "status": "IN_PROGRESS",
-      "progress": 98
+      "status": "DONE",
+      "progress": 100
     },
     {
       "name": "BE-Platform",
@@ -588,7 +588,7 @@
       "title": "스프링 런타임의 원격 Supabase 직접 연결",
       "priority": "P3",
       "owner_agent": "Orchestrator",
-      "status": "IN_PROGRESS",
+      "status": "DONE",
       "feature_refs": [],
       "requirement_refs": [],
       "api_refs": [
@@ -605,11 +605,14 @@
       "dependencies": [
         "P3-2"
       ],
-      "blocker": "remote-env.ps1의 pooler 사용자명이 프로젝트 ref와 일치해야 합니다. 현재 인증 정보 재검증 후 재기동 확인이 남아 있습니다.",
+      "blocker": null,
       "evidence": [
         "supabase/.temp/project-ref",
         "supabase/.temp/pooler-url",
-        "backend/src/main/kotlin/com/cardwise/performance/infrastructure/PerformanceEntities.kt"
+        "backend/src/main/kotlin/com/cardwise/performance/infrastructure/PerformanceEntities.kt",
+        "backend/scripts/boot-remote.ps1",
+        "GET http://127.0.0.1:8080/actuator/health",
+        "GET http://127.0.0.1:8080/api/v1/vouchers"
       ]
     }
   ],
@@ -727,6 +730,18 @@
       "agent": "Orchestrator",
       "type": "DECISION",
       "message": "boot-remote 스크립트에 Supabase pooler 사용자명과 issuer 선검사를 추가해 잘못된 remote-env 설정을 즉시 막도록 보강했습니다."
+    },
+    {
+      "ts": "2026-03-19T11:08:00+09:00",
+      "agent": "Orchestrator",
+      "type": "DECISION",
+      "message": "원격 Supabase 부트에서는 Hibernate schema validate를 끄고 외부 스키마를 그대로 사용하도록 boot-remote 기본값을 ddl-auto=none으로 조정했습니다."
+    },
+    {
+      "ts": "2026-03-19T11:10:00+09:00",
+      "agent": "Orchestrator",
+      "type": "DONE",
+      "message": "boot-remote로 원격 Supabase에 연결한 Spring 런타임이 기동했고 /actuator/health와 /api/v1/vouchers가 200으로 응답했습니다."
     }
   ],
   "questions": [

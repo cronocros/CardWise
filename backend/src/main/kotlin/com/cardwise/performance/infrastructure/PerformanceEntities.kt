@@ -8,6 +8,8 @@ import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.Id
 import jakarta.persistence.Table
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -70,7 +72,8 @@ open class UserPerformanceEntity(
     @Column(name = "user_card_id")
     var userCardId: Long? = null,
 
-    @Column(name = "year_month", columnDefinition = "char(7)")
+    @JdbcTypeCode(SqlTypes.CHAR)
+    @Column(name = "year_month", length = 7, columnDefinition = "char(7)")
     var yearMonth: String = "",
 
     @Column(name = "monthly_spent")
