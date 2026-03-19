@@ -350,7 +350,7 @@ export function VouchersClient({
     return (
       <article
         key={item.userVoucherId}
-        className={`rounded-[28px] border p-4 shadow-[0_14px_30px_rgba(190,24,60,0.06)] transition ${
+        className={`cw-interactive-card cw-voucher-card rounded-[28px] border p-4 shadow-[0_14px_30px_rgba(190,24,60,0.06)] transition ${
           isSelected
             ? "border-[var(--surface-border-strong)] bg-[linear-gradient(180deg,#fff8fa,#ffffff)]"
             : "border-[var(--surface-border)] bg-white hover:-translate-y-0.5 hover:border-[var(--surface-border-strong)]"
@@ -393,7 +393,7 @@ export function VouchersClient({
                 {progressPercent !== null ? (
                   <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--primary-100)]">
                     <div
-                      className="h-full rounded-full bg-[linear-gradient(90deg,var(--primary-300),var(--primary-400))]"
+                      className="cw-progress-fill-animated h-full rounded-full bg-[linear-gradient(90deg,var(--primary-300),var(--primary-400))]"
                       style={{ width: `${progressPercent}%` }}
                     />
                   </div>

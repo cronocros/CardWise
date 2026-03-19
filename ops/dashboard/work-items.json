@@ -1,7 +1,7 @@
 {
   "version": 1,
   "project": "CardWise",
-  "updated_at": "2026-03-19T18:30:43+09:00",
+  "updated_at": "2026-03-19T18:34:04+09:00",
   "phases": [
     {
       "phase": "P0",
@@ -128,8 +128,8 @@
     {
       "name": "FE-MotionAssets",
       "role": "frontend",
-      "status": "TODO",
-      "progress": 0
+      "status": "IN_PROGRESS",
+      "progress": 55
     }
   ],
   "work_items": [
@@ -922,7 +922,7 @@
       "title": "인터랙션과 모션 자산 연결",
       "priority": "P3",
       "owner_agent": "FE-MotionAssets",
-      "status": "TODO",
+      "status": "IN_PROGRESS",
       "feature_refs": [
         "F4",
         "F5",
@@ -946,7 +946,14 @@
         "P4-6"
       ],
       "blocker": null,
-      "evidence": []
+      "evidence": [
+        "frontend/src/app/globals.css",
+        "frontend/src/components/app-shell.tsx",
+        "frontend/src/app/cards/page.tsx",
+        "frontend/src/components/vouchers-client.tsx",
+        "frontend/src/app/benefits/page.tsx",
+        "frontend/src/app/settings/page.tsx"
+      ]
     },
     {
       "todo_id": "P4-8",
@@ -1370,6 +1377,12 @@
       "agent": "Orchestrator",
       "type": "IN_PROGRESS",
       "summary": "프론트 lint/build와 주요 라우트 및 대시보드/Swagger 링크 응답을 검증했다"
+    },
+    {
+      "timestamp": "2026-03-19T18:34:04+09:00",
+      "agent": "FE-MotionAssets",
+      "type": "IN_PROGRESS",
+      "summary": "카드 hover, 바우처 카드 모션, 페이지 진입 스태거, 진행 바 애니메이션을 추가했다"
     }
   ],
   "questions": [

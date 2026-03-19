@@ -29,7 +29,7 @@ export function LedgerHub({ pendingCount, pendingActions, paymentId, adjustments
 
   return (
     <div className="grid gap-5">
-      <section className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+      <section className="cw-stagger grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
         <Panel
           title="Ledger hub"
           subtitle="The ledger surface now acts as the control point for inbox review and payment adjustments."
@@ -40,13 +40,13 @@ export function LedgerHub({ pendingCount, pendingActions, paymentId, adjustments
             <MetricCard label="Net delta" value={formatCurrency(totalDelta)} helper="Recent adjustment total" />
           </div>
           <div className="mt-5 grid gap-3 sm:grid-cols-3">
-            <Link href="/inbox" className="rounded-[20px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] px-4 py-4 text-sm font-medium text-[var(--text-strong)] transition hover:-translate-y-0.5 hover:border-[var(--surface-border-strong)] hover:shadow-[var(--surface-shadow)]">
+            <Link href="/inbox" className="cw-interactive-card rounded-[20px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] px-4 py-4 text-sm font-medium text-[var(--text-strong)] transition hover:-translate-y-0.5 hover:border-[var(--surface-border-strong)] hover:shadow-[var(--surface-shadow)]">
               Open inbox
             </Link>
-            <Link href={`/adjustments?paymentId=${encodeURIComponent(paymentId || "1")}`} className="rounded-[20px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] px-4 py-4 text-sm font-medium text-[var(--text-strong)] transition hover:-translate-y-0.5 hover:border-[var(--surface-border-strong)] hover:shadow-[var(--surface-shadow)]">
+            <Link href={`/adjustments?paymentId=${encodeURIComponent(paymentId || "1")}`} className="cw-interactive-card rounded-[20px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] px-4 py-4 text-sm font-medium text-[var(--text-strong)] transition hover:-translate-y-0.5 hover:border-[var(--surface-border-strong)] hover:shadow-[var(--surface-shadow)]">
               Review adjustments
             </Link>
-            <Link href="/vouchers" className="rounded-[20px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] px-4 py-4 text-sm font-medium text-[var(--text-strong)] transition hover:-translate-y-0.5 hover:border-[var(--surface-border-strong)] hover:shadow-[var(--surface-shadow)]">
+            <Link href="/vouchers" className="cw-interactive-card rounded-[20px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] px-4 py-4 text-sm font-medium text-[var(--text-strong)] transition hover:-translate-y-0.5 hover:border-[var(--surface-border-strong)] hover:shadow-[var(--surface-shadow)]">
               Voucher workbench
             </Link>
           </div>

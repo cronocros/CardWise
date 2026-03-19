@@ -140,7 +140,7 @@ export default function BenefitsPage() {
         </>
       }
     >
-      <section className="grid gap-4 md:grid-cols-4">
+      <section className="cw-stagger grid gap-4 md:grid-cols-4">
         <MetricCard label="추천" value={String(recommendedCount)} helper="AI 우선순위 포함" />
         <MetricCard label="보유" value={String(ownedCount)} helper="현재 활성 혜택" />
         <MetricCard label="검토" value={String(reviewCount)} helper="조건 확인 필요" />
@@ -182,7 +182,7 @@ export default function BenefitsPage() {
                 filteredItems.map((item) => (
                   <article
                     key={item.id}
-                    className="rounded-[24px] border border-[var(--surface-border)] bg-white p-4 shadow-[0_14px_28px_rgba(190,24,60,0.05)]"
+                    className="cw-interactive-card rounded-[24px] border border-[var(--surface-border)] bg-white p-4 shadow-[0_14px_28px_rgba(190,24,60,0.05)]"
                   >
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
@@ -215,7 +215,7 @@ export default function BenefitsPage() {
         <div className="grid gap-5">
           <Panel title="AI 추천" subtitle="추천 흐름은 카드 실적과 사용 습관을 기준으로 보여주는 자리입니다.">
             <div className="grid gap-3">
-              <article className="rounded-[24px] border border-[var(--surface-border)] bg-[linear-gradient(135deg,#fff7f8,#ffffff)] p-4">
+              <article className="cw-interactive-card rounded-[24px] border border-[var(--surface-border)] bg-[linear-gradient(135deg,#fff7f8,#ffffff)] p-4">
                 <div className="flex flex-wrap gap-2">
                   <Chip tone="rose">추천 1위</Chip>
                   <Chip tone="slate">여행</Chip>
@@ -227,7 +227,7 @@ export default function BenefitsPage() {
                   최근 이동 패턴과 카드 실적에 맞아떨어지는 경우 우선 적용 후보로 올립니다.
                 </p>
               </article>
-              <article className="rounded-[24px] border border-[var(--surface-border)] bg-white p-4">
+              <article className="cw-interactive-card rounded-[24px] border border-[var(--surface-border)] bg-white p-4">
                 <div className="flex flex-wrap gap-2">
                   <Chip tone="emerald">유지 권장</Chip>
                   <Chip tone="slate">생활</Chip>
@@ -239,7 +239,7 @@ export default function BenefitsPage() {
                   월 평균 지출과 대비했을 때 잔여 조건이 작아 유지 효율이 높습니다.
                 </p>
               </article>
-              <article className="rounded-[24px] border border-[var(--surface-border)] bg-[var(--surface-soft)] p-4">
+              <article className="cw-interactive-card rounded-[24px] border border-[var(--surface-border)] bg-[var(--surface-soft)] p-4">
                 <div className="flex flex-wrap gap-2">
                   <Chip tone="amber">검토 필요</Chip>
                   <Chip tone="slate">정기구독</Chip>

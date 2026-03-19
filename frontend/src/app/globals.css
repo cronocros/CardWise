@@ -276,10 +276,111 @@ select {
   }
 }
 
+@keyframes cardwise-grow-x {
+  from {
+    transform: scaleX(0.16);
+    opacity: 0.72;
+  }
+
+  to {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
 .animate-float-in {
   animation: cardwise-fade-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .animate-soft-pulse {
   animation: cardwise-soft-pulse 2.4s ease-in-out infinite;
+}
+
+.cw-panel-pop {
+  animation: cardwise-fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.cw-stagger > * {
+  opacity: 0;
+  animation: cardwise-fade-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.cw-stagger > *:nth-child(1) { animation-delay: 0.04s; }
+.cw-stagger > *:nth-child(2) { animation-delay: 0.08s; }
+.cw-stagger > *:nth-child(3) { animation-delay: 0.12s; }
+.cw-stagger > *:nth-child(4) { animation-delay: 0.16s; }
+.cw-stagger > *:nth-child(5) { animation-delay: 0.2s; }
+.cw-stagger > *:nth-child(6) { animation-delay: 0.24s; }
+
+.cw-interactive-card {
+  position: relative;
+  overflow: hidden;
+  transform: translateY(0) scale(1);
+  transition:
+    transform 0.24s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.24s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.cw-interactive-card::after {
+  content: "";
+  position: absolute;
+  inset: -30% auto -30% -55%;
+  width: 34%;
+  background: linear-gradient(
+    110deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.52) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-170%) rotate(14deg);
+  transition:
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.2s ease;
+}
+
+.cw-interactive-card:hover {
+  transform: translateY(-4px) scale(1.01);
+  border-color: var(--surface-border-strong);
+  box-shadow: var(--surface-shadow-strong);
+}
+
+.cw-interactive-card:hover::after {
+  opacity: 1;
+  transform: translateX(340%) rotate(14deg);
+}
+
+.cw-voucher-card {
+  transform-style: preserve-3d;
+}
+
+.cw-voucher-card:hover {
+  transform: translateY(-5px) rotateX(2deg) rotateY(-2deg);
+}
+
+.cw-progress-fill-animated {
+  transform-origin: left center;
+  animation: cardwise-grow-x 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float-in,
+  .animate-soft-pulse,
+  .cw-panel-pop,
+  .cw-stagger > *,
+  .cw-progress-fill-animated {
+    animation: none !important;
+  }
+
+  .cw-interactive-card,
+  .cw-voucher-card {
+    transition: none !important;
+    transform: none !important;
+  }
+
+  .cw-interactive-card::after {
+    display: none;
+  }
 }

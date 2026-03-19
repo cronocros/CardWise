@@ -78,7 +78,7 @@ export default async function DashboardPage() {
         </>
       }
     >
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="cw-stagger grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard label="Pending actions" value={String(pendingCount)} helper="BFF badge count" />
         <MetricCard label="Active vouchers" value={String(activeVouchers.length)} helper="Current live list" />
         <MetricCard label="Expiring soon" value={String(expiringVouchers.length)} helper="D-7 review window" />
@@ -163,7 +163,7 @@ export default async function DashboardPage() {
 
               <div className="mt-4 h-2 overflow-hidden rounded-full bg-[var(--primary-100)]">
                 <div
-                  className="h-full rounded-full bg-[linear-gradient(90deg,var(--primary-300),var(--primary-500))]"
+                  className="cw-progress-fill-animated h-full rounded-full bg-[linear-gradient(90deg,var(--primary-300),var(--primary-500))]"
                   style={{ width: `${progressFor(topCard.data)}%` }}
                 />
               </div>

@@ -285,7 +285,7 @@ export function Panel({
 
   return (
     <section
-      className={`cw-glass overflow-hidden rounded-[26px] border border-[var(--surface-border)] p-5 shadow-[var(--surface-shadow)] sm:p-6 ${toneClass} ${className}`}
+      className={`cw-glass cw-panel-pop overflow-hidden rounded-[26px] border border-[var(--surface-border)] p-5 shadow-[var(--surface-shadow)] sm:p-6 ${toneClass} ${className}`}
     >
       <div className="mb-5 flex flex-col gap-2">
         <h2 className="text-[18px] font-semibold tracking-[-0.04em] text-[var(--text-strong)]">
@@ -312,7 +312,7 @@ export function MetricCard({
   helper?: string;
 }) {
   return (
-    <div className="rounded-[22px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] px-4 py-4 shadow-[0_12px_24px_rgba(190,24,60,0.06)]">
+    <div className="cw-interactive-card animate-float-in rounded-[22px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] px-4 py-4 shadow-[0_12px_24px_rgba(190,24,60,0.06)]">
       <div className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--text-soft)]">
         {label}
       </div>

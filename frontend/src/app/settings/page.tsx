@@ -83,7 +83,7 @@ export default function SettingsPage() {
         </>
       }
     >
-      <section className="grid gap-4 md:grid-cols-4">
+      <section className="cw-stagger grid gap-4 md:grid-cols-4">
         <MetricCard label="활성 설정" value={String(enabledCount)} helper="켜진 항목 수" />
         <MetricCard label="알림 채널" value="3" helper="앱 / 이메일 / 배지" />
         <MetricCard label="연동 카드" value="4" helper="기준 카드 샘플" />
@@ -141,7 +141,7 @@ export default function SettingsPage() {
                     ),
                   )
                 }
-                className="flex items-center justify-between gap-4 rounded-[22px] border border-[var(--surface-border)] bg-white px-4 py-4 text-left transition hover:border-[var(--surface-border-strong)]"
+                className="cw-interactive-card flex items-center justify-between gap-4 rounded-[22px] border border-[var(--surface-border)] bg-white px-4 py-4 text-left transition hover:border-[var(--surface-border-strong)]"
               >
                 <div className="min-w-0">
                   <div className="text-[15px] font-semibold tracking-[-0.03em] text-[var(--text-strong)]">
@@ -172,7 +172,7 @@ export default function SettingsPage() {
             {themeOptions.map((theme) => (
               <article
                 key={theme.key}
-                className={`rounded-[24px] border p-4 ${
+                className={`cw-interactive-card rounded-[24px] border p-4 ${
                   theme.selected
                     ? "border-[var(--surface-border-strong)] bg-[linear-gradient(135deg,#fff5f7,#ffffff)]"
                     : "border-[var(--surface-border)] bg-white"
