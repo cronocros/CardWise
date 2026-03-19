@@ -70,7 +70,7 @@ open class UserPerformanceEntity(
     @Column(name = "user_card_id")
     var userCardId: Long? = null,
 
-    @Column(name = "year_month", length = 7)
+    @Column(name = "year_month", columnDefinition = "char(7)")
     var yearMonth: String = "",
 
     @Column(name = "monthly_spent")

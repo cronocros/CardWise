@@ -1,7 +1,7 @@
 {
   "version": 1,
   "project": "CardWise",
-  "updated_at": "2026-03-19T10:38:00+09:00",
+  "updated_at": "2026-03-19T10:54:00+09:00",
   "phases": [
     {
       "phase": "P0",
@@ -25,7 +25,7 @@
       "phase": "P3",
       "title": "통합 검증과 원격 스모크",
       "status": "IN_PROGRESS",
-      "summary": "로컬 정적 검증과 Supabase 원격 스모크는 완료했고, 스프링 런타임의 원격 연결은 DB 비밀번호가 없어 보류 중입니다."
+      "summary": "로컬 정적 검증과 Supabase 원격 스모크는 완료했고, 스프링 런타임은 원격 DB 연결 후 스키마 매핑 수정까지 반영한 상태입니다."
     }
   ],
   "agents": [
@@ -33,7 +33,7 @@
       "name": "Orchestrator",
       "role": "coordination",
       "status": "IN_PROGRESS",
-      "progress": 97
+      "progress": 98
     },
     {
       "name": "BE-Platform",
@@ -588,7 +588,7 @@
       "title": "스프링 런타임의 원격 Supabase 직접 연결",
       "priority": "P3",
       "owner_agent": "Orchestrator",
-      "status": "BLOCKED",
+      "status": "IN_PROGRESS",
       "feature_refs": [],
       "requirement_refs": [],
       "api_refs": [
@@ -605,10 +605,11 @@
       "dependencies": [
         "P3-2"
       ],
-      "blocker": "원격 Postgres 접속용 DB 비밀번호가 없어 Spring datasource를 기동할 수 없습니다.",
+      "blocker": "원격 pooler 연결 뒤 user_performance.year_month의 CHAR(7) 매핑을 코드에 반영했고, 재기동 최종 확인이 남아 있습니다.",
       "evidence": [
         "supabase/.temp/project-ref",
-        "supabase/.temp/pooler-url"
+        "supabase/.temp/pooler-url",
+        "backend/src/main/kotlin/com/cardwise/performance/infrastructure/PerformanceEntities.kt"
       ]
     }
   ],
@@ -714,6 +715,12 @@
       "agent": "Orchestrator",
       "type": "BLOCKED",
       "message": "Spring 런타임을 원격 Supabase에 직접 연결하려면 DB 비밀번호가 추가로 필요합니다."
+    },
+    {
+      "ts": "2026-03-19T10:54:00+09:00",
+      "agent": "Orchestrator",
+      "type": "DECISION",
+      "message": "원격 pooler 연결은 성공했고, user_performance.year_month의 CHAR(7) 스키마와 맞도록 JPA 매핑을 수정했습니다."
     }
   ],
   "questions": [
