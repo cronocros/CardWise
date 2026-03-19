@@ -1,0 +1,57 @@
+{
+  "generated_at": "2026-03-19T09:40:00+09:00",
+  "mappings": [
+    {
+      "feature_ref": "F2",
+      "requirement_refs": ["R3"],
+      "api_refs": [
+        "POST /payments/{paymentId}/adjustments",
+        "GET /payments/{paymentId}/adjustments"
+      ],
+      "db_refs": [
+        "payment",
+        "payment_item",
+        "payment_adjustment"
+      ]
+    },
+    {
+      "feature_ref": "F3",
+      "requirement_refs": ["R3"],
+      "api_refs": [
+        "GET /pending-actions",
+        "GET /pending-actions/count",
+        "PATCH /pending-actions/{actionId}/resolve",
+        "PATCH /pending-actions/{actionId}/dismiss"
+      ],
+      "db_refs": [
+        "user_pending_action"
+      ]
+    },
+    {
+      "feature_ref": "F4",
+      "requirement_refs": ["R2"],
+      "api_refs": [
+        "GET /cards/{cardId}/performance"
+      ],
+      "db_refs": [
+        "annual_perf_basis_enum",
+        "benefit_period_lag_enum",
+        "special_performance_period",
+        "card_performance_exclusion",
+        "payment_item.excluded_from_performance"
+      ]
+    },
+    {
+      "feature_ref": "F6",
+      "requirement_refs": ["R2"],
+      "api_refs": [
+        "GET /cards/{cardId}/performance"
+      ],
+      "db_refs": [
+        "card_voucher.unlock_conditions",
+        "user_voucher",
+        "user_voucher_log"
+      ]
+    }
+  ]
+}

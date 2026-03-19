@@ -1,0 +1,150 @@
+[
+  {
+    "path": "docs\\_legacy\\2026-03-17-cardwise-architecture.md",
+    "sha256": "5829f457219c1846d4f436a82c0b7068d8a325366eff8eacac9d4206d2b05184"
+  },
+  {
+    "path": "docs\\_legacy\\2026-03-17-cardwise-database.md",
+    "sha256": "db837023d32fc3af54b374b4c154f06c3c09950b4c3f326109eac1a71e563990"
+  },
+  {
+    "path": "docs\\_legacy\\2026-03-17-cardwise-design.md",
+    "sha256": "c66335f25c76ab0469c99edf89d1fbc5e1868e4341099d6885bd726e39880777"
+  },
+  {
+    "path": "docs\\_legacy\\2026-03-17-cardwise-requirements.md",
+    "sha256": "6994c3c87d156cc93d45837778ab978e698e6f8c0629d395d7294c7b6fe983e6"
+  },
+  {
+    "path": "docs\\api\\api-design.md",
+    "sha256": "2531fcfaada236e8718c7d80f73b3bf17dfbc3da3a9a060e6378b26ec211eb38"
+  },
+  {
+    "path": "docs\\architecture\\application-architecture.md",
+    "sha256": "05c956b40fec72fe52e0662946c374a4ef147d3465de02c9c7a88ebc06ce389c"
+  },
+  {
+    "path": "docs\\architecture\\auth-design.md",
+    "sha256": "530bd4c837ee1b86b0f051596d46eeb5406ebc3e0d85f9c1cd5e35624aa8d44e"
+  },
+  {
+    "path": "docs\\architecture\\frontend-architecture.md",
+    "sha256": "d56b7c33b6f7fc0e95952b3cd0d612051de54c143bbc973dc54cc27e0230ce42"
+  },
+  {
+    "path": "docs\\architecture\\system-architecture.md",
+    "sha256": "9718c8d023c1ce12f67c65c4e61058dfcdf8771adae97d2e536d38e61b12e1ba"
+  },
+  {
+    "path": "docs\\archive\\eda-kafka-design.md",
+    "sha256": "6316b674ae5f196dbd1c5f7ad8dd4163169b4a1f8dbf5f1be1b7303989872a3a"
+  },
+  {
+    "path": "docs\\database\\data-dictionary.md",
+    "sha256": "f2c14050339e20772e2dd76a715f449c2f2b5f2f65518efa2784933861244c6f"
+  },
+  {
+    "path": "docs\\database\\schema-design.md",
+    "sha256": "c4284ed023cedd31f3d9fcadc8d2437f5eb4a1d8d02e00555f8163799bd81b2f"
+  },
+  {
+    "path": "docs\\deployment\\deployment-guide.md",
+    "sha256": "5d86a1d9b8c940d7a1a883a9ca35df1de5ad29f7c6da04360c9a9633ce040de9"
+  },
+  {
+    "path": "docs\\design\\design-system.md",
+    "sha256": "8835b04554752427c4fa9614e4c6d593f6cf7cfa8646c8f00727bb803694f9dd"
+  },
+  {
+    "path": "docs\\monitoring\\observability.md",
+    "sha256": "2cb7e060c7abca5d2e8ac968c6a482cec045bca0d0957583990bed050bbc4113"
+  },
+  {
+    "path": "docs\\overview\\tech-stack.md",
+    "sha256": "2ab2151e48d38249ba03ce707968e3ecc3838a045b3d07933c5cc30182706e39"
+  },
+  {
+    "path": "docs\\planning\\mvp-scope.md",
+    "sha256": "9c86eb30cec529a96d22bf2b904d87fbe2db44305c43f90066adb199517b53f2"
+  },
+  {
+    "path": "docs\\prompts\\design-quick-prompts.md",
+    "sha256": "e665f5c48ec91f0d1356c8f92825203567476fee19eaa9a411dada73c2204469"
+  },
+  {
+    "path": "docs\\prompts\\llm-context-prompt.md",
+    "sha256": "cf2c738d105d0516a4eb6e7e316f53c5187dc472d0b30a23780b59811cf52112"
+  },
+  {
+    "path": "docs\\prompts\\ui-design-prompts.md",
+    "sha256": "80b6028863d50cce2ddf564f049514dd1e43bcc4c357c54e324f765ee8c440f7"
+  },
+  {
+    "path": "docs\\README.md",
+    "sha256": "72654356aa6d1b914d316e7af77c397849dee91e6f3073813995d55e9604b2c1"
+  },
+  {
+    "path": "docs\\requirements\\functional-requirements.md",
+    "sha256": "17541d502eb725ec0204cb92e3e2468ca2d85c598e833801680755fbe0f89459"
+  },
+  {
+    "path": "docs\\requirements\\non-functional-requirements.md",
+    "sha256": "9eceea2e33830c3c72ca85b70e66938a7d0edf5c5022904cf3fbd1b409cf6548"
+  },
+  {
+    "path": "docs\\risk\\risk-register.md",
+    "sha256": "953596f764765970f979c0422157ae0f904651bdf6deec32d5fa04c983f2a3dc"
+  },
+  {
+    "path": "docs\\specs\\AUTH-signup-login.md",
+    "sha256": "100cae584e9135fafbac3e2caf08538b1e86037fdc160859cc3b5cb0c468c224"
+  },
+  {
+    "path": "docs\\specs\\F1-card-management.md",
+    "sha256": "977ae792f0635c1c40bca0d979bfbfcfdb85d849ade089fe3f0f5080f54df432"
+  },
+  {
+    "path": "docs\\specs\\F12-group-ledger.md",
+    "sha256": "6c2ee070c6201600dd8fa595ca1d5949de091e241c6e5a7b3fc2e23612421f1c"
+  },
+  {
+    "path": "docs\\specs\\F2-ledger-manual.md",
+    "sha256": "220db2e178e6ddd3d29ea5c3e8dd776b84699ceb388b8cab4d140a08b697a001"
+  },
+  {
+    "path": "docs\\specs\\F3-ledger-inbox.md",
+    "sha256": "492381aa22c34ec41b8c7c75b87dfe7c7834faed7e7de7a5aee3a9b85b7362ea"
+  },
+  {
+    "path": "docs\\specs\\F4-performance-tracking.md",
+    "sha256": "ea3f73c9458d082a177db2038aca9e5106b88eedc5bff8d9da6155e75c252b65"
+  },
+  {
+    "path": "docs\\specs\\F5-benefit-search.md",
+    "sha256": "ef029aa0181ca4692f3fe15993aa718e72970d87ee9aef4502b06a71c8d32654"
+  },
+  {
+    "path": "docs\\specs\\F6-voucher-management.md",
+    "sha256": "680bd37749455ba8c7b16310f908d81b00abe8705ac6fe88b900ee25fcdfc6d2"
+  },
+  {
+    "path": "docs\\specs\\F7-notification.md",
+    "sha256": "488e7a0edaa07c82369d27e34cbda8b3f2d69c19b82fd41bfece005354739a06"
+  },
+  {
+    "path": "docs\\specs\\F8-dashboard.md",
+    "sha256": "93dea68f6b3cde3dbb7f74a5d6654de9b10b123ae20c0121de49903828f73772"
+  },
+  {
+    "path": "docs\\specs\\TAG-system.md",
+    "sha256": "dcece1254f1ee734a117c4b634e8dc4ef7b313c0d7a312e90c2b7e21281394bf"
+  },
+  {
+    "path": "docs\\STATUS.md",
+    "sha256": "255bb6faeaad69f6cc2f25bca96fdd729d88b009f8ea8db3e263b9fc275aa750"
+  },
+  {
+    "path": "docs\\testing\\test-strategy.md",
+    "sha256": "7a88e1e4e48bc2a97d8a7e1339d4aaf328ec7a1539ed750723456cf0da1a4396"
+  }
+]

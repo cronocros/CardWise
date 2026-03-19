@@ -1,0 +1,761 @@
+{
+  "version": 1,
+  "project": "CardWise",
+  "updated_at": "2026-03-19T11:10:00+09:00",
+  "phases": [
+    {
+      "phase": "P0",
+      "title": "스냅샷과 대시보드",
+      "status": "DONE",
+      "summary": "레포 전체와 문서, DB 기준점을 고정하고 실시간 추적판을 마련했습니다."
+    },
+    {
+      "phase": "P1",
+      "title": "원장 인박스와 보정",
+      "status": "DONE",
+      "summary": "F2/F3 흐름과 결제 보정, 확인 필요 인박스를 구현했습니다."
+    },
+    {
+      "phase": "P2",
+      "title": "실적과 바우처",
+      "status": "DONE",
+      "summary": "F4/F6 실적 계산과 바우처 관리 흐름을 백엔드·프론트에 반영했습니다."
+    },
+    {
+      "phase": "P3",
+      "title": "통합 검증과 원격 스모크",
+      "status": "DONE",
+      "summary": "로컬 정적 검증, Supabase 원격 스모크, 그리고 원격 DB를 붙인 스프링 런타임/API 확인까지 완료했습니다."
+    }
+  ],
+  "agents": [
+    {
+      "name": "Orchestrator",
+      "role": "coordination",
+      "status": "DONE",
+      "progress": 100
+    },
+    {
+      "name": "BE-Platform",
+      "role": "backend",
+      "status": "DONE",
+      "progress": 100
+    },
+    {
+      "name": "BE-Ledger",
+      "role": "backend",
+      "status": "DONE",
+      "progress": 100
+    },
+    {
+      "name": "BE-Performance",
+      "role": "backend",
+      "status": "DONE",
+      "progress": 100
+    },
+    {
+      "name": "FE-Foundation",
+      "role": "frontend",
+      "status": "DONE",
+      "progress": 100
+    },
+    {
+      "name": "FE-Features",
+      "role": "frontend",
+      "status": "DONE",
+      "progress": 100
+    },
+    {
+      "name": "FE-Vouchers",
+      "role": "frontend",
+      "status": "DONE",
+      "progress": 100
+    }
+  ],
+  "work_items": [
+    {
+      "todo_id": "P0-1",
+      "title": "스냅샷 고정 및 메타 기록",
+      "priority": "P0",
+      "owner_agent": "Orchestrator",
+      "status": "DONE",
+      "feature_refs": [],
+      "requirement_refs": [],
+      "api_refs": [],
+      "db_refs": [
+        "snapshot/phase1-start-20260319",
+        "codex/integration-phase1"
+      ],
+      "acceptance": [
+        "Git tag exists",
+        "integration branch exists",
+        "docs checksum manifest exists",
+        "Supabase counts recorded"
+      ],
+      "dependencies": [],
+      "blocker": null,
+      "evidence": [
+        "ops/snapshots/phase1-start-20260319.meta.json",
+        "ops/snapshots/phase1-start-20260319.docs.sha256.json"
+      ]
+    },
+    {
+      "todo_id": "P0-2",
+      "title": "공유 대시보드 상태와 렌더러 구축",
+      "priority": "P0",
+      "owner_agent": "Orchestrator",
+      "status": "DONE",
+      "feature_refs": [],
+      "requirement_refs": [],
+      "api_refs": [],
+      "db_refs": [],
+      "acceptance": [
+        "Terminal renderer reads the same JSON state",
+        "Web dashboard shows phases, agents, blockers, events",
+        "Dashboard can be opened locally in browser"
+      ],
+      "dependencies": [
+        "P0-1"
+      ],
+      "blocker": null,
+      "evidence": [
+        "ops/dashboard/work-items.json",
+        "ops/dashboard/serve.js",
+        "ops/dashboard/render-terminal.js",
+        "ops/dashboard/dashboard-lib.js"
+      ]
+    },
+    {
+      "todo_id": "P0-3",
+      "title": "기능·요구사항·API 매핑 확정",
+      "priority": "P0",
+      "owner_agent": "Orchestrator",
+      "status": "DONE",
+      "feature_refs": [
+        "F2",
+        "F3",
+        "F4",
+        "F6"
+      ],
+      "requirement_refs": [
+        "R2",
+        "R3"
+      ],
+      "api_refs": [
+        "POST /payments/{paymentId}/adjustments",
+        "GET /pending-actions",
+        "GET /pending-actions/count",
+        "GET /cards/{cardId}/performance"
+      ],
+      "db_refs": [
+        "payment_adjustment",
+        "user_pending_action",
+        "card_performance_exclusion",
+        "special_performance_period"
+      ],
+      "acceptance": [
+        "Each todo can reference feature, requirement, API, and DB objects",
+        "Dashboard shows counts by type",
+        "Conversation events can be traced to todos"
+      ],
+      "dependencies": [
+        "P0-2"
+      ],
+      "blocker": null,
+      "evidence": [
+        "ops/dashboard/traceability-map.json",
+        "supabase/seeds/seed-metadata.json"
+      ]
+    },
+    {
+      "todo_id": "P1-0",
+      "title": "백엔드 공통 기반 정비",
+      "priority": "P1",
+      "owner_agent": "BE-Platform",
+      "status": "DONE",
+      "feature_refs": [
+        "F2",
+        "F3",
+        "F4",
+        "F6"
+      ],
+      "requirement_refs": [
+        "R2",
+        "R3"
+      ],
+      "api_refs": [
+        "POST /payments/{paymentId}/adjustments",
+        "GET /pending-actions",
+        "GET /cards/{cardId}/performance"
+      ],
+      "db_refs": [
+        "common api",
+        "security",
+        "jsonb converter"
+      ],
+      "acceptance": [
+        "Shared API response wrapper exists",
+        "Global error handling exists",
+        "Request account resolution is consistent",
+        "Security defaults allow local development"
+      ],
+      "dependencies": [
+        "P0-1"
+      ],
+      "blocker": null,
+      "evidence": [
+        "backend/src/main/kotlin/com/cardwise/common/api/ApiResponse.kt",
+        "backend/src/main/kotlin/com/cardwise/common/config/SecurityConfig.kt",
+        "backend/src/main/kotlin/com/cardwise/common/exception/ApiExceptionHandler.kt",
+        "backend/src/main/kotlin/com/cardwise/common/web/RequestAccountIdResolver.kt"
+      ]
+    },
+    {
+      "todo_id": "P1-1",
+      "title": "인박스 흐름 구현",
+      "priority": "P1",
+      "owner_agent": "BE-Ledger",
+      "status": "DONE",
+      "feature_refs": [
+        "F3"
+      ],
+      "requirement_refs": [
+        "R3"
+      ],
+      "api_refs": [
+        "GET /pending-actions",
+        "GET /pending-actions/count",
+        "PATCH /pending-actions/{actionId}/resolve",
+        "PATCH /pending-actions/{actionId}/dismiss"
+      ],
+      "db_refs": [
+        "user_pending_action"
+      ],
+      "acceptance": [
+        "Inbox list returns unresolved items",
+        "Resolve and dismiss change status",
+        "Badge count matches unresolved items"
+      ],
+      "dependencies": [
+        "P0-3"
+      ],
+      "blocker": null,
+      "evidence": [
+        "backend/src/main/kotlin/com/cardwise/ledger/api/LedgerController.kt",
+        "backend/src/main/kotlin/com/cardwise/ledger/application/LedgerService.kt",
+        "backend/src/main/kotlin/com/cardwise/ledger/repository/PendingActionRepository.kt",
+        "backend/src/test/kotlin/com/cardwise/ledger/LedgerServiceTest.kt"
+      ]
+    },
+    {
+      "todo_id": "P1-2",
+      "title": "결제 보정 API 구현",
+      "priority": "P1",
+      "owner_agent": "BE-Ledger",
+      "status": "DONE",
+      "feature_refs": [
+        "F2"
+      ],
+      "requirement_refs": [
+        "R3"
+      ],
+      "api_refs": [
+        "POST /payments/{paymentId}/adjustments",
+        "GET /payments/{paymentId}/adjustments"
+      ],
+      "db_refs": [
+        "payment_adjustment",
+        "payment"
+      ],
+      "acceptance": [
+        "Adjustments create and list correctly",
+        "Partial unique constraints and references are honored"
+      ],
+      "dependencies": [
+        "P0-3"
+      ],
+      "blocker": null,
+      "evidence": [
+        "backend/src/main/kotlin/com/cardwise/ledger/dto/LedgerDtos.kt",
+        "backend/src/main/kotlin/com/cardwise/ledger/repository/PaymentRepository.kt",
+        "backend/src/main/kotlin/com/cardwise/ledger/repository/PaymentAdjustmentRepository.kt",
+        "backend/src/test/kotlin/com/cardwise/ledger/LedgerServiceTest.kt"
+      ]
+    },
+    {
+      "todo_id": "P2-1",
+      "title": "실적 계산 규칙 엔진 구현",
+      "priority": "P2",
+      "owner_agent": "BE-Performance",
+      "status": "DONE",
+      "feature_refs": [
+        "F4"
+      ],
+      "requirement_refs": [
+        "R2"
+      ],
+      "api_refs": [
+        "GET /cards/{cardId}/performance"
+      ],
+      "db_refs": [
+        "annual_perf_basis_enum",
+        "benefit_period_lag_enum",
+        "special_performance_period",
+        "payment_item",
+        "card_rules"
+      ],
+      "acceptance": [
+        "Annual basis and lag are reflected in performance output",
+        "Grace and exclusion rules are represented in the response"
+      ],
+      "dependencies": [
+        "P0-3"
+      ],
+      "blocker": null,
+      "evidence": [
+        "backend/src/main/kotlin/com/cardwise/performance/application/PerformanceService.kt",
+        "backend/src/main/kotlin/com/cardwise/performance/api/PerformanceDtos.kt",
+        "backend/src/main/kotlin/com/cardwise/performance/infrastructure/PerformanceEntities.kt",
+        "backend/src/test/kotlin/com/cardwise/performance/PerformanceServiceTest.kt"
+      ]
+    },
+    {
+      "todo_id": "P2-2",
+      "title": "바우처 잠금해제 규칙 구현",
+      "priority": "P2",
+      "owner_agent": "BE-Performance",
+      "status": "DONE",
+      "feature_refs": [
+        "F6"
+      ],
+      "requirement_refs": [
+        "R2"
+      ],
+      "api_refs": [
+        "GET /cards/{cardId}/performance"
+      ],
+      "db_refs": [
+        "card_voucher",
+        "unlock_conditions"
+      ],
+      "acceptance": [
+        "Unlock rules are exposed consistently",
+        "Voucher states can be derived from the configured conditions"
+      ],
+      "dependencies": [
+        "P0-3"
+      ],
+      "blocker": null,
+      "evidence": [
+        "backend/src/main/kotlin/com/cardwise/performance/application/PerformanceService.kt",
+        "backend/src/main/kotlin/com/cardwise/performance/infrastructure/PerformanceRepositories.kt",
+        "frontend/src/app/performance/[userCardId]/page.tsx",
+        "frontend/src/lib/cardwise-api.ts"
+      ]
+    },
+    {
+      "todo_id": "P1-3",
+      "title": "프론트 BFF와 원장 화면 구현",
+      "priority": "P1",
+      "owner_agent": "FE-Foundation",
+      "status": "DONE",
+      "feature_refs": [
+        "F2",
+        "F3"
+      ],
+      "requirement_refs": [
+        "R3"
+      ],
+      "api_refs": [
+        "POST /payments/{paymentId}/adjustments",
+        "GET /payments/{paymentId}/adjustments",
+        "GET /pending-actions",
+        "GET /pending-actions/count",
+        "PATCH /pending-actions/{actionId}/resolve",
+        "PATCH /pending-actions/{actionId}/dismiss"
+      ],
+      "db_refs": [
+        "payment",
+        "payment_adjustment",
+        "user_pending_action"
+      ],
+      "acceptance": [
+        "BFF proxies backend APIs",
+        "Inbox UI resolves and dismisses actions",
+        "Adjustments UI lists and creates entries"
+      ],
+      "dependencies": [
+        "P1-0"
+      ],
+      "blocker": null,
+      "evidence": [
+        "frontend/src/app/api/pending-actions/route.ts",
+        "frontend/src/app/api/pending-actions/count/route.ts",
+        "frontend/src/app/api/payments/[paymentId]/adjustments/route.ts",
+        "frontend/src/app/inbox/page.tsx",
+        "frontend/src/app/adjustments/page.tsx",
+        "frontend/src/components/inbox-client.tsx",
+        "frontend/src/components/adjustments-client.tsx"
+      ]
+    },
+    {
+      "todo_id": "P2-3",
+      "title": "바우처 관리 백엔드 API 구현",
+      "priority": "P2",
+      "owner_agent": "BE-Performance",
+      "status": "DONE",
+      "feature_refs": [
+        "F6"
+      ],
+      "requirement_refs": [
+        "R2"
+      ],
+      "api_refs": [
+        "GET /user-cards/{userCardId}/vouchers",
+        "GET /vouchers",
+        "GET /vouchers/expiring",
+        "PATCH /user-vouchers/{id}/use",
+        "PATCH /user-vouchers/{id}/unuse",
+        "GET /user-vouchers/{id}/history"
+      ],
+      "db_refs": [
+        "card_voucher",
+        "user_voucher",
+        "user_voucher_log"
+      ],
+      "acceptance": [
+        "바우처 목록과 만료 임박 조회가 동작한다",
+        "사용 처리와 되돌리기가 이력을 남긴다",
+        "프론트 계약에 맞는 응답 필드가 제공된다"
+      ],
+      "dependencies": [
+        "P2-2"
+      ],
+      "blocker": null,
+      "evidence": [
+        "backend/src/main/kotlin/com/cardwise/voucher/api/VoucherController.kt",
+        "backend/src/main/kotlin/com/cardwise/voucher/application/VoucherService.kt",
+        "backend/src/test/kotlin/com/cardwise/voucher/VoucherServiceTest.kt"
+      ]
+    },
+    {
+      "todo_id": "P3-1",
+      "title": "라이브 대시보드 한글화 및 10초 갱신",
+      "priority": "P3",
+      "owner_agent": "Orchestrator",
+      "status": "DONE",
+      "feature_refs": [],
+      "requirement_refs": [],
+      "api_refs": [],
+      "db_refs": [
+        "ops/dashboard/work-items.json"
+      ],
+      "acceptance": [
+        "웹 대시보드가 한글 UI를 사용한다",
+        "터미널 대시보드가 한글 상태 라벨을 사용한다",
+        "웹과 터미널 갱신 주기가 10초다"
+      ],
+      "dependencies": [
+        "P0-2"
+      ],
+      "blocker": null,
+      "evidence": [
+        "ops/dashboard/dashboard-lib.js",
+        "ops/dashboard/render-terminal.js",
+        "ops/dashboard/serve.js"
+      ]
+    },
+    {
+      "todo_id": "P0-4",
+      "title": "Prepare and apply realistic Supabase seed dataset",
+      "priority": "P0",
+      "owner_agent": "Orchestrator",
+      "status": "DONE",
+      "feature_refs": [
+        "F1",
+        "F2",
+        "F3",
+        "F4",
+        "F6"
+      ],
+      "requirement_refs": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "api_refs": [
+        "GET /cards/{cardId}/performance",
+        "POST /payments/{paymentId}/adjustments",
+        "GET /pending-actions",
+        "GET /pending-actions/count"
+      ],
+      "db_refs": [
+        "card_company",
+        "card",
+        "card_benefit",
+        "card_voucher",
+        "payment",
+        "payment_item",
+        "payment_adjustment",
+        "user_pending_action",
+        "user_performance",
+        "user_voucher"
+      ],
+      "acceptance": [
+        "Seed SQL is idempotent",
+        "Seed metadata maps feature/requirement/api/db",
+        "Seed applied to linked Supabase project"
+      ],
+      "dependencies": [
+        "P0-1"
+      ],
+      "blocker": null,
+      "evidence": [
+        "supabase/seeds/cardwise_mvp_seed.sql",
+        "supabase/seeds/seed-metadata.json",
+        "supabase/seeds/README.md"
+      ]
+    },
+    {
+      "todo_id": "P2-4",
+      "title": "바우처 프론트/BFF 화면 구현",
+      "priority": "P2",
+      "owner_agent": "FE-Vouchers",
+      "status": "DONE",
+      "feature_refs": [
+        "F6"
+      ],
+      "requirement_refs": [
+        "R2"
+      ],
+      "api_refs": [
+        "GET /vouchers",
+        "GET /vouchers/expiring",
+        "GET /user-cards/{userCardId}/vouchers",
+        "PATCH /user-vouchers/{id}/use",
+        "PATCH /user-vouchers/{id}/unuse",
+        "GET /user-vouchers/{id}/history"
+      ],
+      "db_refs": [
+        "user_voucher",
+        "user_voucher_log"
+      ],
+      "acceptance": [
+        "/vouchers 페이지가 목록, 만료 임박, 카드별 바우처를 표시한다",
+        "사용 처리와 되돌리기 액션을 호출할 수 있다",
+        "히스토리 타임라인이 로드된다"
+      ],
+      "dependencies": [
+        "P2-3"
+      ],
+      "blocker": null,
+      "evidence": [
+        "frontend/src/app/vouchers/page.tsx",
+        "frontend/src/components/vouchers-client.tsx",
+        "frontend/src/app/api/vouchers/route.ts"
+      ]
+    },
+    {
+      "todo_id": "P3-2",
+      "title": "Supabase 원격 스키마/시드 스모크 검증",
+      "priority": "P3",
+      "owner_agent": "Orchestrator",
+      "status": "DONE",
+      "feature_refs": [],
+      "requirement_refs": [],
+      "api_refs": [],
+      "db_refs": [
+        "user_voucher",
+        "user_voucher_log",
+        "user_pending_action"
+      ],
+      "acceptance": [
+        "linked migration 상태가 로컬과 원격에서 일치한다",
+        "41개 테이블과 26개 ENUM이 확인된다",
+        "시드된 바우처/인박스 데이터가 원격 DB에 존재한다"
+      ],
+      "dependencies": [
+        "P0-1"
+      ],
+      "blocker": null,
+      "evidence": [
+        "npx supabase migration list --linked",
+        "npx supabase db query --linked"
+      ]
+    },
+    {
+      "todo_id": "P3-3",
+      "title": "스프링 런타임의 원격 Supabase 직접 연결",
+      "priority": "P3",
+      "owner_agent": "Orchestrator",
+      "status": "DONE",
+      "feature_refs": [],
+      "requirement_refs": [],
+      "api_refs": [
+        "GET /vouchers",
+        "GET /cards/{cardId}/performance"
+      ],
+      "db_refs": [
+        "spring.datasource"
+      ],
+      "acceptance": [
+        "로컬 백엔드가 원격 Supabase Postgres에 직접 붙는다",
+        "실행 중인 API가 원격 데이터를 반환한다"
+      ],
+      "dependencies": [
+        "P3-2"
+      ],
+      "blocker": null,
+      "evidence": [
+        "supabase/.temp/project-ref",
+        "supabase/.temp/pooler-url",
+        "backend/src/main/kotlin/com/cardwise/performance/infrastructure/PerformanceEntities.kt",
+        "backend/scripts/boot-remote.ps1",
+        "GET http://127.0.0.1:8080/actuator/health",
+        "GET http://127.0.0.1:8080/api/v1/vouchers"
+      ]
+    }
+  ],
+  "events": [
+    {
+      "ts": "2026-03-19T09:30:00+09:00",
+      "agent": "Orchestrator",
+      "type": "DECISION",
+      "message": "Snapshot is frozen and dashboard work starts from the shared JSON state."
+    },
+    {
+      "ts": "2026-03-19T09:30:10+09:00",
+      "agent": "Orchestrator",
+      "type": "QUESTION",
+      "message": "Need feature-to-requirement traceability in the dashboard for every todo."
+    },
+    {
+      "ts": "2026-03-19T09:30:20+09:00",
+      "agent": "System",
+      "type": "ANSWER",
+      "message": "Track F*, R*, API, and DB references per todo."
+    },
+    {
+      "ts": "2026-03-19T09:39:42+09:00",
+      "agent": "Orchestrator",
+      "type": "DECISION",
+      "message": "P0-2 completed: terminal and web dashboards are now live on shared work-items state."
+    },
+    {
+      "ts": "2026-03-19T09:39:42+09:00",
+      "agent": "Orchestrator",
+      "type": "DECISION",
+      "message": "P0-3 completed: feature, requirement, API, and DB traceability map is published."
+    },
+    {
+      "ts": "2026-03-19T09:50:00+09:00",
+      "agent": "Orchestrator",
+      "type": "DECISION",
+      "message": "Execution moved into implementation: backend platform, ledger, performance, and frontend streams are now in progress."
+    },
+    {
+      "ts": "2026-03-19T09:42:42+09:00",
+      "agent": "Orchestrator",
+      "type": "DECISION",
+      "message": "P0-4 completed: realistic seed dataset applied to linked Supabase project."
+    },
+    {
+      "ts": "2026-03-19T10:12:31+09:00",
+      "agent": "BE-Ledger",
+      "type": "DECISION",
+      "message": "F2/F3 backend endpoints are implemented with adjustment, inbox, resolve, dismiss, and performance-exclusion handling."
+    },
+    {
+      "ts": "2026-03-19T10:12:31+09:00",
+      "agent": "BE-Performance",
+      "type": "DECISION",
+      "message": "F4/F6 performance response now includes annual basis, lag, grace period, special period, and voucher unlock summaries."
+    },
+    {
+      "ts": "2026-03-19T10:12:31+09:00",
+      "agent": "FE-Foundation",
+      "type": "DECISION",
+      "message": "BFF routes and ledger/performance surfaces build cleanly on Next.js 16."
+    },
+    {
+      "ts": "2026-03-19T10:12:31+09:00",
+      "agent": "Orchestrator",
+      "type": "DECISION",
+      "message": "Backend tests and frontend lint/build passed after integrating voucher unlock state into the performance surface."
+    },
+    {
+      "ts": "2026-03-19T10:18:00+09:00",
+      "agent": "Orchestrator",
+      "type": "DECISION",
+      "message": "바우처 구현을 백엔드와 프론트/BFF로 분리하고, 대시보드 한글화는 별도 트랙으로 병행했습니다."
+    },
+    {
+      "ts": "2026-03-19T10:24:00+09:00",
+      "agent": "FE-Vouchers",
+      "type": "DONE",
+      "message": "/vouchers 화면, BFF 라우트, 공유 타입, 내비게이션 연결을 완료했습니다."
+    },
+    {
+      "ts": "2026-03-19T10:28:00+09:00",
+      "agent": "BE-Performance",
+      "type": "DONE",
+      "message": "바우처 목록, 만료 임박, 사용/되돌리기, 이력 API와 테스트를 추가했습니다."
+    },
+    {
+      "ts": "2026-03-19T10:35:00+09:00",
+      "agent": "Orchestrator",
+      "type": "DONE",
+      "message": "웹/터미널 대시보드 상태 라벨을 한글화하고 10초 자동 갱신으로 통일했습니다."
+    },
+    {
+      "ts": "2026-03-19T10:37:00+09:00",
+      "agent": "Orchestrator",
+      "type": "DONE",
+      "message": "Supabase 원격 마이그레이션 상태와 시드된 바우처/인박스 데이터 존재를 확인했습니다."
+    },
+    {
+      "ts": "2026-03-19T10:38:00+09:00",
+      "agent": "Orchestrator",
+      "type": "BLOCKED",
+      "message": "Spring 런타임을 원격 Supabase에 직접 연결하려면 DB 비밀번호가 추가로 필요합니다."
+    },
+    {
+      "ts": "2026-03-19T10:54:00+09:00",
+      "agent": "Orchestrator",
+      "type": "DECISION",
+      "message": "원격 pooler 연결은 성공했고, user_performance.year_month의 CHAR(7) 스키마와 맞도록 JPA 매핑을 수정했습니다."
+    },
+    {
+      "ts": "2026-03-19T11:02:00+09:00",
+      "agent": "Orchestrator",
+      "type": "DECISION",
+      "message": "boot-remote 스크립트에 Supabase pooler 사용자명과 issuer 선검사를 추가해 잘못된 remote-env 설정을 즉시 막도록 보강했습니다."
+    },
+    {
+      "ts": "2026-03-19T11:08:00+09:00",
+      "agent": "Orchestrator",
+      "type": "DECISION",
+      "message": "원격 Supabase 부트에서는 Hibernate schema validate를 끄고 외부 스키마를 그대로 사용하도록 boot-remote 기본값을 ddl-auto=none으로 조정했습니다."
+    },
+    {
+      "ts": "2026-03-19T11:10:00+09:00",
+      "agent": "Orchestrator",
+      "type": "DONE",
+      "message": "boot-remote로 원격 Supabase에 연결한 Spring 런타임이 기동했고 /actuator/health와 /api/v1/vouchers가 200으로 응답했습니다."
+    }
+  ],
+  "questions": [
+    {
+      "question_id": "Q-1",
+      "status": "RESOLVED",
+      "topic": "Snapshot scope",
+      "detail": "Include code, docs, and DB schema state."
+    },
+    {
+      "question_id": "Q-2",
+      "status": "RESOLVED",
+      "topic": "Implementing F2/F3 first",
+      "detail": "Parallel by domain with orchestrator integration branch cadence."
+    }
+  ]
+}

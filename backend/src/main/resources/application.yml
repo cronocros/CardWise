@@ -9,11 +9,16 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:validate}
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc.time_zone: Asia/Seoul
     open-in-view: false
+
+  mvc:
+    problemdetails:
+      enabled: true
 
   security:
     oauth2:

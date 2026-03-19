@@ -1,0 +1,96 @@
+{
+  "seed_sets": [
+    {
+      "seed_id": "catalog_core",
+      "label": "Card catalog foundation",
+      "feature_refs": ["F1", "F4", "F6"],
+      "requirement_refs": ["R1", "R2"],
+      "api_refs": ["GET /cards/{cardId}/performance"],
+      "db_refs": [
+        "card_company",
+        "card_network",
+        "card",
+        "performance_tier",
+        "card_benefit",
+        "card_voucher",
+        "special_performance_period",
+        "performance_exclusion_code",
+        "card_performance_exclusion"
+      ],
+      "validates": [
+        "card brand/network presentation",
+        "annual/monthly performance basis",
+        "benefit lag and grace-period logic",
+        "voucher unlock conditions",
+        "performance exclusion codes"
+      ],
+      "entities": [
+        "Samsung Card",
+        "Shinhan Card",
+        "Hyundai Card",
+        "KakaoBank"
+      ]
+    },
+    {
+      "seed_id": "ledger_inbox",
+      "label": "Ledger, inbox, and adjustment flow",
+      "feature_refs": ["F2", "F3"],
+      "requirement_refs": ["R3"],
+      "api_refs": [
+        "POST /payments/{paymentId}/adjustments",
+        "GET /payments/{paymentId}/adjustments",
+        "GET /pending-actions",
+        "GET /pending-actions/count",
+        "PATCH /pending-actions/{actionId}/resolve",
+        "PATCH /pending-actions/{actionId}/dismiss"
+      ],
+      "db_refs": [
+        "account",
+        "user_card",
+        "exchange_rate_snapshot",
+        "payment",
+        "payment_item",
+        "payment_adjustment",
+        "user_pending_action"
+      ],
+      "validates": [
+        "manual and imported payments",
+        "FX correction and billing discount adjustments",
+        "inbox action states",
+        "exclusion toggles"
+      ],
+      "entities": [
+        "owner account",
+        "member account",
+        "manual payment",
+        "email payment",
+        "excel payment",
+        "mydata payment"
+      ]
+    },
+    {
+      "seed_id": "performance_voucher",
+      "label": "User performance and voucher state",
+      "feature_refs": ["F4", "F6"],
+      "requirement_refs": ["R2"],
+      "api_refs": ["GET /cards/{cardId}/performance"],
+      "db_refs": [
+        "user_performance",
+        "user_voucher",
+        "user_voucher_log",
+        "user_benefit_usage"
+      ],
+      "validates": [
+        "monthly performance accumulation",
+        "annual performance accumulation",
+        "voucher counts and logs",
+        "benefit usage history"
+      ],
+      "entities": [
+        "owner card performance rows",
+        "member voucher rows"
+      ]
+    }
+  ]
+}
+
