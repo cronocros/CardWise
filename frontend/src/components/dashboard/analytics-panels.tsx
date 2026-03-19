@@ -30,9 +30,11 @@ const tagPalette = ["#fb7185", "#f97316", "#f59e0b", "#10b981", "#3b82f6"];
 export function DashboardFilterSummary({
   activeLabel,
   rangeLabel,
+  scopeLabel = "개인 가계부",
 }: {
   activeLabel: string;
   rangeLabel: string;
+  scopeLabel?: string;
 }) {
   return (
     <div className="rounded-[24px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] p-4">
@@ -53,7 +55,7 @@ export function DashboardFilterSummary({
             커스텀
           </span>
           <span className="inline-flex rounded-full border border-[var(--surface-border)] bg-[var(--surface-soft)] px-4 py-2 text-sm font-medium text-[var(--text-muted)]">
-            개인 가계부
+            {scopeLabel}
           </span>
         </div>
       </div>

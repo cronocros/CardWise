@@ -8,6 +8,8 @@ type LedgerHubProps = {
   pendingActions: PendingAction[];
   paymentId: string;
   adjustments: PaymentAdjustment[];
+  groupCount: number;
+  groupInvitationCount: number;
 };
 
 function priorityTone(priority: string) {
@@ -53,7 +55,14 @@ function differenceTone(value: number) {
   return "slate";
 }
 
-export function LedgerHub({ pendingCount, pendingActions, paymentId, adjustments }: LedgerHubProps) {
+export function LedgerHub({
+  pendingCount,
+  pendingActions,
+  paymentId,
+  adjustments,
+  groupCount,
+  groupInvitationCount,
+}: LedgerHubProps) {
   const recentActions = pendingActions.slice(0, 4);
   const recentAdjustments = adjustments.slice(0, 4);
   const totalDelta = adjustments.reduce((sum, item) => sum + item.differenceAmount, 0);
@@ -77,8 +86,8 @@ export function LedgerHub({ pendingCount, pendingActions, paymentId, adjustments
             <Link href={`/adjustments?paymentId=${encodeURIComponent(paymentId || "1")}`} className="cw-interactive-card rounded-[20px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] px-4 py-4 text-sm font-medium text-[var(--text-strong)] transition hover:-translate-y-0.5 hover:border-[var(--surface-border-strong)] hover:shadow-[var(--surface-shadow)]">
               조정 이력 보기
             </Link>
-            <Link href="/vouchers" className="cw-interactive-card rounded-[20px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] px-4 py-4 text-sm font-medium text-[var(--text-strong)] transition hover:-translate-y-0.5 hover:border-[var(--surface-border-strong)] hover:shadow-[var(--surface-shadow)]">
-              바우처 작업대로
+            <Link href="/groups" className="cw-interactive-card rounded-[20px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] px-4 py-4 text-sm font-medium text-[var(--text-strong)] transition hover:-translate-y-0.5 hover:border-[var(--surface-border-strong)] hover:shadow-[var(--surface-shadow)]">
+              그룹 가계부 보기
             </Link>
           </div>
         </Panel>
@@ -96,6 +105,14 @@ export function LedgerHub({ pendingCount, pendingActions, paymentId, adjustments
             <Link href="/performance/1" className="flex items-center justify-between rounded-[18px] border border-[var(--surface-border)] bg-[var(--surface-soft)] px-4 py-3 text-sm text-[var(--text-strong)] transition hover:border-[var(--surface-border-strong)]">
               <span>실적 검토</span>
               <span className="text-[var(--text-muted)]">시드</span>
+            </Link>
+            <Link href="/groups" className="flex items-center justify-between rounded-[18px] border border-[var(--surface-border)] bg-[var(--surface-soft)] px-4 py-3 text-sm text-[var(--text-strong)] transition hover:border-[var(--surface-border-strong)]">
+              <span>그룹 목록</span>
+              <span className="text-[var(--text-muted)]">{groupCount}</span>
+            </Link>
+            <Link href="/groups/invitations" className="flex items-center justify-between rounded-[18px] border border-[var(--surface-border)] bg-[var(--surface-soft)] px-4 py-3 text-sm text-[var(--text-strong)] transition hover:border-[var(--surface-border-strong)]">
+              <span>그룹 초대</span>
+              <span className="text-[var(--text-muted)]">{groupInvitationCount}</span>
             </Link>
           </div>
           <div className="mt-4 rounded-[20px] border border-[var(--surface-border)] bg-[linear-gradient(135deg,rgba(255,241,242,.96),rgba(255,255,255,.96))] p-4">

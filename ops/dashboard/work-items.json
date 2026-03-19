@@ -1,7 +1,7 @@
 {
   "version": 1,
   "project": "CardWise",
-  "updated_at": "2026-03-19T22:20:00+09:00",
+  "updated_at": "2026-03-20T00:35:00+09:00",
   "phases": [
     {
       "phase": "P0",
@@ -43,7 +43,7 @@
       "phase": "P6",
       "title": "아키텍처 감사와 정합성 보강",
       "status": "IN_PROGRESS",
-      "summary": "아키텍처·요구사항 감사는 완료했고, 인증·그룹·혜택·알림 후속 갭을 추적판에 등록했습니다."
+      "summary": "아키텍처 감사 뒤 F5 혜택 검색, F12 그룹 조회·통계, F7 알림 설정 최소 범위를 맞췄고, 인증과 알림 센터/그룹 거버넌스 후속만 남겼습니다."
     }
   ],
   "agents": [
@@ -1239,7 +1239,7 @@
       "title": "혜택 검색 백엔드와 추천 API 구현",
       "priority": "P2",
       "owner_agent": "FE-Features",
-      "status": "TODO",
+      "status": "DONE",
       "feature_refs": [
         "F5"
       ],
@@ -1248,7 +1248,9 @@
       ],
       "api_refs": [
         "GET /benefits/search",
-        "GET /benefits/recommendations"
+        "GET /benefits/recommend",
+        "GET /cards/{cardId}/benefits",
+        "GET /categories"
       ],
       "db_refs": [
         "card_benefit",
@@ -1265,7 +1267,13 @@
       ],
       "blocker": null,
       "evidence": [
+        "backend/src/main/kotlin/com/cardwise/benefit/api/BenefitController.kt",
+        "backend/src/main/kotlin/com/cardwise/benefit/application/BenefitService.kt",
         "frontend/src/app/benefits/page.tsx",
+        "frontend/src/app/api/benefits/search/route.ts",
+        "frontend/src/app/api/benefits/recommend/route.ts",
+        "frontend/src/app/api/cards/[userCardId]/benefits/route.ts",
+        "frontend/src/app/api/categories/route.ts",
         "docs/specs/F5-benefit-search.md"
       ]
     },
@@ -1274,7 +1282,7 @@
       "title": "그룹 가계부와 그룹 대시보드 통계 확장",
       "priority": "P2",
       "owner_agent": "BE-Ledger",
-      "status": "TODO",
+      "status": "DONE",
       "feature_refs": [
         "F12",
         "F8"
@@ -1303,6 +1311,11 @@
       ],
       "blocker": null,
       "evidence": [
+        "backend/src/main/kotlin/com/cardwise/group/api/GroupController.kt",
+        "backend/src/main/kotlin/com/cardwise/group/application/GroupService.kt",
+        "frontend/src/app/groups/page.tsx",
+        "frontend/src/app/groups/[groupId]/stats/page.tsx",
+        "frontend/src/app/dashboard/page.tsx",
         "docs/specs/F12-group-ledger.md",
         "docs/specs/F8-dashboard.md"
       ]
@@ -1312,7 +1325,7 @@
       "title": "만료/실적 알림 경로 구현",
       "priority": "P3",
       "owner_agent": "FE-Vouchers",
-      "status": "TODO",
+      "status": "IN_PROGRESS",
       "feature_refs": [
         "F7",
         "F6",
@@ -1322,8 +1335,8 @@
         "R2"
       ],
       "api_refs": [
-        "POST /notifications/test",
-        "GET /notifications/preferences"
+        "GET /notifications/settings",
+        "PATCH /notifications/settings"
       ],
       "db_refs": [
         "user_voucher",
@@ -1338,10 +1351,13 @@
         "P4-5",
         "P4-6"
       ],
-      "blocker": null,
+      "blocker": "notification 테이블과 이벤트 기반 인앱 알림 생성 경로가 아직 없어 설정 화면만 우선 구현했다.",
       "evidence": [
         "docs/specs/F7-notification.md",
-        "frontend/src/app/settings/page.tsx"
+        "backend/src/main/kotlin/com/cardwise/notification/api/NotificationController.kt",
+        "backend/src/main/kotlin/com/cardwise/notification/application/NotificationService.kt",
+        "frontend/src/app/settings/page.tsx",
+        "frontend/src/app/settings/notifications/page.tsx"
       ]
     }
   ],

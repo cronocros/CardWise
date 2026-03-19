@@ -341,6 +341,74 @@ export interface CardBenefitDetailEnvelope {
   };
 }
 
+export interface GroupSummaryEnvelope {
+  data: Array<{
+    groupId: number;
+    groupName: string;
+    description: string | null;
+    role: string;
+    memberCount: number;
+    currentMonthSpent: number;
+    maxMembers: number;
+  }>;
+}
+
+export interface GroupInvitationEnvelope {
+  data: Array<{
+    invitationId: number;
+    groupId: number;
+    groupName: string;
+    inviterName: string;
+    inviteeEmail: string;
+    invitationStatus: string;
+    expiresAt: string;
+    createdAt: string;
+  }>;
+}
+
+export interface GroupPaymentEnvelope {
+  data: Array<{
+    paymentId: number;
+    accountId: string;
+    payerName: string;
+    merchantName: string;
+    amount: number;
+    paidAt: string;
+    currency: string;
+    memo: string | null;
+    canEdit: boolean;
+  }>;
+}
+
+export interface GroupStatsEnvelope {
+  data: {
+    groupId: number;
+    groupName: string;
+    from: string;
+    to: string;
+    totalSpent: number;
+    paymentCount: number;
+    memberStats: Array<{
+      accountId: string;
+      displayName: string;
+      spentAmount: number;
+      paymentCount: number;
+      sharePercent: number;
+    }>;
+    tagStats: Array<{
+      tagName: string;
+      spentAmount: number;
+      paymentCount: number;
+      sharePercent: number;
+    }>;
+    monthlyTrend: Array<{
+      yearMonth: string;
+      totalSpent: number;
+      paymentCount: number;
+    }>;
+  };
+}
+
 function normalizeBaseUrl(baseUrl: string) {
   return baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
 }

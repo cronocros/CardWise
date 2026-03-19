@@ -299,17 +299,18 @@ POST   /payments/upload                      엑셀 파일 업로드
 ### 4.3 혜택 (`/api/v1/benefits`)
 
 ```
-GET    /benefits                 혜택 목록 (검색/필터)
-GET    /benefits/{benefitId}     혜택 상세
-GET    /benefits/categories      카테고리별 최고 혜택 카드
+GET    /benefits/search          혜택 검색 (가맹점/카테고리/유형/내 카드 필터)
+GET    /benefits/recommend       현재 조건 기준 최적 카드 추천
+GET    /cards/{cardId}/benefits  카드 혜택 상세
+GET    /categories               혜택 카테고리 목록
 ```
 
-**GET /benefits 쿼리 파라미터**:
+**GET /benefits/search 쿼리 파라미터**:
 ```
-?query=스타벅스            (가맹점 검색)
-&category=CAFE            (카테고리)
-&type=DISCOUNT|CASHBACK|POINTS|MILEAGE
-&cardId=<cardId>          (특정 카드 혜택만)
+?q=Starbucks              (가맹점/카드/카테고리 검색)
+&categoryId=<categoryId>  (카테고리 ID)
+&type=DISCOUNT|POINT|CASHBACK|MILEAGE|INTEREST_FREE
+&myCardsOnly=true|false   (보유 카드만 필터)
 &limit=20
 ```
 
@@ -325,25 +326,24 @@ GET    /vouchers/expiring-soon   만료 임박 바우처 (D-7 이내)
 ### 4.5 알림 (`/api/v1/notifications`)
 
 ```
-GET    /notifications            알림 목록
-PATCH  /notifications/{id}/read  알림 읽음 처리
-PATCH  /notifications/read-all   전체 읽음
 GET    /notifications/settings   알림 설정 조회
-PUT    /notifications/settings   알림 설정 변경
+PATCH  /notifications/settings   알림 설정 변경
 ```
 
-**알림 설정 예시**:
+**현재 구현된 알림 설정 예시**:
 ```json
 {
   "data": {
-    "tierAchievement": true,      // 실적 구간 달성 시
-    "voucherExpiry": true,         // 바우처 만료 7일 전
-    "monthlyReport": true,         // 월말 지출 리포트
-    "aiRecommendation": false,     // AI 추천 알림
-    "emailParsed": true            // 이메일 파싱 완료 시
+    "voucherExpiryAlert": true,
+    "performanceReminder": true,
+    "paymentConfirmAlert": true,
+    "emailNotification": false,
+    "pushNotification": true
   }
 }
 ```
+
+알림 센터(`GET /notifications`, 읽음 처리, unread count)는 설계 문서에 남아 있지만 아직 현행 런타임에는 구현되지 않았다.
 
 ### 4.6 AI 추천 (`/api/v1/recommendations`)
 
@@ -524,16 +524,12 @@ POST   /account/deactivate      계정 비활성화
 ```
 POST   /groups                              그룹 생성
 GET    /groups                              내 그룹 목록
-GET    /groups/{groupId}                    그룹 상세
-PATCH  /groups/{groupId}                    그룹 설정 수정 (OWNER)
-DELETE /groups/{groupId}                    그룹 삭제 (OWNER)
+GET    /groups/invitations                  내 초대 목록
+POST   /groups/invitations/{invitationId}/accept   초대 수락
+POST   /groups/invitations/{invitationId}/decline  초대 거절
+GET    /groups/{groupId}/invitations        그룹 초대 목록
 POST   /groups/{groupId}/invite             멤버 초대 (OWNER)
-DELETE /groups/{groupId}/members/{memberId}  멤버 추방 (OWNER)
-POST   /groups/{groupId}/leave              그룹 탈퇴 (MEMBER)
 GET    /groups/{groupId}/payments           그룹 가계부 조회
-POST   /groups/{groupId}/payments           그룹 결제 입력
-GET    /groups/{groupId}/tags               그룹 태그 목록
-POST   /groups/{groupId}/tags               그룹 태그 생성
 GET    /groups/{groupId}/stats              그룹 통계 (멤버별/태그별)
 ```
 
@@ -548,7 +544,7 @@ GET    /groups/{groupId}/stats              그룹 통계 (멤버별/태그별)
 **POST /groups/{groupId}/invite 요청**:
 ```json
 {
-  "email": "family@example.com"
+  "inviteeEmail": "family@example.com"
 }
 ```
 

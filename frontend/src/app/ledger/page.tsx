@@ -3,6 +3,8 @@ import { LedgerHub } from "@/components/route-b-ledger";
 import {
   getPendingCount,
   tryFetchBackendJson,
+  type GroupInvitationEnvelope,
+  type GroupSummaryEnvelope,
   type PendingActionCountResponse,
   type PendingActionsResponse,
   type PaymentAdjustmentsResponse,
@@ -18,10 +20,12 @@ export default async function LedgerPage(props: PageProps<"/ledger">) {
   const searchParams = await props.searchParams;
   const paymentId = firstSearchValue(searchParams.paymentId) ?? "1";
 
-  const [actionsResponse, countResponse, adjustmentsResponse] = await Promise.all([
+  const [actionsResponse, countResponse, adjustmentsResponse, groupsResponse, invitationsResponse] = await Promise.all([
     tryFetchBackendJson<PendingActionsResponse>("/pending-actions?status=PENDING&limit=8"),
     tryFetchBackendJson<PendingActionCountResponse>("/pending-actions/count?status=PENDING"),
     tryFetchBackendJson<PaymentAdjustmentsResponse>(`/payments/${encodeURIComponent(paymentId)}/adjustments`),
+    tryFetchBackendJson<GroupSummaryEnvelope>("/groups"),
+    tryFetchBackendJson<GroupInvitationEnvelope>("/groups/invitations"),
   ]);
 
   return (
@@ -37,6 +41,8 @@ export default async function LedgerPage(props: PageProps<"/ledger">) {
         pendingActions={actionsResponse?.data ?? []}
         paymentId={paymentId}
         adjustments={adjustmentsResponse?.data ?? []}
+        groupCount={groupsResponse?.data?.length ?? 0}
+        groupInvitationCount={invitationsResponse?.data?.length ?? 0}
       />
     </AppShell>
   );

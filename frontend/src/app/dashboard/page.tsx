@@ -19,6 +19,8 @@ import {
   type DashboardMonthlySummaryResponse,
   type DashboardTagSummaryResponse,
   type DashboardTrendResponse,
+  type GroupStatsEnvelope,
+  type GroupSummaryEnvelope,
   type PendingActionCountResponse,
   type PendingActionsResponse,
   type PerformanceResponse,
@@ -73,7 +75,17 @@ function specialPeriodLabel(data: PerformanceResponse["data"]) {
   return data.specialPeriod?.active ? data.specialPeriod.name ?? "특별 기간" : "일반 기간";
 }
 
-export default async function DashboardPage() {
+type DashboardPageProps = {
+  searchParams?: Promise<{
+    groupId?: string | string[];
+  }>;
+};
+
+export default async function DashboardPage({ searchParams }: DashboardPageProps) {
+  const resolvedSearchParams = searchParams ? await searchParams : {};
+  const selectedGroupIdParam = Array.isArray(resolvedSearchParams.groupId)
+    ? resolvedSearchParams.groupId[0]
+    : resolvedSearchParams.groupId;
   const now = new Date();
   const currentYear = now.getFullYear();
   const currentMonth = now.getMonth() + 1;
@@ -86,6 +98,7 @@ export default async function DashboardPage() {
     pendingResponse,
     activeVouchersResponse,
     expiringVouchersResponse,
+    groupsResponse,
     monthlySummaryResponse,
     cardSummaryResponse,
     categorySummaryResponse,
@@ -98,6 +111,7 @@ export default async function DashboardPage() {
       tryFetchBackendJson<PendingActionsResponse>("/pending-actions?status=PENDING&limit=4"),
       tryFetchBackendJson<VoucherListResponse>("/vouchers?status=active"),
       tryFetchBackendJson<VoucherListResponse>("/vouchers/expiring?days=7"),
+      tryFetchBackendJson<GroupSummaryEnvelope>("/groups"),
       tryFetchBackendJson<DashboardMonthlySummaryResponse>(`/dashboard/monthly?year=${currentYear}&month=${currentMonth}`),
       tryFetchBackendJson<DashboardCardSummaryResponse>(`/dashboard/cards?from=${monthStart}&to=${monthEnd}`),
       tryFetchBackendJson<DashboardCategorySummaryResponse>(`/dashboard/categories?from=${monthStart}&to=${monthEnd}`),
@@ -115,11 +129,21 @@ export default async function DashboardPage() {
   const pendingItems = pendingResponse?.data ?? [];
   const activeVouchers = activeVouchersResponse?.data ?? [];
   const expiringVouchers = expiringVouchersResponse?.data ?? [];
+  const groups = groupsResponse?.data ?? [];
   const monthlySummary = monthlySummaryResponse?.data ?? null;
   const cardSummaries = cardSummaryResponse?.data ?? [];
   const categorySummaries = categorySummaryResponse?.data ?? [];
   const tagSummaries = tagSummaryResponse?.data ?? [];
   const trendPoints = trendResponse?.data ?? [];
+  const selectedGroup =
+    groups.find((group) => String(group.groupId) === selectedGroupIdParam) ?? null;
+  const selectedGroupStatsResponse =
+    selectedGroup !== null
+      ? await tryFetchBackendJson<GroupStatsEnvelope>(
+          `/groups/${selectedGroup.groupId}/stats?from=${monthStart}&to=${monthEnd}`,
+        )
+      : null;
+  const selectedGroupStats = selectedGroupStatsResponse?.data ?? null;
   const cardSummaryMap = new Map(cardSummaries.map((item) => [item.userCardId, item]));
   const cards = performanceResults
     .map(({ userCardId, result }) => ({ userCardId, data: result?.data }))
@@ -161,7 +185,135 @@ export default async function DashboardPage() {
         </>
       }
     >
-      <DashboardFilterSummary activeLabel="이번 달 대시보드" rangeLabel={`${yearMonthLabel} 기준 집계 · 개인 가계부`} />
+      <DashboardFilterSummary
+        activeLabel={selectedGroup ? `${selectedGroup.groupName} 그룹 대시보드` : "이번 달 대시보드"}
+        rangeLabel={
+          selectedGroup
+            ? `${yearMonthLabel} 기준 집계 · 그룹 가계부 모드`
+            : `${yearMonthLabel} 기준 집계 · 개인 가계부`
+        }
+        scopeLabel={selectedGroup ? `${selectedGroup.groupName} 그룹` : "개인 가계부"}
+      />
+
+      <Panel
+        title="가계부 선택"
+        subtitle="F8 문서 기준으로 개인 가계부와 그룹 가계부를 대시보드에서 직접 전환합니다."
+      >
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href="/dashboard"
+            className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
+              selectedGroup
+                ? "border-[var(--surface-border)] bg-white text-[var(--text-body)] hover:border-[var(--surface-border-strong)]"
+                : "border-[var(--surface-border-strong)] bg-[var(--accent-soft)] text-[var(--accent-strong)]"
+            }`}
+          >
+            개인
+          </Link>
+          {groups.map((group) => {
+            const isActive = selectedGroup?.groupId === group.groupId;
+            return (
+              <Link
+                key={group.groupId}
+                href={`/dashboard?groupId=${group.groupId}`}
+                className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
+                  isActive
+                    ? "border-[var(--surface-border-strong)] bg-[var(--accent-soft)] text-[var(--accent-strong)]"
+                    : "border-[var(--surface-border)] bg-white text-[var(--text-body)] hover:border-[var(--surface-border-strong)]"
+                }`}
+              >
+                {group.groupName}
+              </Link>
+            );
+          })}
+          <Link
+            href="/groups"
+            className="rounded-full border border-[var(--surface-border)] bg-[var(--surface-soft)] px-4 py-2 text-sm font-medium text-[var(--text-muted)] transition hover:border-[var(--surface-border-strong)]"
+          >
+            그룹 관리
+          </Link>
+        </div>
+        {selectedGroup && selectedGroupStats ? (
+          <div className="mt-4 grid gap-4 xl:grid-cols-[0.92fr_1.08fr]">
+            <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-1">
+              <MetricCard label="그룹 총 지출" value={formatCurrency(selectedGroupStats.totalSpent)} helper={`${selectedGroup.groupName} · 이번 달`} />
+              <MetricCard label="멤버 수" value={`${selectedGroup.memberCount}명`} helper={`${selectedGroup.role} 참여 중`} />
+              <MetricCard label="그룹 결제" value={`${selectedGroupStats.paymentCount}건`} helper="선택 기간 기준" />
+            </div>
+            <div className="grid gap-4 lg:grid-cols-2">
+              <div className="rounded-[24px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] p-4">
+                <div className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--text-soft)]">멤버별 지출 비교</div>
+                <div className="mt-4 grid gap-3">
+                  {selectedGroupStats.memberStats.length === 0 ? (
+                    <div className="rounded-[18px] border border-dashed border-[var(--surface-border)] bg-[var(--surface-soft)] px-4 py-6 text-sm text-[var(--text-muted)]">
+                      아직 그룹 결제가 없어 멤버 비교를 표시하지 못했습니다.
+                    </div>
+                  ) : (
+                    selectedGroupStats.memberStats.map((member) => (
+                      <div key={member.accountId} className="rounded-[18px] border border-[var(--surface-border)] bg-white px-4 py-3">
+                        <div className="flex items-center justify-between gap-4">
+                          <div>
+                            <div className="text-sm font-semibold text-[var(--text-strong)]">{member.displayName}</div>
+                            <div className="mt-1 text-xs text-[var(--text-muted)]">{member.paymentCount}건 · {formatPercent(member.sharePercent)}</div>
+                          </div>
+                          <div className="text-sm font-semibold text-[var(--text-strong)]">{formatCurrency(member.spentAmount)}</div>
+                        </div>
+                        <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--surface-soft)]">
+                          <div className="h-full rounded-full bg-[linear-gradient(90deg,var(--accent),var(--accent-strong))]" style={{ width: `${Math.max(member.sharePercent, 6)}%` }} />
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+              <div className="rounded-[24px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] p-4">
+                <div className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--text-soft)]">그룹 태그 분포</div>
+                <div className="mt-4 grid gap-3">
+                  {selectedGroupStats.tagStats.length === 0 ? (
+                    <div className="rounded-[18px] border border-dashed border-[var(--surface-border)] bg-[var(--surface-soft)] px-4 py-6 text-sm text-[var(--text-muted)]">
+                      아직 태그가 연결된 그룹 결제가 없습니다.
+                    </div>
+                  ) : (
+                    selectedGroupStats.tagStats.slice(0, 5).map((tag) => (
+                      <div key={tag.tagName} className="rounded-[18px] border border-[var(--surface-border)] bg-white px-4 py-3">
+                        <div className="flex items-center justify-between gap-4">
+                          <div>
+                            <div className="text-sm font-semibold text-[var(--text-strong)]">{tag.tagName}</div>
+                            <div className="mt-1 text-xs text-[var(--text-muted)]">{tag.paymentCount}건 · {formatPercent(tag.sharePercent)}</div>
+                          </div>
+                          <div className="text-sm font-semibold text-[var(--text-strong)]">{formatCurrency(tag.spentAmount)}</div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Link
+                    href={`/groups/${selectedGroup.groupId}/stats`}
+                    className="rounded-full border border-[var(--surface-border)] bg-white px-4 py-2 text-sm font-medium text-[var(--text-strong)] transition hover:bg-[var(--surface-soft)]"
+                  >
+                    그룹 통계 전체 보기
+                  </Link>
+                  <Link
+                    href={`/groups/${selectedGroup.groupId}/payments`}
+                    className="rounded-full border border-[var(--surface-border)] bg-[var(--surface-soft)] px-4 py-2 text-sm font-medium text-[var(--text-muted)] transition hover:border-[var(--surface-border-strong)]"
+                  >
+                    그룹 결제 보기
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : groups.length > 0 ? (
+          <div className="mt-4 rounded-[22px] border border-dashed border-[var(--surface-border)] bg-[var(--surface-soft)] px-5 py-6 text-sm text-[var(--text-muted)]">
+            그룹을 선택하면 멤버별 지출 비교와 그룹 태그 분포를 이 화면에서 바로 확인할 수 있습니다.
+          </div>
+        ) : (
+          <div className="mt-4 rounded-[22px] border border-dashed border-[var(--surface-border)] bg-[var(--surface-soft)] px-5 py-6 text-sm text-[var(--text-muted)]">
+            아직 참여 중인 그룹이 없습니다. 그룹을 만들면 대시보드에서 개인/그룹 모드를 전환할 수 있습니다.
+          </div>
+        )}
+      </Panel>
 
       <section className="cw-stagger grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard

@@ -50,7 +50,7 @@ const defaultSettings: NotificationSettings = {
   paymentConfirmAlert: true,
   emailNotification: false,
   pushNotification: true,
-  updatedAt: new Date().toISOString(),
+  updatedAt: "",
 };
 
 export default function NotificationSettingsPage() {
@@ -168,7 +168,7 @@ export default function NotificationSettingsPage() {
       <section className="cw-stagger grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <MetricCard label="활성 설정" value={String(enabledCount)} helper="켜진 알림 수" />
         <MetricCard label="채널" value={settings.pushNotification ? "푸시" : "비활성"} helper="앱 채널 기준" />
-        <MetricCard label="최근 저장" value={formatDateTime(settings.updatedAt)} helper="서버 반영 시각" />
+        <MetricCard label="최근 저장" value={settings.updatedAt ? formatDateTime(settings.updatedAt) : "불러오는 중"} helper="서버 반영 시각" />
         <MetricCard label="스킨" value="로즈 미니멀" helper="설정 전용" />
       </section>
 
