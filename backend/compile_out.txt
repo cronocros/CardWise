@@ -1,0 +1,8 @@
+> Task :checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :compileKotlin UP-TO-DATE
+> Task :compileJava NO-SOURCE
+> Task :processResources UP-TO-DATE
+> Task :classes UP-TO-DATE
+
+BUILD SUCCESSFUL in 1s
+2 actionable tasks: 2 up-to-date
