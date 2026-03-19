@@ -1,0 +1,432 @@
+{
+  "version": 1,
+  "project": "CardWise",
+  "updated_at": "2026-03-19T09:42:42+09:00",
+  "phases": [
+    {
+      "phase": "P0",
+      "title": "Snapshot and dashboard",
+      "status": "DONE",
+      "summary": "Freeze repo+docs+db snapshot and establish live tracking."
+    },
+    {
+      "phase": "P1",
+      "title": "Ledger inbox and adjustments",
+      "status": "TODO",
+      "summary": "Implement F2/F3 flows and trace R3 / payments / pending actions."
+    },
+    {
+      "phase": "P2",
+      "title": "Performance and voucher",
+      "status": "TODO",
+      "summary": "Implement F4/F6 flows and trace R2 / performance / voucher unlock."
+    },
+    {
+      "phase": "P3",
+      "title": "Integration hardening",
+      "status": "TODO",
+      "summary": "Contract checks, RLS/policy verification, docs sync, seed validation."
+    }
+  ],
+  "agents": [
+    {
+      "name": "Orchestrator",
+      "role": "coordination",
+      "status": "IN_PROGRESS",
+      "progress": 80
+    },
+    {
+      "name": "BE-Platform",
+      "role": "backend",
+      "status": "TODO",
+      "progress": 0
+    },
+    {
+      "name": "BE-Ledger",
+      "role": "backend",
+      "status": "TODO",
+      "progress": 0
+    },
+    {
+      "name": "BE-Performance",
+      "role": "backend",
+      "status": "TODO",
+      "progress": 0
+    },
+    {
+      "name": "FE-Foundation",
+      "role": "frontend",
+      "status": "TODO",
+      "progress": 0
+    },
+    {
+      "name": "FE-Features",
+      "role": "frontend",
+      "status": "TODO",
+      "progress": 0
+    }
+  ],
+  "work_items": [
+    {
+      "todo_id": "P0-1",
+      "title": "Freeze snapshot and record metadata",
+      "priority": "P0",
+      "owner_agent": "Orchestrator",
+      "status": "DONE",
+      "feature_refs": [],
+      "requirement_refs": [],
+      "api_refs": [],
+      "db_refs": [
+        "snapshot/phase1-start-20260319",
+        "codex/integration-phase1"
+      ],
+      "acceptance": [
+        "Git tag exists",
+        "integration branch exists",
+        "docs checksum manifest exists",
+        "Supabase counts recorded"
+      ],
+      "dependencies": [],
+      "blocker": null,
+      "evidence": [
+        "ops/snapshots/phase1-start-20260319.meta.json",
+        "ops/snapshots/phase1-start-20260319.docs.sha256.json"
+      ]
+    },
+    {
+      "todo_id": "P0-2",
+      "title": "Build shared dashboard state and renderers",
+      "priority": "P0",
+      "owner_agent": "Orchestrator",
+      "status": "DONE",
+      "feature_refs": [],
+      "requirement_refs": [],
+      "api_refs": [],
+      "db_refs": [],
+      "acceptance": [
+        "Terminal renderer reads the same JSON state",
+        "Web dashboard shows phases, agents, blockers, events",
+        "Dashboard can be opened locally in browser"
+      ],
+      "dependencies": [
+        "P0-1"
+      ],
+      "blocker": null,
+      "evidence": [
+        "ops/dashboard/work-items.json",
+        "ops/dashboard/serve.js",
+        "ops/dashboard/render-terminal.js",
+        "ops/dashboard/dashboard-lib.js"
+      ]
+    },
+    {
+      "todo_id": "P0-3",
+      "title": "Establish feature-to-requirement mapping",
+      "priority": "P0",
+      "owner_agent": "Orchestrator",
+      "status": "DONE",
+      "feature_refs": [
+        "F2",
+        "F3",
+        "F4",
+        "F6"
+      ],
+      "requirement_refs": [
+        "R2",
+        "R3"
+      ],
+      "api_refs": [
+        "POST /payments/{paymentId}/adjustments",
+        "GET /pending-actions",
+        "GET /pending-actions/count",
+        "GET /cards/{cardId}/performance"
+      ],
+      "db_refs": [
+        "payment_adjustment",
+        "user_pending_action",
+        "card_performance_exclusion",
+        "special_performance_period"
+      ],
+      "acceptance": [
+        "Each todo can reference feature, requirement, API, and DB objects",
+        "Dashboard shows counts by type",
+        "Conversation events can be traced to todos"
+      ],
+      "dependencies": [
+        "P0-2"
+      ],
+      "blocker": null,
+      "evidence": [
+        "ops/dashboard/traceability-map.json",
+        "supabase/seeds/seed-metadata.json"
+      ]
+    },
+    {
+      "todo_id": "P1-1",
+      "title": "Implement ledger inbox flow",
+      "priority": "P1",
+      "owner_agent": "BE-Ledger",
+      "status": "TODO",
+      "feature_refs": [
+        "F3"
+      ],
+      "requirement_refs": [
+        "R3"
+      ],
+      "api_refs": [
+        "GET /pending-actions",
+        "GET /pending-actions/count",
+        "PATCH /pending-actions/{actionId}/resolve",
+        "PATCH /pending-actions/{actionId}/dismiss"
+      ],
+      "db_refs": [
+        "user_pending_action"
+      ],
+      "acceptance": [
+        "Inbox list returns unresolved items",
+        "Resolve and dismiss change status",
+        "Badge count matches unresolved items"
+      ],
+      "dependencies": [
+        "P0-3"
+      ],
+      "blocker": null,
+      "evidence": []
+    },
+    {
+      "todo_id": "P1-2",
+      "title": "Implement payment adjustments",
+      "priority": "P1",
+      "owner_agent": "BE-Ledger",
+      "status": "TODO",
+      "feature_refs": [
+        "F2"
+      ],
+      "requirement_refs": [
+        "R3"
+      ],
+      "api_refs": [
+        "POST /payments/{paymentId}/adjustments",
+        "GET /payments/{paymentId}/adjustments"
+      ],
+      "db_refs": [
+        "payment_adjustment",
+        "payment"
+      ],
+      "acceptance": [
+        "Adjustments create and list correctly",
+        "Partial unique constraints and references are honored"
+      ],
+      "dependencies": [
+        "P0-3"
+      ],
+      "blocker": null,
+      "evidence": []
+    },
+    {
+      "todo_id": "P2-1",
+      "title": "Implement performance rules engine",
+      "priority": "P2",
+      "owner_agent": "BE-Performance",
+      "status": "TODO",
+      "feature_refs": [
+        "F4"
+      ],
+      "requirement_refs": [
+        "R2"
+      ],
+      "api_refs": [
+        "GET /cards/{cardId}/performance"
+      ],
+      "db_refs": [
+        "annual_perf_basis_enum",
+        "benefit_period_lag_enum",
+        "special_performance_period",
+        "payment_item",
+        "card_rules"
+      ],
+      "acceptance": [
+        "Annual basis and lag are reflected in performance output",
+        "Grace and exclusion rules are represented in the response"
+      ],
+      "dependencies": [
+        "P0-3"
+      ],
+      "blocker": null,
+      "evidence": []
+    },
+    {
+      "todo_id": "P2-2",
+      "title": "Implement voucher unlock conditions",
+      "priority": "P2",
+      "owner_agent": "BE-Performance",
+      "status": "TODO",
+      "feature_refs": [
+        "F6"
+      ],
+      "requirement_refs": [
+        "R2"
+      ],
+      "api_refs": [
+        "GET /cards/{cardId}/performance"
+      ],
+      "db_refs": [
+        "card_voucher",
+        "unlock_conditions"
+      ],
+      "acceptance": [
+        "Unlock rules are exposed consistently",
+        "Voucher states can be derived from the configured conditions"
+      ],
+      "dependencies": [
+        "P0-3"
+      ],
+      "blocker": null,
+      "evidence": []
+    },
+    {
+      "todo_id": "P3-1",
+      "title": "Validate contracts and policies",
+      "priority": "P3",
+      "owner_agent": "Orchestrator",
+      "status": "TODO",
+      "feature_refs": [
+        "F1",
+        "F2",
+        "F3",
+        "F4",
+        "F6"
+      ],
+      "requirement_refs": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "api_refs": [
+        "POST /payments/{paymentId}/adjustments",
+        "GET /pending-actions",
+        "GET /cards/{cardId}/performance"
+      ],
+      "db_refs": [
+        "RLS",
+        "policy"
+      ],
+      "acceptance": [
+        "No contract mismatch remains",
+        "RLS and policy coverage is documented",
+        "Docs and dashboard counts are aligned"
+      ],
+      "dependencies": [
+        "P1-1",
+        "P1-2",
+        "P2-1",
+        "P2-2"
+      ],
+      "blocker": null,
+      "evidence": []
+    },
+    {
+      "todo_id": "P0-4",
+      "title": "Prepare and apply realistic Supabase seed dataset",
+      "priority": "P0",
+      "owner_agent": "Orchestrator",
+      "status": "DONE",
+      "feature_refs": [
+        "F1",
+        "F2",
+        "F3",
+        "F4",
+        "F6"
+      ],
+      "requirement_refs": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "api_refs": [
+        "GET /cards/{cardId}/performance",
+        "POST /payments/{paymentId}/adjustments",
+        "GET /pending-actions",
+        "GET /pending-actions/count"
+      ],
+      "db_refs": [
+        "card_company",
+        "card",
+        "card_benefit",
+        "card_voucher",
+        "payment",
+        "payment_item",
+        "payment_adjustment",
+        "user_pending_action",
+        "user_performance",
+        "user_voucher"
+      ],
+      "acceptance": [
+        "Seed SQL is idempotent",
+        "Seed metadata maps feature/requirement/api/db",
+        "Seed applied to linked Supabase project"
+      ],
+      "dependencies": [
+        "P0-1"
+      ],
+      "blocker": null,
+      "evidence": [
+        "supabase/seeds/cardwise_mvp_seed.sql",
+        "supabase/seeds/seed-metadata.json",
+        "supabase/seeds/README.md"
+      ]
+    }
+  ],
+  "events": [
+    {
+      "ts": "2026-03-19T09:30:00+09:00",
+      "agent": "Orchestrator",
+      "type": "DECISION",
+      "message": "Snapshot is frozen and dashboard work starts from the shared JSON state."
+    },
+    {
+      "ts": "2026-03-19T09:30:10+09:00",
+      "agent": "Orchestrator",
+      "type": "QUESTION",
+      "message": "Need feature-to-requirement traceability in the dashboard for every todo."
+    },
+    {
+      "ts": "2026-03-19T09:30:20+09:00",
+      "agent": "System",
+      "type": "ANSWER",
+      "message": "Track F*, R*, API, and DB references per todo."
+    },
+    {
+      "ts": "2026-03-19T09:39:42+09:00",
+      "agent": "Orchestrator",
+      "type": "DECISION",
+      "message": "P0-2 completed: terminal and web dashboards are now live on shared work-items state."
+    },
+    {
+      "ts": "2026-03-19T09:39:42+09:00",
+      "agent": "Orchestrator",
+      "type": "DECISION",
+      "message": "P0-3 completed: feature, requirement, API, and DB traceability map is published."
+    },
+    {
+      "ts": "2026-03-19T09:42:42+09:00",
+      "agent": "Orchestrator",
+      "type": "DECISION",
+      "message": "P0-4 completed: realistic seed dataset applied to linked Supabase project."
+    }
+  ],
+  "questions": [
+    {
+      "question_id": "Q-1",
+      "status": "RESOLVED",
+      "topic": "Snapshot scope",
+      "detail": "Include code, docs, and DB schema state."
+    },
+    {
+      "question_id": "Q-2",
+      "status": "RESOLVED",
+      "topic": "Implementing F2/F3 first",
+      "detail": "Parallel by domain with orchestrator integration branch cadence."
+    }
+  ]
+}
