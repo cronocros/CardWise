@@ -136,6 +136,7 @@ export interface VoucherRecord {
   cardId?: number | null;
   cardName: string;
   cardNickname?: string | null;
+  cardLabel?: string | null;
   voucherName: string;
   voucherType?: string | null;
   periodType?: string | null;

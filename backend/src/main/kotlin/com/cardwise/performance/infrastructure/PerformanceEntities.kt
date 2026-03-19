@@ -10,6 +10,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.Table
 import java.math.BigDecimal
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 
 @Entity
@@ -48,6 +49,9 @@ open class UserCardEntity(
 
     @Column(name = "card_id")
     var cardId: Long? = null,
+
+    @Column(name = "card_nickname")
+    var cardNickname: String? = null,
 
     @Column(name = "issued_at")
     var issuedAt: LocalDate = LocalDate.now(),
@@ -156,11 +160,20 @@ open class CardVoucherEntity(
     @Column(name = "voucher_name")
     var voucherName: String = "",
 
+    @Column(name = "voucher_type")
+    var voucherType: String? = null,
+
+    @Column(name = "period_type")
+    var periodType: String? = null,
+
     @Column(name = "total_count")
     var totalCount: Int? = null,
 
     @Column(name = "description")
     var description: String? = null,
+
+    @Column(name = "valid_from")
+    var validFrom: LocalDate? = null,
 
     @Column(name = "valid_until")
     var validUntil: LocalDate? = null,
@@ -191,6 +204,12 @@ open class UserVoucherEntity(
     @Column(name = "total_count")
     var totalCount: Int? = null,
 
+    @Column(name = "valid_from")
+    var validFrom: LocalDate? = null,
+
     @Column(name = "valid_until")
     var validUntil: LocalDate? = null,
+
+    @Column(name = "updated_at")
+    var updatedAt: OffsetDateTime? = null,
 )
