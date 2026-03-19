@@ -6,12 +6,13 @@ import type {
   TextareaHTMLAttributes,
 } from "react";
 
-type NavKey = "home" | "inbox" | "adjustments" | "performance";
+type NavKey = "home" | "inbox" | "adjustments" | "vouchers" | "performance";
 
 const navItems: Array<{ href: string; label: string; key: NavKey }> = [
   { href: "/", label: "Home", key: "home" },
   { href: "/inbox", label: "Inbox", key: "inbox" },
   { href: "/adjustments", label: "Adjustments", key: "adjustments" },
+  { href: "/vouchers", label: "Vouchers", key: "vouchers" },
   { href: "/performance/1", label: "Performance", key: "performance" },
 ];
 
