@@ -34,12 +34,12 @@ export function LedgerHub({ pendingCount, pendingActions, paymentId, adjustments
           title="Ledger hub"
           subtitle="The ledger surface now acts as the control point for inbox review and payment adjustments."
         >
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <MetricCard label="Pending actions" value={String(pendingCount)} helper="Inbox queue depth" />
             <MetricCard label="Selected payment" value={paymentId || "-"} helper="Adjustment history lookup" />
             <MetricCard label="Net delta" value={formatCurrency(totalDelta)} helper="Recent adjustment total" />
           </div>
-          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+          <div className="mt-5 grid gap-3 md:grid-cols-3">
             <Link href="/inbox" className="cw-interactive-card rounded-[20px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] px-4 py-4 text-sm font-medium text-[var(--text-strong)] transition hover:-translate-y-0.5 hover:border-[var(--surface-border-strong)] hover:shadow-[var(--surface-shadow)]">
               Open inbox
             </Link>
@@ -76,7 +76,7 @@ export function LedgerHub({ pendingCount, pendingActions, paymentId, adjustments
         </Panel>
       </section>
 
-      <section className="grid gap-5 xl:grid-cols-[1fr_1fr]">
+      <section className="grid gap-5 lg:grid-cols-2">
         <Panel title="Pending actions" subtitle="A compact preview of the inbox queue, ordered for the most urgent work." tone="minimal">
           <div className="grid gap-3">
             {recentActions.length === 0 ? (

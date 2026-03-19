@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AppShell, Chip, MetricCard, Panel } from "@/components/app-shell";
+import { PerformanceCelebration } from "@/components/performance-celebration";
 import {
   formatCurrency,
   formatPercent,
@@ -33,6 +34,7 @@ export default async function PerformancePage(props: PageProps<"/performance/[us
   );
   const data = response?.data;
   const seededIds = [1, 2, 3, 4];
+  const unlockedCount = data?.voucherUnlocks.filter((voucher) => voucher.unlockState === "UNLOCKED").length ?? 0;
 
   return (
     <AppShell
@@ -132,6 +134,19 @@ export default async function PerformancePage(props: PageProps<"/performance/[us
                   <span>Change</span>
                   <span>{formatPercent(data.currentMonth?.changeRate)}</span>
                 </div>
+              </div>
+
+              <div className="mt-4">
+                <PerformanceCelebration
+                  cardName={data.cardName}
+                  currentTier={data.annual?.currentTier?.tierName ?? "Unrated"}
+                  nextTier={data.annual?.nextTier?.tierName ?? null}
+                  progress={progressFor(data)}
+                  specialActive={Boolean(data.specialPeriod?.active)}
+                  graceActive={Boolean(data.benefitQualification?.gracePeriod?.active)}
+                  unlockedCount={unlockedCount}
+                  remainingAmount={data.annual?.nextTier?.remainingAmount ?? null}
+                />
               </div>
 
               <div className="mt-4 grid gap-3 sm:grid-cols-2">

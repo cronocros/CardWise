@@ -85,9 +85,9 @@ export default async function DashboardPage() {
         <MetricCard label="Cards tracked" value={String(cards.length)} helper="Seeded performance snapshots" />
       </section>
 
-      <div className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+      <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
         <Panel title="Command strip" subtitle="The home surface keeps the next work right at the top.">
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="rounded-[22px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] p-4">
               <div className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--text-soft)]">Active cards</div>
               <div className="mt-2 text-[28px] font-semibold tracking-[-0.05em] text-[var(--text-strong)]">{cards.length}</div>
@@ -117,7 +117,7 @@ export default async function DashboardPage() {
             <Chip tone="emerald">BFF live</Chip>
           </div>
 
-          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <Link href="/ledger" className="rounded-[20px] border border-[var(--surface-border)] bg-[var(--surface-soft)] px-4 py-4 transition hover:bg-[var(--surface-elevated)]">
               <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">Ledger</div>
               <div className="mt-2 text-[15px] font-semibold text-[var(--text-strong)]">Open the hub</div>
@@ -200,7 +200,7 @@ export default async function DashboardPage() {
         </Panel>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[1fr_1fr]">
+      <div className="grid gap-4 lg:grid-cols-2">
         <Panel title="Pending work" subtitle="Surface the unresolved queue without leaving home.">
           <div className="grid gap-3">
             {pendingItems.length === 0 ? (

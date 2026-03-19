@@ -9,7 +9,7 @@ function firstSearchValue(value: string | string[] | undefined) {
 
 export default async function AdjustmentsPage(props: PageProps<"/adjustments">) {
   const searchParams = await props.searchParams;
-  const paymentId = firstSearchValue(searchParams.paymentId) ?? "1";
+  const paymentId = firstSearchValue(searchParams.paymentId) ?? "";
 
   return (
     <AppShell

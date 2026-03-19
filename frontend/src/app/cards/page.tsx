@@ -67,14 +67,14 @@ export default async function CardsPage() {
         </>
       }
     >
-      <section className="cw-stagger grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="cw-stagger grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <MetricCard label="Tracked cards" value={String(cards.length)} helper="Seeded performance snapshots" />
         <MetricCard label="Annual total" value={formatCurrency(annualTotal)} helper="Combined accumulated spend" />
         <MetricCard label="Monthly avg" value={formatCurrency(averageMonthly)} helper="Current month average" />
         <MetricCard label="Special / grace" value={`${specialCount}/${graceCount}`} helper="Boosted window / grace window" />
       </section>
 
-      <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+      <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
         <Panel title="Card deck" subtitle="Each card acts like a tappable app tile. Use the detail view to inspect tier thresholds, monthly breakdowns, and voucher unlocks.">
           <div className="grid gap-4 md:grid-cols-2">
             {cards.map((card, index) => (

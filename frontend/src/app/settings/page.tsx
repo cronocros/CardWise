@@ -83,14 +83,14 @@ export default function SettingsPage() {
         </>
       }
     >
-      <section className="cw-stagger grid gap-4 md:grid-cols-4">
+      <section className="cw-stagger grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <MetricCard label="활성 설정" value={String(enabledCount)} helper="켜진 항목 수" />
         <MetricCard label="알림 채널" value="3" helper="앱 / 이메일 / 배지" />
         <MetricCard label="연동 카드" value="4" helper="기준 카드 샘플" />
         <MetricCard label="스킨" value="Minimal" helper="설정 화면 전용" />
       </section>
 
-      <div className="grid gap-5 lg:grid-cols-[0.95fr_1.05fr]">
+      <div className="grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">
         <Panel title="계정" subtitle="프로필과 앱 사용 상태를 한 번에 확인할 수 있게 정리했습니다.">
           <div className="grid gap-4">
             <div className="rounded-[24px] border border-[var(--surface-border)] bg-white p-4">
@@ -168,7 +168,7 @@ export default function SettingsPage() {
 
       <div className="grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
         <Panel title="테마 스킨" subtitle="기본 앱은 Blossom, 조용한 설정은 Minimal, 이벤트는 Glass로 분리합니다.">
-          <div className="grid gap-3 md:grid-cols-3">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {themeOptions.map((theme) => (
               <article
                 key={theme.key}

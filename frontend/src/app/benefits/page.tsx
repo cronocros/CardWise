@@ -140,14 +140,14 @@ export default function BenefitsPage() {
         </>
       }
     >
-      <section className="cw-stagger grid gap-4 md:grid-cols-4">
+      <section className="cw-stagger grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <MetricCard label="추천" value={String(recommendedCount)} helper="AI 우선순위 포함" />
         <MetricCard label="보유" value={String(ownedCount)} helper="현재 활성 혜택" />
         <MetricCard label="검토" value={String(reviewCount)} helper="조건 확인 필요" />
         <MetricCard label="평균 매칭" value={`${avgMatch}%`} helper="시뮬레이션 적합도" />
       </section>
 
-      <div className="grid gap-5 lg:grid-cols-[1.05fr_0.95fr]">
+      <div className="grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
         <Panel title="혜택 검색" subtitle="검색어와 카테고리로 혜택을 좁히고, 바로 판단할 수 있도록 요약을 붙였습니다.">
           <div className="grid gap-4">
             <TextField

@@ -154,6 +154,7 @@ export function VouchersClient({
   const [historyLoading, setHistoryLoading] = useState(false);
   const [actioningId, setActioningId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [detailSheetOpen, setDetailSheetOpen] = useState(false);
 
   const selectedCardLabel =
     seededCards.find((card) => String(card.userCardId) === selectedUserCardId)?.label ??
@@ -163,6 +164,25 @@ export function VouchersClient({
     void refreshData(selectedUserCardId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedUserCardId]);
+
+  useEffect(() => {
+    if (!detailSheetOpen) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setDetailSheetOpen(false);
+      }
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [detailSheetOpen]);
 
   const filteredGlobalVouchers = useMemo(() => {
     const source =
@@ -290,6 +310,9 @@ export function VouchersClient({
   async function selectVoucher(userVoucherId: number) {
     setSelectedVoucherId(userVoucherId);
     setError(null);
+    if (typeof window !== "undefined" && window.innerWidth < 1280) {
+      setDetailSheetOpen(true);
+    }
     await loadHistory(userVoucherId);
   }
 
@@ -448,6 +471,110 @@ export function VouchersClient({
   const selectedCardLockedCount = filteredSelectedCardVouchers.filter(
     (item) => item.unlockState === "LOCKED",
   ).length;
+  const selectedVoucherDetails = selectedVoucher ? (
+    <div className="grid gap-4">
+      <div className="rounded-[24px] border border-[var(--surface-border)] bg-[linear-gradient(135deg,#fff5f7,#ffffff)] p-4">
+        <div className="flex flex-wrap gap-2">
+          <Chip tone={unlockTone(selectedVoucher.unlockState)}>{selectedVoucher.unlockState ?? "UNKNOWN"}</Chip>
+          <Chip tone={categoryTone(selectedVoucher.voucherType)}>{categoryLabel(selectedVoucher.voucherType)}</Chip>
+          <Chip tone="slate">{selectedVoucher.periodType ?? "UNKNOWN"}</Chip>
+        </div>
+        <h3 className="mt-3 text-lg font-semibold tracking-[-0.04em] text-[var(--text-strong)]">
+          {selectedVoucher.voucherName}
+        </h3>
+        <p className="mt-1 text-sm text-[var(--text-body)]">
+          {selectedVoucher.cardName}
+          {selectedVoucher.cardNickname ? ` · ${selectedVoucher.cardNickname}` : ""}
+        </p>
+        <p className="mt-3 text-sm leading-6 text-[var(--text-muted)]">
+          {selectedVoucher.description ?? "No description available."}
+        </p>
+      </div>
+
+      <div className="grid gap-3 md:grid-cols-2">
+        <MetricCard
+          label="Remaining / total"
+          value={
+            selectedVoucher.totalCount === null || selectedVoucher.totalCount === undefined
+              ? "Unlimited"
+              : `${selectedVoucher.remainingCount ?? 0} / ${selectedVoucher.totalCount}`
+          }
+          helper="Current usage state"
+        />
+        <MetricCard
+          label="Expiry"
+          value={formatDaysUntilExpiry(resolveDaysUntilExpiry(selectedVoucher))}
+          helper={formatDate(selectedVoucher.validUntil)}
+        />
+      </div>
+
+      <div className="grid gap-2 rounded-[24px] border border-[var(--surface-border)] bg-white p-4 text-sm text-[var(--text-body)]">
+        <div className="flex justify-between gap-4">
+          <span>Annual requirement</span>
+          <span>{formatCurrency(selectedVoucher.requiredAnnualPerformance)}</span>
+        </div>
+        <div className="flex justify-between gap-4">
+          <span>Current annual</span>
+          <span>{formatCurrency(selectedVoucher.currentAnnualPerformance)}</span>
+        </div>
+        <div className="flex justify-between gap-4">
+          <span>Remaining to unlock</span>
+          <span>{formatCurrency(selectedVoucher.remainingAmount)}</span>
+        </div>
+        <div className="flex justify-between gap-4">
+          <span>Available at</span>
+          <span>{selectedVoucher.availableAt ? formatDate(selectedVoucher.availableAt) : "-"}</span>
+        </div>
+        <div className="flex justify-between gap-4">
+          <span>Valid from</span>
+          <span>{formatDate(selectedVoucher.validFrom)}</span>
+        </div>
+        <div className="flex justify-between gap-4">
+          <span>Valid until</span>
+          <span>{formatDate(selectedVoucher.validUntil)}</span>
+        </div>
+      </div>
+
+      <div>
+        <div className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-[var(--text-soft)]">
+          History
+        </div>
+        {historyLoading ? (
+          <div className="rounded-[22px] border border-dashed border-[var(--surface-border)] bg-[var(--surface-soft)] px-5 py-10 text-center text-sm text-[var(--text-muted)]">
+            Loading history...
+          </div>
+        ) : history.length === 0 ? (
+          <div className="rounded-[22px] border border-dashed border-[var(--surface-border)] bg-[var(--surface-soft)] px-5 py-10 text-center text-sm text-[var(--text-muted)]">
+            No history entries yet.
+          </div>
+        ) : (
+          <div className="grid gap-3">
+            {history.map((entry, index) => (
+              <div
+                key={`${entry.voucherHistoryId ?? entry.createdAt}-${index}`}
+                className="rounded-[22px] border border-[var(--surface-border)] bg-white p-4"
+              >
+                <div className="flex flex-wrap gap-2">
+                  <Chip tone="slate">{entry.action ?? "UPDATE"}</Chip>
+                  <Chip tone="slate">{formatDateTime(entry.createdAt)}</Chip>
+                </div>
+                <p className="mt-3 text-sm text-[var(--text-body)]">{entry.memo ?? "-"}</p>
+                {entry.beforeRemainingCount !== undefined || entry.afterRemainingCount !== undefined ? (
+                  <p className="mt-2 text-xs text-[var(--text-muted)]">
+                    {entry.beforeRemainingCount ?? "-"} → {entry.afterRemainingCount ?? "-"}
+                  </p>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  ) : (
+    <div className="rounded-[22px] border border-dashed border-[var(--surface-border)] bg-[var(--surface-soft)] px-5 py-10 text-center text-sm text-[var(--text-muted)]">
+      Select a voucher from the list to inspect its details and history.
+    </div>
+  );
 
   return (
     <div className="grid gap-5">
@@ -590,115 +717,46 @@ export function VouchersClient({
         </Panel>
 
         <Panel
+          className="hidden xl:block"
           title="Voucher details"
           subtitle="Open a voucher to inspect unlock state, counts, and the use / unuse history timeline."
         >
-          {selectedVoucher ? (
-            <div className="grid gap-4">
-              <div className="rounded-[24px] border border-[var(--surface-border)] bg-[linear-gradient(135deg,#fff5f7,#ffffff)] p-4">
-                <div className="flex flex-wrap gap-2">
-                  <Chip tone={unlockTone(selectedVoucher.unlockState)}>{selectedVoucher.unlockState ?? "UNKNOWN"}</Chip>
-                  <Chip tone={categoryTone(selectedVoucher.voucherType)}>{categoryLabel(selectedVoucher.voucherType)}</Chip>
-                  <Chip tone="slate">{selectedVoucher.periodType ?? "UNKNOWN"}</Chip>
-                </div>
-                <h3 className="mt-3 text-lg font-semibold tracking-[-0.04em] text-[var(--text-strong)]">
-                  {selectedVoucher.voucherName}
-                </h3>
-                <p className="mt-1 text-sm text-[var(--text-body)]">
-                  {selectedVoucher.cardName}
-                  {selectedVoucher.cardNickname ? ` · ${selectedVoucher.cardNickname}` : ""}
-                </p>
-                <p className="mt-3 text-sm leading-6 text-[var(--text-muted)]">
-                  {selectedVoucher.description ?? "No description available."}
-                </p>
-              </div>
-
-              <div className="grid gap-3 md:grid-cols-2">
-                <MetricCard
-                  label="Remaining / total"
-                  value={
-                    selectedVoucher.totalCount === null || selectedVoucher.totalCount === undefined
-                      ? "Unlimited"
-                      : `${selectedVoucher.remainingCount ?? 0} / ${selectedVoucher.totalCount}`
-                  }
-                  helper="Current usage state"
-                />
-                <MetricCard
-                  label="Expiry"
-                  value={formatDaysUntilExpiry(resolveDaysUntilExpiry(selectedVoucher))}
-                  helper={formatDate(selectedVoucher.validUntil)}
-                />
-              </div>
-
-              <div className="grid gap-2 rounded-[24px] border border-[var(--surface-border)] bg-white p-4 text-sm text-[var(--text-body)]">
-                <div className="flex justify-between gap-4">
-                  <span>Annual requirement</span>
-                  <span>{formatCurrency(selectedVoucher.requiredAnnualPerformance)}</span>
-                </div>
-                <div className="flex justify-between gap-4">
-                  <span>Current annual</span>
-                  <span>{formatCurrency(selectedVoucher.currentAnnualPerformance)}</span>
-                </div>
-                <div className="flex justify-between gap-4">
-                  <span>Remaining to unlock</span>
-                  <span>{formatCurrency(selectedVoucher.remainingAmount)}</span>
-                </div>
-                <div className="flex justify-between gap-4">
-                  <span>Available at</span>
-                  <span>{selectedVoucher.availableAt ? formatDate(selectedVoucher.availableAt) : "-"}</span>
-                </div>
-                <div className="flex justify-between gap-4">
-                  <span>Valid from</span>
-                  <span>{formatDate(selectedVoucher.validFrom)}</span>
-                </div>
-                <div className="flex justify-between gap-4">
-                  <span>Valid until</span>
-                  <span>{formatDate(selectedVoucher.validUntil)}</span>
-                </div>
-              </div>
-
-              <div>
-                <div className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-[var(--text-soft)]">
-                  History
-                </div>
-                {historyLoading ? (
-                  <div className="rounded-[22px] border border-dashed border-[var(--surface-border)] bg-[var(--surface-soft)] px-5 py-10 text-center text-sm text-[var(--text-muted)]">
-                    Loading history...
-                  </div>
-                ) : history.length === 0 ? (
-                  <div className="rounded-[22px] border border-dashed border-[var(--surface-border)] bg-[var(--surface-soft)] px-5 py-10 text-center text-sm text-[var(--text-muted)]">
-                    No history entries yet.
-                  </div>
-                ) : (
-                  <div className="grid gap-3">
-                    {history.map((entry, index) => (
-                      <div
-                        key={`${entry.voucherHistoryId ?? entry.createdAt}-${index}`}
-                        className="rounded-[22px] border border-[var(--surface-border)] bg-white p-4"
-                      >
-                        <div className="flex flex-wrap gap-2">
-                          <Chip tone="slate">{entry.action ?? "UPDATE"}</Chip>
-                          <Chip tone="slate">{formatDateTime(entry.createdAt)}</Chip>
-                        </div>
-                        <p className="mt-3 text-sm text-[var(--text-body)]">{entry.memo ?? "-"}</p>
-                        {entry.beforeRemainingCount !== undefined || entry.afterRemainingCount !== undefined ? (
-                          <p className="mt-2 text-xs text-[var(--text-muted)]">
-                            {entry.beforeRemainingCount ?? "-"} → {entry.afterRemainingCount ?? "-"}
-                          </p>
-                        ) : null}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          ) : (
-            <div className="rounded-[22px] border border-dashed border-[var(--surface-border)] bg-[var(--surface-soft)] px-5 py-10 text-center text-sm text-[var(--text-muted)]">
-              Select a voucher from the list to inspect its details and history.
-            </div>
-          )}
+          {selectedVoucherDetails}
         </Panel>
       </div>
+
+      {detailSheetOpen && selectedVoucher ? (
+        <div
+          className="cw-sheet-backdrop xl:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Voucher detail sheet"
+        >
+          <button
+            type="button"
+            aria-label="Close voucher detail sheet"
+            className="absolute inset-0 h-full w-full cursor-default bg-transparent"
+            onClick={() => setDetailSheetOpen(false)}
+          />
+          <div className="cw-bottom-sheet relative z-[1]">
+            <div className="sticky top-0 z-[1] flex items-center justify-between gap-3 border-b border-[var(--surface-border)] bg-[rgba(255,255,255,0.92)] px-5 py-4 backdrop-blur-xl">
+              <div className="min-w-0">
+                <div className="cw-sheet-handle mb-3" />
+                <p className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--text-soft)]">
+                  Voucher detail sheet
+                </p>
+                <h3 className="mt-1 truncate text-[18px] font-semibold tracking-[-0.04em] text-[var(--text-strong)]">
+                  {selectedVoucher.voucherName}
+                </h3>
+              </div>
+              <ActionButton kind="ghost" onClick={() => setDetailSheetOpen(false)}>
+                Close
+              </ActionButton>
+            </div>
+            <div className="px-5 pb-6 pt-4">{selectedVoucherDetails}</div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

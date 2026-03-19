@@ -145,13 +145,13 @@ export function RouteBInbox({ initialActions, initialCount }: InboxRouteProps) {
   return (
     <div className="grid gap-5">
       <Panel title="Inbox control" subtitle="A Blossom-style review surface for triage, resolve, and dismiss actions." tone="minimal">
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <MetricCard label="Pending" value={String(pendingCount)} helper="Badge count" />
           <MetricCard label="Visible" value={String(items.length)} helper="Current filter result" />
           <MetricCard label="High" value={String(summary.high)} helper="Priority HIGH" />
           <MetricCard label="Medium/Low" value={`${summary.medium}/${summary.low}`} helper="Lower priority mix" />
         </div>
-        <div className="mt-5 grid gap-4 md:grid-cols-3">
+        <div className="mt-5 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <label className="flex flex-col gap-2">
             <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-soft)]">Status</span>
             <select value={status} onChange={(event) => setStatus(event.target.value)} className="h-12 rounded-[16px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] px-4 text-sm text-[var(--text-strong)] outline-none">

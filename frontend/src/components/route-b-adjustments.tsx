@@ -97,7 +97,7 @@ export function RouteBAdjustments({ initialPaymentId }: AdjustmentsRouteProps) {
   }
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
+    <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
       <Panel title="Create adjustment" subtitle="FX correction, billing discount, and fee adjustments stay on a simple app-first form." tone="minimal">
         <div className="grid gap-4 md:grid-cols-2">
           <TextField label="Payment ID" value={paymentId} onChange={(event) => setPaymentId(event.target.value)} placeholder="1" />
@@ -165,7 +165,7 @@ export function RouteBAdjustments({ initialPaymentId }: AdjustmentsRouteProps) {
                   </div>
                   <div className="flex justify-between gap-4">
                     <span>Reason</span>
-                    <span className="max-w-[18rem] text-right">{item.reason ?? "-"}</span>
+                    <span className="max-w-full text-right md:max-w-[18rem]">{item.reason ?? "-"}</span>
                   </div>
                   <div className="flex justify-between gap-4">
                     <span>Created</span>
