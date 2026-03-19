@@ -10,8 +10,8 @@
 - 기능 대조표: `docs/specs/feature-matrix.md`
 
 ### 핵심 메모 (다음 LLM이 반드시 알아야 할 것)
-- **인증이 미실장 상태**: `SecurityConfig`가 모든 요청을 허용. `RequestAccountIdResolver`는 하드코딩 fallback accountId 사용 중 — 개발용 임시. 가장 큰 보안 갭.
-- **원격 DB 마이그레이션 미적용**: `20260320100000_add_group_notification_settings.sql` 아직 원격 Supabase에 미적용 (psycopg 스크립트로 수동 적용 필요)
+- **인증 기초 연결 완료**: `SecurityConfig`에 JWT 검증 필터 및 CORS 연동 완료. `SUPABASE_JWT_ISSUER` 환경변수로 활성화 가능 (미설정 시 임시 fallback 동작). 프론트엔드의 실제 로그인 페이지 연동은 검증 대기 중.
+- **자동 마이그레이션 스크립트(`apply_migrations.py`) 완성**: `20260320100000_add_group_notification_settings.sql` 등 원격 Supabase DB 반영 시 `DATABASE_URL` 등 환경변수를 가지고 스크립트 실행하여 적용 가능.
 - **`SecurityConfig` 수정 시 주의**: JWT issuer-uri는 `SUPABASE_JWT_ISSUER` 환경 변수로 주입됨
 
 ---

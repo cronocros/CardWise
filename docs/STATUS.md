@@ -12,9 +12,9 @@
 | Frontend | Next.js 16 (App Router) + TypeScript + Tailwind + shadcn/ui | ✅ 로컬 실행 중 (:3000) |
 | Backend | Spring Boot 3.x (Kotlin), Hexagonal Architecture | ✅ 로컬 실행 중 (:8080) |
 | Database | Supabase PostgreSQL (원격, 서비스 롤 키 기반) | ✅ 연결됨 |
-| Auth | Supabase Auth (JWT) | ❌ **미연결** — `SecurityConfig`가 모든 요청 허용 상태 |
+| Auth | Supabase Auth (JWT) | ✅ **연결됨** — Spring Security JWT 검증 및 CORS 연동 완료 |
 | Cache | Docker Redis (로컬) / Upstash (운영 예정) | 🔶 로컬 only |
-| 마이그레이션 | `supabase/migrations/` 파일 기반, psycopg 수동 적용 | 🔶 일부 미적용 (아래 참조) |
+| 마이그레이션 | `supabase/migrations/` 파일 기반, psycopg 수동 적용 | 🔶 원격 미적용 (`scripts/apply_migrations.py` 실행 대기) |
 | 배포 | Vercel (FE 예정) + Cloud Run (BE 예정) | ❌ 미배포 (로컬 수준) |
 
 ### 미적용 마이그레이션
@@ -33,14 +33,14 @@ supabase/migrations/20260320100000_add_group_notification_settings.sql
 
 | 기능 | 완료율 | 핵심 갭 |
 |------|--------|---------|
-| AUTH | 10% | 실인증 미구현, 개발용 fallback accountId 사용 중 |
-| F1 카드 관리 | 40% | 조회 완성, 등록/수정/삭제 CRUD 미구현 |
+| AUTH | 90% | Backend JWT 연동 완료, Frontend 로그인 연동 대기 |
+| F1 카드 관리 | 90% | CRUD API 파이프라인 및 등록 화면 완성 |
 | F2 가계부 수동입력 | 70% | 기본 저장 완성, 혜택 자동매칭 미완 |
 | F3 인박스 | 95% | 거의 완성 |
 | F4 실적 관리 | 90% | 거의 완성 |
 | F5 혜택 검색 | 95% | 거의 완성 |
-| F6 바우처 관리 | 85% | 만료 알림 스케줄러 미구현 |
-| F7 알림 | 80% | 그룹 알림 연동 완성, 스케줄러 배치 미구현 |
+| F6 바우처 관리 | 95% | 만료 알림 스케줄러 배치 완성 |
+| F7 알림 | 95% | 그룹 기능 연동 및 정기 알림 스케줄러 배치 완성 |
 | F8 대시보드 | 90% | 거의 완성 |
 | F12 그룹 가계부 | 95% | 거의 완성 |
 
@@ -56,7 +56,7 @@ supabase/migrations/20260320100000_add_group_notification_settings.sql
 | Port/Adapter 구조 | ✅ OK | api / application / infrastructure 3-layer 준수 |
 | NamedParameterJdbcTemplate (Supabase) | ✅ OK | JPA ORM 없이 직접 SQL 사용 |
 | @Transactional 범위 | ✅ OK | 서비스 레이어에서 적절히 적용 |
-| 인증/인가 (JWT) | ❌ NOT OK | SecurityConfig 미실장, accountId fallback 사용 중 |
+| 인증/인가 (JWT) | ✅ OK | SecurityConfig, RequestAccountIdResolver JWT 기반으로 연동됨 |
 | Redis 캐시 무효화 | 🔶 PARTIAL | 설계는 있으나 실구현 검증 필요 |
 
 ### Frontend (Next.js - BFF Pattern)
@@ -83,15 +83,13 @@ supabase/migrations/20260320100000_add_group_notification_settings.sql
 
 ### 즉시 수정 필요
 
-1. **`SecurityConfig`** — 모든 요청 허용 상태. JWT 검증 필터 실장 전까지 인증 우회됨
-2. **`RequestAccountIdResolver`** — 하드코딩된 fallback accountId (`"00000000-0000-0000-0000-000000000001"` 등) 사용 중
-3. **`NotificationService.createNotificationIfAccountExists`** — 내부에서 accountId를 email처럼 찾는 로직 오사용 가능성 존재 (GroupService에서 직접 호출하는 로직과 중복)
+1. **`NotificationService.createNotificationIfAccountExists`** — 내부에서 accountId를 email처럼 찾는 로직 오사용 가능성 존재 (GroupService에서 직접 호출하는 로직과 중복)
 
 ### 구조 개선 권고
 
-4. **`GroupService`** — NotificationService를 직접 호출하는 방식. 이벤트 기반(`@ApplicationEventPublisher`)으로 전환하면 결합도 낮아짐
-5. **프론트 BFF 혼용** — 일부 페이지에서 Server Component가 Spring Boot를 직접 호출함. API Route 경유로 일관성 개선 필요
-6. **에러 핸들링 일관성** — 일부 API Route에서 try-catch 누락 또는 불일치 응답 포맷 사용됨
+2. **`GroupService`** — NotificationService를 직접 호출하는 방식. 이벤트 기반(`@ApplicationEventPublisher`)으로 전환하면 결합도 낮아짐
+3. **프론트 BFF 혼용** — 일부 페이지에서 Server Component가 Spring Boot를 직접 호출함. API Route 경유로 일관성 개선 필요
+4. **에러 핸들링 일관성** — 일부 API Route에서 try-catch 누락 또는 불일치 응답 포맷 사용됨
 
 ---
 
@@ -112,12 +110,10 @@ supabase/migrations/20260320100000_add_group_notification_settings.sql
 
 ## 6. 다음 우선순위
 
-1. **AUTH 실구현** (가장 높음) — Supabase JWT → Spring Security 연결
-2. **원격 DB 마이그레이션 적용** — `group_invite_alert`, `group_activity_alert` 컬럼 추가
-3. **스케줄러 구현** — 바우처 만료 알림 (Daily), 실적 리마인더 (Monthly)
-4. **F1 카드 CRUD 구현** — 카드 등록/수정/삭제
-5. **Vercel + Cloud Run 배포** — 환경 변수 세팅 및 CI/CD 파이프라인
-
+1. **원격 DB 마이그레이션 적용** — `apply_migrations.py` 실행하여 `group_invite_alert`, `group_activity_alert` 컬럼 추가
+2. **AUTH 연동 마무리** — 프론트엔드 로그인 페이지 UI와 백엔드 상태 검증 E2E 플로우 완성
+3. **Vercel + Cloud Run 배포** — 환경 변수 세팅 및 CI/CD 파이프라인 구성
+4. **Redis 기능 검증** — Rate Limiting, 캐시 무효화 로직 운영환경 테스트
 ---
 
 ## 7. 관련 문서

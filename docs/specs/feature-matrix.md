@@ -21,8 +21,8 @@
 |------|------|------|
 | 이메일/비밀번호 회원가입 | ❌ TODO | SecurityConfig에서 모든 요청 permitAll 상태 (미실장) |
 | 소셜 로그인 (Google/Kakao) | ❌ TODO | 설계만 존재 |
-| JWT 발급/갱신/검증 | ❌ TODO | `RequestAccountIdResolver`가 하드코딩 fallback accountId 사용 중 |
-| 로그인 화면 (`/login`) | 🔶 PARTIAL | 페이지 파일 존재하나 Supabase Auth 연동 미완 |
+| JWT 발급/갱신/검증 | ✅ DONE | `RequestAccountIdResolver`가 JWT `sub` 추출 완료, Spring Security 연동됨 |
+| 로그인 화면 (`/login`) | 🔶 PARTIAL | 페이지 파일 존재하나 프론트 연결 검증 대기 중 |
 
 ---
 
@@ -31,9 +31,9 @@
 | 기능 | 상태 | 비고 |
 |------|------|------|
 | 카드 목록 조회 | ✅ DONE | `/cards` 페이지 및 API 완성 |
-| 카드 등록 (신규) | ❌ TODO | UI만 존재, 백엔드 CRUD 미구현 |
-| 카드 별칭/발급일 수정 | ❌ TODO | 미구현 |
-| 카드 삭제 | ❌ TODO | 미구현 |
+| 카드 등록 (신규) | ✅ DONE | 백엔드 CRUD 및 바우처 인스턴스 초기화, 프론트 `/cards/register` 완성 |
+| 카드 별칭/발급일 수정 | ✅ DONE | API 완성 (프론트 연결 진행 대기) |
+| 카드 삭제 | ✅ DONE | 소프트 삭제 API 완성 (프론트 연결 진행 대기) |
 | 카드 상세 (연간 실적 등) | 🔶 PARTIAL | `/performance/[userCardId]`에서 조회 가능 |
 
 ---
@@ -94,7 +94,7 @@
 | 바우처 목록 (활성/만료임박) | ✅ DONE | `/vouchers` 화면 및 API 완성 |
 | 바우처 사용/취소 처리 | ✅ DONE | API 완성 |
 | 바우처 이력(log) 조회 | ✅ DONE | API 완성 |
-| 만료 알림 스케줄러 | ❌ TODO | 스케줄러 로직 미구현 |
+| 만료 알림 스케줄러 | ✅ DONE | `NotificationScheduler` (매일 09:00, D-7/3/1) 구현 완료 |
 
 ---
 
@@ -109,9 +109,9 @@
 | **그룹 초대 알림** | ✅ DONE | `NotificationEventHandler.handleGroupInvitation` 구현 완성 |
 | **그룹 결제 알림** | ✅ DONE | `GroupService.createGroupPayment`에서 직접 발행 |
 | **멤버 제외/소유권 양도 알림** | ✅ DONE | `GroupService` + EventHandler 이중 경로 |
-| 바우처 만료 알림 스케줄러 | ❌ TODO | 미구현 |
-| 실적 리마인더 스케줄러 | ❌ TODO | 미구현 |
-| 그룹 활동 알림 설정 `group_activity_alert` DB 컬럼 | 🔶 PARTIAL | 마이그레이션 파일 작성됨, 원격 DB 적용 대기 |
+| 바우처 만료 알림 스케줄러 | ✅ DONE | `NotificationScheduler.sendVoucherExpiryAlerts` 구현 완성 |
+| 실적 리마인더 스케줄러 | ✅ DONE | `NotificationScheduler.sendPerformanceReminders` 구현 완성 |
+| 그룹 활동 알림 설정 `group_activity_alert` DB 컬럼 | 🔶 PARTIAL | 마이그레이션 파일 작성됨, `apply_migrations.py` 실행 대기 |
 
 ---
 
@@ -156,14 +156,14 @@
 
 | 기능명 | 완료율 |
 |-------|--------|
-| AUTH | 10% (설계만 완성, 실구현 ❌) |
-| F1 카드 관리 | 40% (조회 완성, CRUD 미완) |
+| AUTH | 90% (Backend 연동 완성, Frontend 연동 검증 대기) |
+| F1 카드 관리 | 90% (조회/등록 로직 완성, 일부 UI 연결 대기) |
 | F2 가계부 수동 입력 | 70% |
 | F3 인박스 | 95% |
 | F4 실적 관리 | 90% |
 | F5 혜택 검색 | 95% |
-| F6 바우처 관리 | 85% |
-| F7 알림 | 80% (스케줄러 미완) |
+| F6 바우처 관리 | 95% |
+| F7 알림 | 95% |
 | F8 대시보드 | 90% |
 | F12 그룹 가계부 | 95% |
 
@@ -171,8 +171,7 @@
 
 ## 중요 미완성 항목 (Next Priority)
 
-1. **AUTH 실구현** — 가장 큰 보안 갭. `SecurityConfig` 모든 허용 상태
-2. **F6/F7 스케줄러** — 바우처 만료 알림, 실적 리마인더 Daily 배치 미구현
-3. **F1 카드 CRUD** — 카드 등록/수정/삭제 API 미구현
-4. **원격 DB 마이그레이션** — `20260320100000_add_group_notification_settings.sql` 아직 미적용
-5. **Redis 실장 확인** — Rate Limiting, 캐시 무효화 로직 운영환경 검증 필요
+1. **원격 DB 마이그레이션 적용** — `apply_migrations.py` 실행하여 새 컬럼 반영
+2. **AUTH 연동 마무리** — 프론트엔드 로그인 페이지와 백엔드 상태 검증 E2E 플로우
+3. **Vercel + Cloud Run 배포** — 환경 변수 세팅 및 CI/CD 파이프라인
+4. **Redis 기능 검증** — 스로틀링, 캐시 무효화가 클라우드 환경에서 정상 작동하는지 확인
