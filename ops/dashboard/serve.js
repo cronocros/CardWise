@@ -24,7 +24,7 @@ const server = http.createServer((req, res) => {
     return res.end(JSON.stringify(readJson(path.join(__dirname, 'seed-state.json')), null, 2));
   }
 
-  if (url.pathname === '/' || url.pathname === '/index.html') {
+if (url.pathname === '/' || url.pathname === '/index.html') {
     res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
     return res.end(renderHtml(state));
   }
@@ -34,6 +34,6 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(port, host, () => {
-  process.stdout.write(`CardWise dashboard running at http://${host}:${port}\n`);
-  process.stdout.write(`State file: ${statePath}\n`);
+  process.stdout.write(`CardWise 작업판이 http://${host}:${port} 에서 실행 중입니다.\n`);
+  process.stdout.write(`상태 파일: ${statePath}\n`);
 });

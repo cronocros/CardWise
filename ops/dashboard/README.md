@@ -1,15 +1,15 @@
-# CardWise Dashboard
+# CardWise 작업판
 
-Live implementation tracker for the current phase.
+현재 단계의 실시간 작업 추적판입니다.
 
 ## Files
 
-- `work-items.json`: shared live state consumed by terminal and web renderers
-- `seed-state.json`: initial seed state for the dashboard
-- `serve.js`: local web dashboard server
-- `render-terminal.js`: terminal status board
-- `dashboard-lib.js`: shared state and rendering helpers
-- `traceability-map.json`: feature/requirement/API/DB mapping baseline
+- `work-items.json`: 터미널과 웹이 함께 읽는 공유 상태
+- `seed-state.json`: 대시보드 초기 상태
+- `serve.js`: 로컬 웹 대시보드 서버
+- `render-terminal.js`: 터미널 상태판
+- `dashboard-lib.js`: 공통 상태 및 렌더링 헬퍼
+- `traceability-map.json`: 기능/요구/API/DB 매핑 기준
 
 ## Run
 
@@ -17,13 +17,13 @@ Live implementation tracker for the current phase.
 node ops/dashboard/serve.js
 ```
 
-Open the printed URL in a browser.
+출력된 URL을 브라우저에서 엽니다.
 
 ```bash
 node ops/dashboard/render-terminal.js
 ```
 
-Continuous terminal refresh:
+터미널 연속 갱신:
 
 ```bash
 node ops/dashboard/render-terminal.js --watch
@@ -31,7 +31,7 @@ node ops/dashboard/render-terminal.js --watch
 
 ## State Model
 
-Each work item includes:
+각 작업 항목에는 다음이 포함됩니다.
 
 - `todo_id`
 - `title`
@@ -47,17 +47,17 @@ Each work item includes:
 - `blocker`
 - `evidence`
 
-The web dashboard shows:
+웹 대시보드는 다음을 보여줍니다.
 
-- plan phases
-- per-agent progress
-- completed feature, requirement, and API counts (done/total)
-- blockers
-- last 20 conversation events
-- unresolved question count
+- 실행 단계
+- 에이전트별 진행률
+- 완료된 기능/요구사항/API 수
+- 차단 항목
+- 최근 20개 대화 이벤트
+- 미해결 질문 수
 
 ## Update Flow
 
-- Edit `work-items.json` to reflect progress.
-- Terminal and browser views read the same file.
-- Keep `seed-state.json` as the canonical starting point.
+- 진행 상황은 `work-items.json`에 반영합니다.
+- 터미널과 브라우저는 같은 파일을 읽습니다.
+- 시작 기준은 `seed-state.json`을 유지합니다.
