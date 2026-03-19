@@ -46,6 +46,7 @@ data class GroupInvitationRow(
     val invitationId: Long,
     val groupId: Long,
     val groupName: String,
+    val inviterId: UUID,
     val inviterName: String,
     val inviteeEmail: String,
     val invitationStatus: String,
@@ -56,12 +57,27 @@ data class GroupInvitationRow(
 data class GroupPaymentRow(
     val paymentId: Long,
     val accountId: UUID,
+    val userCardId: Long,
     val payerName: String,
     val merchantName: String,
     val amount: Long,
     val paidAt: OffsetDateTime,
     val currency: String,
     val memo: String?,
+)
+
+data class GroupMemberDetailRow(
+    val accountId: UUID,
+    val email: String,
+    val displayName: String,
+    val role: String,
+    val joinedAt: OffsetDateTime,
+)
+
+data class GroupTagRow(
+    val tagId: Long,
+    val tagName: String,
+    val color: String?,
 )
 
 data class GroupMemberStatsRow(
@@ -126,6 +142,37 @@ class GroupRepository(
         )!!
     }
 
+    fun updateGroup(groupId: Long, groupName: String?, description: String?) {
+        val sql = """
+            update ledger_group
+            set group_name = coalesce(:groupName, group_name),
+                description = coalesce(:description, description),
+                updated_at = now()
+            where group_id = :groupId
+              and deleted_at is null
+        """.trimIndent()
+
+        jdbcTemplate.update(
+            sql,
+            MapSqlParameterSource()
+                .addValue("groupId", groupId)
+                .addValue("groupName", groupName)
+                .addValue("description", description),
+        )
+    }
+
+    fun softDeleteGroup(groupId: Long) {
+        val sql = """
+            update ledger_group
+            set deleted_at = now(),
+                updated_at = now()
+            where group_id = :groupId
+              and deleted_at is null
+        """.trimIndent()
+
+        jdbcTemplate.update(sql, MapSqlParameterSource().addValue("groupId", groupId))
+    }
+
     fun insertGroupMember(groupId: Long, accountId: UUID, role: String) {
         val sql = """
             insert into group_member (group_id, account_id, role)
@@ -139,6 +186,55 @@ class GroupRepository(
                 .addValue("groupId", groupId)
                 .addValue("accountId", accountId)
                 .addValue("role", role),
+        )
+    }
+
+    fun updateMemberRole(groupId: Long, accountId: UUID, role: String) {
+        val sql = """
+            update group_member
+            set role = cast(:role as group_role_enum)
+            where group_id = :groupId
+              and account_id = :accountId
+        """.trimIndent()
+
+        jdbcTemplate.update(
+            sql,
+            MapSqlParameterSource()
+                .addValue("groupId", groupId)
+                .addValue("accountId", accountId)
+                .addValue("role", role),
+        )
+    }
+
+    fun updateGroupOwner(groupId: Long, ownerAccountId: UUID) {
+        val sql = """
+            update ledger_group
+            set owner_account_id = :ownerAccountId,
+                updated_at = now()
+            where group_id = :groupId
+              and deleted_at is null
+        """.trimIndent()
+
+        jdbcTemplate.update(
+            sql,
+            MapSqlParameterSource()
+                .addValue("groupId", groupId)
+                .addValue("ownerAccountId", ownerAccountId),
+        )
+    }
+
+    fun deleteGroupMember(groupId: Long, accountId: UUID): Int {
+        val sql = """
+            delete from group_member
+            where group_id = :groupId
+              and account_id = :accountId
+        """.trimIndent()
+
+        return jdbcTemplate.update(
+            sql,
+            MapSqlParameterSource()
+                .addValue("groupId", groupId)
+                .addValue("accountId", accountId),
         )
     }
 

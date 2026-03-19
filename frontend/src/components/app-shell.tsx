@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { NotificationBadge } from "@/components/notification-badge";
 import type {
   ButtonHTMLAttributes,
   InputHTMLAttributes,
@@ -14,6 +15,7 @@ type NavKey =
   | "adjustments"
   | "vouchers"
   | "performance"
+  | "notifications"
   | "dashboard"
   | "cards"
   | "ledger"
@@ -39,6 +41,7 @@ const navItems: NavItem[] = [
   { href: "/dashboard", label: "홈", key: "dashboard", icon: HomeIcon },
   { href: "/cards", label: "카드", key: "cards", icon: CardIcon },
   { href: "/ledger", label: "가계부", key: "ledger", icon: LedgerIcon },
+  { href: "/notifications", label: "알림", key: "notifications", icon: BellIcon },
   { href: "/benefits", label: "혜택", key: "benefits", icon: SparkIcon },
   { href: "/settings", label: "마이", key: "settings", icon: UserIcon },
 ];
@@ -132,7 +135,10 @@ export function AppShell({
                         : "bg-[var(--surface-soft)] text-[var(--text-muted)] group-hover:text-[var(--accent-strong)]"
                     }`}
                   >
-                    <Icon className="h-[18px] w-[18px]" />
+                    <span className="relative">
+                      <Icon className="h-[18px] w-[18px]" />
+                      {item.key === "notifications" ? <NotificationBadge /> : null}
+                    </span>
                   </span>
                   <span>{item.label}</span>
                   {isActive ? (
@@ -163,6 +169,7 @@ export function AppShell({
                 <span>/dashboard</span>
                 <span>/cards</span>
                 <span>/ledger</span>
+                <span>/notifications</span>
                 <span>/benefits</span>
                 <span>/settings</span>
               </div>
@@ -249,7 +256,10 @@ export function AppShell({
                         : "bg-transparent text-[var(--text-muted)] group-hover:bg-[var(--surface-soft)]"
                     }`}
                   >
-                    <Icon className="h-[18px] w-[18px]" />
+                    <span className="relative">
+                      <Icon className="h-[18px] w-[18px]" />
+                      {item.key === "notifications" ? <NotificationBadge compact /> : null}
+                    </span>
                   </span>
                   <span
                     className={`truncate text-[11px] font-medium ${
@@ -532,6 +542,16 @@ function CardIcon(props: SVGProps<SVGSVGElement>) {
       <rect x="3" y="5" width="18" height="14" rx="3" />
       <path d="M3 10.5h18" />
       <path d="M7 15h4" />
+    </svg>
+  );
+}
+
+function BellIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
+      <path d="M15.5 17.5H8.5a2.5 2.5 0 0 1-2.5-2.5V10.8a6 6 0 1 1 12 0V15a2.5 2.5 0 0 1-2.5 2.5Z" />
+      <path d="M10 17.5a2 2 0 0 0 4 0" />
+      <path d="M12 4.75v1.1" />
     </svg>
   );
 }

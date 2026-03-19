@@ -1,7 +1,25 @@
 package com.cardwise.notification.api
 
-import jakarta.validation.constraints.NotNull
 import java.time.OffsetDateTime
+
+data class NotificationItemResponse(
+    val notificationId: Long,
+    val notificationType: String,
+    val eventCode: String,
+    val title: String,
+    val body: String,
+    val actionUrl: String?,
+    val actionLabel: String?,
+    val referenceTable: String?,
+    val referenceId: Long?,
+    val isRead: Boolean,
+    val readAt: OffsetDateTime?,
+    val createdAt: OffsetDateTime,
+)
+
+data class NotificationUnreadCountResponse(
+    val unreadCount: Long,
+)
 
 data class NotificationSettingsResponse(
     val notificationSettingId: Long,

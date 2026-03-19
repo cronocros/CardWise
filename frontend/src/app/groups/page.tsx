@@ -65,8 +65,10 @@ export default async function GroupsPage() {
                     </div>
                   </div>
                   <div className="mt-4 flex flex-wrap gap-3">
+                    <Link href={`/groups/${group.groupId}`} className="rounded-full border border-[var(--surface-border)] bg-white px-4 py-2 text-sm font-medium text-[var(--text-strong)] transition hover:bg-[var(--surface-soft)]">상세</Link>
                     <Link href={`/groups/${group.groupId}/payments`} className="rounded-full border border-[var(--surface-border)] bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white transition hover:bg-[var(--accent-strong)]">결제 목록</Link>
                     <Link href={`/groups/${group.groupId}/stats`} className="rounded-full border border-[var(--surface-border)] bg-white px-4 py-2 text-sm font-medium text-[var(--text-strong)] transition hover:bg-[var(--surface-soft)]">통계 보기</Link>
+                    <Link href={`/groups/${group.groupId}/settings`} className="rounded-full border border-[var(--surface-border)] bg-white px-4 py-2 text-sm font-medium text-[var(--text-strong)] transition hover:bg-[var(--surface-soft)]">설정</Link>
                     {group.role === "OWNER" ? (
                       <Link href={`/groups/${group.groupId}/invite`} className="rounded-full border border-[var(--surface-border)] bg-white px-4 py-2 text-sm font-medium text-[var(--text-strong)] transition hover:bg-[var(--surface-soft)]">멤버 초대</Link>
                     ) : null}

@@ -272,6 +272,31 @@ export interface NotificationSettingsPatchRequest {
   pushNotification?: boolean;
 }
 
+export interface NotificationItem {
+  notificationId: number;
+  notificationType: string;
+  eventCode: string;
+  title: string;
+  body: string;
+  actionUrl: string | null;
+  actionLabel: string | null;
+  referenceTable: string | null;
+  referenceId: number | null;
+  isRead: boolean;
+  readAt: string | null;
+  createdAt: string;
+}
+
+export interface NotificationListEnvelope {
+  data: NotificationItem[];
+}
+
+export interface NotificationUnreadCountEnvelope {
+  data: {
+    unreadCount: number;
+  };
+}
+
 export interface BenefitCategoryEnvelope {
   data: Array<{
     categoryId: number;
@@ -353,6 +378,62 @@ export interface GroupSummaryEnvelope {
   }>;
 }
 
+export interface GroupMemberRecord {
+  accountId: string;
+  displayName: string;
+  email: string;
+  role: string;
+  joinedAt: string;
+}
+
+export interface GroupTagRecord {
+  tagId: number;
+  tagName: string;
+  color: string | null;
+}
+
+export interface GroupDetailEnvelope {
+  data: {
+    groupId: number;
+    groupName: string;
+    description: string | null;
+    role: string;
+    memberCount: number;
+    currentMonthSpent: number;
+    maxMembers: number;
+    ownerAccountId: string;
+    canManageSettings: boolean;
+    pendingInvitationCount: number;
+    members: GroupMemberRecord[];
+  };
+}
+
+export interface GroupActionEnvelope {
+  data: {
+    groupId: number;
+    status: string;
+    message: string;
+  };
+}
+
+export interface GroupTagEnvelope {
+  data: GroupTagRecord[];
+}
+
+export interface GroupPaymentRecord {
+  paymentId: number;
+  accountId: string;
+  userCardId: number;
+  payerName: string;
+  merchantName: string;
+  amount: number;
+  paidAt: string;
+  currency: string;
+  memo: string | null;
+  tagNames: string[];
+  canEdit: boolean;
+}
+
 export interface GroupInvitationEnvelope {
   data: Array<{
     invitationId: number;
@@ -367,17 +448,7 @@ export interface GroupInvitationEnvelope {
 }
 
 export interface GroupPaymentEnvelope {
-  data: Array<{
-    paymentId: number;
-    accountId: string;
-    payerName: string;
-    merchantName: string;
-    amount: number;
-    paidAt: string;
-    currency: string;
-    memo: string | null;
-    canEdit: boolean;
-  }>;
+  data: GroupPaymentRecord[];
 }
 
 export interface GroupStatsEnvelope {
