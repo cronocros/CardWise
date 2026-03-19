@@ -4,6 +4,27 @@ const path = require('node:path');
 const rootDir = __dirname;
 const statePath = path.join(rootDir, 'work-items.json');
 const seedPath = path.join(rootDir, 'seed-state.json');
+const statusLabels = {
+  TODO: '대기',
+  IN_PROGRESS: '진행중',
+  REVIEW: '검토중',
+  DONE: '완료',
+  BLOCKED: '차단',
+  RESOLVED: '해결',
+  UNRESOLVED: '미해결',
+  QUESTION: '질의',
+  ANSWER: '응답',
+  DECISION: '결정'
+};
+const agentLabels = {
+  Orchestrator: '오케스트레이터',
+  'BE-Platform': '백엔드 플랫폼',
+  'BE-Ledger': '백엔드 원장',
+  'BE-Performance': '백엔드 실적',
+  'FE-Foundation': '프론트 기반',
+  'FE-Features': '프론트 기능',
+  'FE-Vouchers': '프론트 바우처'
+};
 
 function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, 'utf8'));
@@ -91,18 +112,26 @@ function buildDashboardModel(state) {
   };
 }
 
+function labelStatus(value) {
+  return statusLabels[value] || value;
+}
+
+function labelAgent(value) {
+  return agentLabels[value] || value;
+}
+
 function renderTerminal(state) {
   const model = buildDashboardModel(state);
   const lines = [];
   lines.push(`CardWise 작업판 | ${model.updated_at}`);
-  lines.push(`단계: ${model.phases.map((phase) => `${phase.phase}:${phase.status}`).join(' | ')}`);
+  lines.push(`단계: ${model.phases.map((phase) => `${phase.phase}:${labelStatus(phase.status)}`).join(' | ')}`);
   lines.push(
     `집계: 항목 ${model.counts.done_items}/${model.counts.total_items} 완료 | 기능 ${model.counts.feature_done}/${model.counts.feature_total} | 요구사항 ${model.counts.requirement_done}/${model.counts.requirement_total} | API ${model.counts.api_done}/${model.counts.api_total} | 미해결 질문 ${model.unresolved_questions}`
   );
   lines.push('');
   lines.push('에이전트');
   model.agents.forEach((agent) => {
-    lines.push(`- ${agent.name.padEnd(16)} ${String(agent.progress).padStart(3)}% ${String(agent.status).padEnd(12)} ${agent.done}/${agent.total}`);
+    lines.push(`- ${labelAgent(agent.name).padEnd(16)} ${String(agent.progress).padStart(3)}% ${labelStatus(agent.status).padEnd(12)} ${agent.done}/${agent.total}`);
   });
   lines.push('');
   lines.push('작업 항목');
@@ -114,12 +143,12 @@ function renderTerminal(state) {
       item.db_refs && item.db_refs.length ? `DB:${item.db_refs.length}` : ''
     ].filter(Boolean).join(' ');
     const blocker = item.blocker ? ` | 차단 사유: ${item.blocker}` : '';
-    lines.push(`- ${item.todo_id} [${item.priority}] [${item.status}] ${item.owner_agent} :: ${item.title}${blocker}${refs ? ` | ${refs}` : ''}`);
+    lines.push(`- ${item.todo_id} [${item.priority}] [${labelStatus(item.status)}] ${labelAgent(item.owner_agent)} :: ${item.title}${blocker}${refs ? ` | ${refs}` : ''}`);
   });
   lines.push('');
   lines.push('최근 이벤트');
   model.recent_events.forEach((event) => {
-    lines.push(`- ${event.ts} ${event.agent} ${event.type}: ${event.message}`);
+    lines.push(`- ${event.ts} ${labelAgent(event.agent)} ${labelStatus(event.type)}: ${event.message}`);
   });
   lines.push('');
   lines.push('차단 항목');
@@ -127,7 +156,7 @@ function renderTerminal(state) {
     lines.push('- 없음');
   } else {
     model.blockers.forEach((blocker) => {
-      lines.push(`- ${blocker.todo_id} ${blocker.owner_agent}: ${blocker.blocker}`);
+      lines.push(`- ${blocker.todo_id} ${labelAgent(blocker.owner_agent)}: ${blocker.blocker}`);
     });
   }
   return lines.join('\n');
@@ -156,7 +185,7 @@ function renderHtml(state) {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>CardWise 작업판</title>
+  <title>CardWise 진행 대시보드</title>
   <style>
     :root { --bg:#0b1020; --panel:#121a32; --panel2:#17213f; --text:#e6ebff; --muted:#96a2cf; --accent:#7dd3fc; --good:#34d399; --warn:#fbbf24; --bad:#fb7185; --border:rgba(150,168,255,.16); }
     * { box-sizing: border-box; }
@@ -231,14 +260,22 @@ function renderHtml(state) {
       return 'todo';
     }
     function row(html) { return '<div class="row">' + html + '</div>'; }
+    function labelStatus(value) {
+      const labels = ${JSON.stringify(statusLabels)};
+      return labels[value] || value;
+    }
+    function labelAgent(value) {
+      const labels = ${JSON.stringify(agentLabels)};
+      return labels[value] || value;
+    }
     function render(s) {
       document.getElementById('meta').textContent = '갱신 시각 ' + s.updated_at + ' | ' + s.counts.done_items + '/' + s.counts.total_items + ' 항목 완료';
       document.getElementById('feature-count').textContent = s.counts.feature_done + '/' + s.counts.feature_total;
       document.getElementById('requirement-count').textContent = s.counts.requirement_done + '/' + s.counts.requirement_total;
       document.getElementById('api-count').textContent = s.counts.api_done + '/' + s.counts.api_total;
       document.getElementById('question-count').textContent = s.unresolved_questions;
-      document.getElementById('phases').innerHTML = s.phases.map((p) => row('<div class="row-head"><strong>' + escapeHtml(p.phase + ' ' + p.title) + '</strong><span class="badge ' + badgeClass(p.status) + '">' + escapeHtml(p.status) + '</span></div><div class="small">' + escapeHtml(p.summary) + '</div>')).join('');
-      document.getElementById('agents').innerHTML = s.agents.map((a) => row('<div class="row-head"><strong>' + escapeHtml(a.name) + '</strong><span class="badge ' + badgeClass(a.status) + '">' + escapeHtml(a.status) + '</span></div><div class="small">완료 ' + a.done + '/' + a.total + ' | 진행률 ' + a.progress + '%</div><div class="progress-track"><div class="progress-fill" style="width:' + a.progress + '%"></div></div>')).join('');
+      document.getElementById('phases').innerHTML = s.phases.map((p) => row('<div class="row-head"><strong>' + escapeHtml(p.phase + ' ' + p.title) + '</strong><span class="badge ' + badgeClass(p.status) + '">' + escapeHtml(labelStatus(p.status)) + '</span></div><div class="small">' + escapeHtml(p.summary) + '</div>')).join('');
+      document.getElementById('agents').innerHTML = s.agents.map((a) => row('<div class="row-head"><strong>' + escapeHtml(labelAgent(a.name)) + '</strong><span class="badge ' + badgeClass(a.status) + '">' + escapeHtml(labelStatus(a.status)) + '</span></div><div class="small">완료 ' + a.done + '/' + a.total + ' | 진행률 ' + a.progress + '%</div><div class="progress-track"><div class="progress-fill" style="width:' + a.progress + '%"></div></div>')).join('');
       document.getElementById('items').innerHTML = s.work_items.map((item) => {
         const refs = []
           .concat(item.feature_refs && item.feature_refs.length ? ['기능: ' + item.feature_refs.join(', ')] : [])
@@ -246,11 +283,11 @@ function renderHtml(state) {
           .concat(item.api_refs && item.api_refs.length ? ['API: ' + item.api_refs.length] : [])
           .concat(item.db_refs && item.db_refs.length ? ['DB: ' + item.db_refs.length] : []);
         const tags = (item.acceptance || []).map((t) => '<span class="tag">' + escapeHtml(t) + '</span>').join('');
-        return row('<div class="row-head"><strong>' + escapeHtml(item.todo_id + ' ' + item.title) + '</strong><span class="badge ' + badgeClass(item.status) + '">' + escapeHtml(item.priority + ' / ' + item.status) + '</span></div><div class="small">담당: ' + escapeHtml(item.owner_agent) + '</div><div class="small">' + escapeHtml(refs.join(' | ') || '참조 없음') + '</div><div>' + tags + '</div>');
+        return row('<div class="row-head"><strong>' + escapeHtml(item.todo_id + ' ' + item.title) + '</strong><span class="badge ' + badgeClass(item.status) + '">' + escapeHtml(item.priority + ' / ' + labelStatus(item.status)) + '</span></div><div class="small">담당: ' + escapeHtml(labelAgent(item.owner_agent)) + '</div><div class="small">' + escapeHtml(refs.join(' | ') || '참조 없음') + '</div><div>' + tags + '</div>');
       }).join('');
-      document.getElementById('events').innerHTML = s.recent_events.slice().reverse().map((e) => row('<div class="row-head"><strong>' + escapeHtml(e.agent) + '</strong><span class="badge ' + badgeClass(e.type) + '">' + escapeHtml(e.type) + '</span></div><div class="mono">' + escapeHtml(e.ts) + '</div><div class="small">' + escapeHtml(e.message) + '</div>')).join('');
-      document.getElementById('blockers').innerHTML = s.blockers.map((b) => row('<div class="row-head"><strong>' + escapeHtml(b.todo_id + ' ' + b.title) + '</strong><span class="badge blocked">차단</span></div><div class="small">담당: ' + escapeHtml(b.owner_agent) + '</div><div class="small">' + escapeHtml(b.blocker) + '</div>')).join('') || '<div class="empty">차단 항목이 없습니다.</div>';
-      document.getElementById('questions').innerHTML = s.questions.filter((q) => q.status !== 'RESOLVED').map((q) => row('<div class="row-head"><strong>' + escapeHtml(q.question_id + ' ' + q.topic) + '</strong><span class="badge ' + badgeClass(q.status) + '">' + escapeHtml(q.status) + '</span></div><div class="small">' + escapeHtml(q.detail) + '</div>')).join('') || '<div class="empty">열려 있는 질문이 없습니다.</div>';
+      document.getElementById('events').innerHTML = s.recent_events.slice().reverse().map((e) => row('<div class="row-head"><strong>' + escapeHtml(labelAgent(e.agent)) + '</strong><span class="badge ' + badgeClass(e.type) + '">' + escapeHtml(labelStatus(e.type)) + '</span></div><div class="mono">' + escapeHtml(e.ts) + '</div><div class="small">' + escapeHtml(e.message) + '</div>')).join('');
+      document.getElementById('blockers').innerHTML = s.blockers.map((b) => row('<div class="row-head"><strong>' + escapeHtml(b.todo_id + ' ' + b.title) + '</strong><span class="badge blocked">차단</span></div><div class="small">담당: ' + escapeHtml(labelAgent(b.owner_agent)) + '</div><div class="small">' + escapeHtml(b.blocker) + '</div>')).join('') || '<div class="empty">차단 항목이 없습니다.</div>';
+      document.getElementById('questions').innerHTML = s.questions.filter((q) => q.status !== 'RESOLVED').map((q) => row('<div class="row-head"><strong>' + escapeHtml(q.question_id + ' ' + q.topic) + '</strong><span class="badge ' + badgeClass(q.status) + '">' + escapeHtml(labelStatus(q.status)) + '</span></div><div class="small">' + escapeHtml(q.detail) + '</div>')).join('') || '<div class="empty">열려 있는 질문이 없습니다.</div>';
     }
     render(state);
     setInterval(async () => {
