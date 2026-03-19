@@ -251,6 +251,96 @@ export interface DashboardTagCrossResponse {
   };
 }
 
+export interface NotificationSettingsResponse {
+  data: {
+    notificationSettingId: number;
+    accountId: string;
+    voucherExpiryAlert: boolean;
+    performanceReminder: boolean;
+    paymentConfirmAlert: boolean;
+    emailNotification: boolean;
+    pushNotification: boolean;
+    updatedAt: string;
+  };
+}
+
+export interface NotificationSettingsPatchRequest {
+  voucherExpiryAlert?: boolean;
+  performanceReminder?: boolean;
+  paymentConfirmAlert?: boolean;
+  emailNotification?: boolean;
+  pushNotification?: boolean;
+}
+
+export interface BenefitCategoryEnvelope {
+  data: Array<{
+    categoryId: number;
+    categoryName: string;
+    benefitCount: number;
+  }>;
+}
+
+export interface BenefitSearchEnvelope {
+  data: Array<{
+    cardBenefitId: number;
+    cardId: number;
+    cardName: string;
+    cardCompanyName: string;
+    cardImageUrl: string | null;
+    benefitType: string;
+    benefitTypeLabel: string;
+    discountType: string;
+    discountValue: number;
+    benefitLabel: string;
+    targetLabel: string;
+    categoryId: number | null;
+    categoryName: string | null;
+    merchantId: number | null;
+    merchantName: string | null;
+    description: string | null;
+    monthlyLimitCount: number | null;
+    monthlyLimitAmount: number | null;
+    minPaymentAmount: number | null;
+    performanceTierId: number | null;
+    tierName: string | null;
+    requiredPerformanceAmount: number | null;
+    maxPerformanceAmount: number | null;
+    isMyCard: boolean;
+    userCardId: number | null;
+    cardNickname: string | null;
+    isEligible: boolean;
+    eligibilityLabel: string;
+    currentSpent: number | null;
+    latestPerformanceMonth: string | null;
+    remainingToEligible: number | null;
+    matchScore: number;
+  }>;
+}
+
+export interface BenefitRecommendationEnvelope {
+  data: {
+    scope: string;
+    comparedCount: number;
+    reason: string;
+    recommendation: BenefitSearchEnvelope["data"][number] | null;
+  };
+}
+
+export interface CardBenefitDetailEnvelope {
+  data: {
+    cardId: number;
+    cardName: string;
+    cardCompanyName: string;
+    cardImageUrl: string | null;
+    isMyCard: boolean;
+    userCardId: number | null;
+    cardNickname: string | null;
+    currentSpent: number | null;
+    latestPerformanceMonth: string | null;
+    benefits: BenefitSearchEnvelope["data"];
+  };
+}
+
 function normalizeBaseUrl(baseUrl: string) {
   return baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
 }
