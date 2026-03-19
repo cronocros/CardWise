@@ -4,6 +4,7 @@ plugins {
     kotlin("jvm") version "2.1.10"
     kotlin("plugin.spring") version "2.1.10"
     kotlin("plugin.jpa") version "2.1.10"
+    kotlin("plugin.allopen") version "2.1.10"
 }
 
 group = "com.cardwise"
@@ -46,6 +47,12 @@ kotlin {
     compilerOptions {
         freeCompilerArgs.addAll("-Xjsr305=strict")
     }
+}
+
+allOpen {
+    annotation("jakarta.persistence.Entity")
+    annotation("jakarta.persistence.MappedSuperclass")
+    annotation("jakarta.persistence.Embeddable")
 }
 
 tasks.withType<Test> {

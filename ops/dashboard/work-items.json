@@ -1,7 +1,7 @@
 {
   "version": 1,
   "project": "CardWise",
-  "updated_at": "2026-03-19T11:10:00+09:00",
+  "updated_at": "2026-03-19T11:15:00+09:00",
   "phases": [
     {
       "phase": "P0",
@@ -609,10 +609,17 @@
       "evidence": [
         "supabase/.temp/project-ref",
         "supabase/.temp/pooler-url",
+        "backend/build.gradle.kts",
         "backend/src/main/kotlin/com/cardwise/performance/infrastructure/PerformanceEntities.kt",
         "backend/scripts/boot-remote.ps1",
         "GET http://127.0.0.1:8080/actuator/health",
-        "GET http://127.0.0.1:8080/api/v1/vouchers"
+        "GET http://127.0.0.1:8080/api/v1/vouchers",
+        "GET http://127.0.0.1:3000/api/vouchers?status=active",
+        "GET http://127.0.0.1:3000/api/pending-actions/count?status=PENDING",
+        "GET http://127.0.0.1:3000/api/cards/1/performance",
+        "GET http://127.0.0.1:3000/",
+        "GET http://127.0.0.1:3000/vouchers",
+        "GET http://127.0.0.1:3000/performance/1"
       ]
     }
   ],
@@ -742,6 +749,18 @@
       "agent": "Orchestrator",
       "type": "DONE",
       "message": "boot-remote로 원격 Supabase에 연결한 Spring 런타임이 기동했고 /actuator/health와 /api/v1/vouchers가 200으로 응답했습니다."
+    },
+    {
+      "ts": "2026-03-19T11:12:00+09:00",
+      "agent": "Orchestrator",
+      "type": "DONE",
+      "message": "JPA 엔티티용 Kotlin all-open 설정을 추가해 컴파일 결과의 엔티티 getter가 final이 아니게 정리했습니다."
+    },
+    {
+      "ts": "2026-03-19T11:15:00+09:00",
+      "agent": "Orchestrator",
+      "type": "DONE",
+      "message": "프론트 dev 서버와 BFF를 띄운 뒤 /, /vouchers, /performance/1 UI와 주요 BFF API가 모두 200으로 응답하는 E2E 스모크를 완료했습니다."
     }
   ],
   "questions": [
