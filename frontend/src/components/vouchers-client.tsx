@@ -228,7 +228,6 @@ export function VouchersClient({
 
   async function loadHistory(userVoucherId: number) {
     setHistoryLoading(true);
-    setError(null);
     try {
       const items = await fetchVoucherHistory(`/api/user-vouchers/${userVoucherId}/history`);
       setHistory(items);
@@ -307,6 +306,7 @@ export function VouchersClient({
 
   async function selectVoucher(userVoucherId: number) {
     setSelectedVoucherId(userVoucherId);
+    setError(null);
     await loadHistory(userVoucherId);
   }
 
