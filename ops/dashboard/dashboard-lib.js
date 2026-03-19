@@ -245,30 +245,56 @@ function renderHtml(state) {
         linear-gradient(180deg, var(--bg-accent) 0%, var(--bg) 100%);
     }
     a { color:inherit; text-decoration:none; }
-    .page { max-width:1560px; margin:0 auto; padding:24px; display:grid; gap:18px; }
+    .page {
+      max-width:1600px;
+      margin:0 auto;
+      padding:18px;
+      min-height:100vh;
+      display:grid;
+      gap:16px;
+    }
     .top-grid {
       display:grid;
-      gap:18px;
-      grid-template-columns:minmax(0, 1.35fr) minmax(340px, .95fr);
+      gap:16px;
+      grid-template-columns:minmax(0, 1.45fr) minmax(320px, .85fr);
       align-items:start;
     }
     .main-grid {
       display:grid;
-      gap:18px;
-      grid-template-columns:minmax(0, 1.15fr) minmax(0, 1.4fr) minmax(300px, .9fr);
-      align-items:start;
+      gap:16px;
+      grid-template-columns:minmax(280px, .88fr) minmax(0, 1.45fr) minmax(300px, .95fr);
+      align-items:stretch;
+      min-height:0;
     }
-    .stack { display:grid; gap:18px; }
+    .stack { display:grid; gap:16px; min-height:0; }
+    .stack-left { grid-template-rows:minmax(0, .92fr) minmax(0, 1.08fr); }
+    .stack-center { grid-template-rows:minmax(0, 1.3fr) minmax(0, .82fr); }
+    .stack-right { grid-template-rows:minmax(0, .72fr) minmax(0, .95fr) minmax(0, 1.12fr); }
     .panel {
       background:rgba(255,255,255,.92);
       border:1px solid var(--line);
       border-radius:var(--radius-xl);
       box-shadow:var(--shadow);
       overflow:hidden;
+      min-height:0;
+      display:flex;
+      flex-direction:column;
     }
     .panel.soft { background:linear-gradient(180deg, rgba(255,255,255,.96), rgba(255,249,250,.96)); }
     .panel-header { padding:20px 22px 0; }
-    .panel-body { padding:20px 22px 22px; }
+    .panel-body { padding:18px 22px 22px; }
+    .panel-body.scroll-body {
+      flex:1;
+      min-height:0;
+      overflow:auto;
+      scrollbar-width:thin;
+      scrollbar-color:rgba(140, 110, 128, .28) transparent;
+    }
+    .panel-body.scroll-body::-webkit-scrollbar { width:8px; height:8px; }
+    .panel-body.scroll-body::-webkit-scrollbar-thumb {
+      background:rgba(140, 110, 128, .24);
+      border-radius:999px;
+    }
     .eyebrow {
       display:inline-flex;
       align-items:center;
@@ -283,14 +309,14 @@ function renderHtml(state) {
       text-transform:uppercase;
     }
     .hero {
-      padding:22px;
+      padding:20px 22px;
       background:
         radial-gradient(circle at top right, rgba(244, 63, 94, .16), transparent 28%),
         linear-gradient(135deg, rgba(255,255,255,.96), rgba(255,248,249,.98));
     }
     .hero h1 {
-      margin:14px 0 10px;
-      font-size:42px;
+      margin:12px 0 8px;
+      font-size:38px;
       line-height:1.02;
       letter-spacing:-.05em;
     }
@@ -298,18 +324,18 @@ function renderHtml(state) {
       margin:0;
       max-width:820px;
       color:var(--muted);
-      font-size:15px;
-      line-height:1.75;
+      font-size:14px;
+      line-height:1.68;
     }
     .hero-meta {
-      margin-top:20px;
+      margin-top:18px;
       display:grid;
-      gap:14px;
+      gap:12px;
       grid-template-columns:repeat(3, minmax(0, 1fr));
     }
     .hero-card {
-      min-height:116px;
-      padding:16px 18px;
+      min-height:96px;
+      padding:14px 16px;
       border-radius:var(--radius-lg);
       background:rgba(255,255,255,.9);
       border:1px solid var(--line);
@@ -322,24 +348,30 @@ function renderHtml(state) {
       text-transform:uppercase;
     }
     .hero-card .value {
-      margin-top:10px;
-      font-size:30px;
+      margin-top:8px;
+      font-size:28px;
       font-weight:800;
       letter-spacing:-.04em;
     }
-    .hero-card .subvalue {
-      margin-top:8px;
-      color:var(--muted);
-      font-size:13px;
-      line-height:1.6;
+    #updated-value {
+      font-size:22px;
+      line-height:1.24;
+      word-break:break-word;
     }
-    .hero-rail { display:grid; gap:14px; }
+    .hero-card .subvalue {
+      margin-top:6px;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.5;
+    }
+    .hero-rail { display:grid; gap:14px; min-height:0; }
     .status-card {
       padding:18px 20px;
       border-radius:var(--radius-lg);
       background:linear-gradient(160deg, rgba(32,23,29,.96), rgba(62,37,47,.96));
       color:#fff8fb;
       box-shadow:0 26px 60px rgba(63, 27, 44, .28);
+      height:100%;
     }
     .status-grid {
       margin-top:14px;
@@ -366,12 +398,17 @@ function renderHtml(state) {
       font-weight:800;
       letter-spacing:-.04em;
     }
-    .timeline, .card-list, .link-list { display:grid; gap:12px; }
+    .timeline, .card-list { display:grid; gap:12px; }
+    .card-list.compact { gap:10px; }
     .phase-row, .card-row, .link-row {
       border-radius:var(--radius-md);
       border:1px solid var(--line);
       background:var(--panel-alt);
       padding:14px 16px;
+    }
+    .card-row.compact {
+      padding:12px 14px;
+      background:linear-gradient(180deg, rgba(255,255,255,.95), rgba(255,249,250,.96));
     }
     .row-head {
       display:flex;
@@ -432,6 +469,109 @@ function renderHtml(state) {
       align-items:flex-start;
     }
     .link-row a:hover strong { color:var(--rose-strong); }
+    .board-note {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-bottom:14px;
+    }
+    .board-note .small strong { color:var(--text); }
+    .kanban-board {
+      display:grid;
+      gap:12px;
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+      min-height:0;
+    }
+    .kanban-lane {
+      min-height:0;
+      display:flex;
+      flex-direction:column;
+      border-radius:var(--radius-lg);
+      border:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(255,255,255,.98), rgba(255,245,247,.96));
+      overflow:hidden;
+    }
+    .lane-head {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      padding:14px 16px;
+      border-bottom:1px solid var(--line);
+      background:rgba(255,255,255,.8);
+    }
+    .lane-title {
+      font-size:13px;
+      font-weight:800;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color:var(--text);
+    }
+    .lane-body {
+      min-height:0;
+      overflow:auto;
+      padding:12px;
+      display:grid;
+      gap:10px;
+      scrollbar-width:thin;
+      scrollbar-color:rgba(140, 110, 128, .28) transparent;
+    }
+    .lane-body::-webkit-scrollbar { width:8px; }
+    .lane-body::-webkit-scrollbar-thumb {
+      background:rgba(140, 110, 128, .24);
+      border-radius:999px;
+    }
+    .link-grid {
+      display:grid;
+      gap:10px;
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+    }
+    .link-tile {
+      border-radius:var(--radius-md);
+      border:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(255,255,255,.98), rgba(255,247,249,.96));
+      transition:transform .16s ease, border-color .16s ease, box-shadow .16s ease;
+    }
+    .link-tile:hover {
+      transform:translateY(-2px);
+      border-color:rgba(244, 63, 94, .28);
+      box-shadow:0 18px 30px rgba(99, 65, 86, .1);
+    }
+    .link-tile a {
+      height:100%;
+      display:grid;
+      gap:8px;
+      padding:14px 14px 12px;
+    }
+    .link-topline {
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:10px;
+    }
+    .tiny {
+      color:var(--muted);
+      font-size:11px;
+      line-height:1.45;
+      word-break:break-all;
+    }
+    .split-stack {
+      display:grid;
+      gap:14px;
+      grid-template-rows:minmax(0, 1fr) minmax(0, 1fr);
+      min-height:0;
+    }
+    .split-card {
+      min-height:0;
+      display:flex;
+      flex-direction:column;
+    }
+    .split-card .card-list {
+      min-height:0;
+      overflow:auto;
+      padding-right:4px;
+    }
     .tag {
       display:inline-flex;
       align-items:center;
@@ -474,13 +614,22 @@ function renderHtml(state) {
       line-height:1.7;
       padding:8px 0;
     }
+    @media (min-width: 1321px) {
+      html, body { height:100%; }
+      body { overflow:hidden; }
+      .page { height:100vh; grid-template-rows:auto minmax(0, 1fr); }
+      .top-grid, .main-grid, .hero-rail { min-height:0; }
+    }
     @media (max-width: 1320px) {
+      body { overflow:auto; }
       .top-grid, .main-grid { grid-template-columns:1fr; }
+      .stack-left, .stack-center, .stack-right { grid-template-rows:auto; }
     }
     @media (max-width: 860px) {
       .page { padding:16px; }
       .hero h1 { font-size:34px; }
       .hero-meta, .status-grid { grid-template-columns:1fr; }
+      .kanban-board, .link-grid { grid-template-columns:1fr; }
     }
   </style>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%23f43f5e'/%3E%3Ctext x='50%25' y='54%25' text-anchor='middle' font-size='28' font-family='Arial' font-weight='700' fill='white'%3ECW%3C/text%3E%3C/svg%3E" />
@@ -522,63 +671,64 @@ function renderHtml(state) {
             <div class="status-chip"><div class="title">미해결 질문</div><div class="number" id="question-count">0</div></div>
           </div>
         </article>
-        <article class="panel">
-          <div class="panel-header">
-            <div class="eyebrow">즉시 집중</div>
-          </div>
-          <div class="panel-body">
-            <div class="card-list" id="next-focus"></div>
-          </div>
-        </article>
       </aside>
     </section>
 
     <section class="main-grid">
-      <article class="panel">
-        <div class="panel-header"><div class="eyebrow">실행 단계</div></div>
-        <div class="panel-body"><div class="timeline" id="phases"></div></div>
-      </article>
-      <article class="stack">
+      <section class="stack stack-left">
+        <article class="panel">
+          <div class="panel-header"><div class="eyebrow">실행 단계</div></div>
+          <div class="panel-body scroll-body"><div class="timeline" id="phases"></div></div>
+        </article>
+        <article class="panel">
+          <div class="panel-header"><div class="eyebrow">에이전트 진행률</div></div>
+          <div class="panel-body scroll-body"><div class="card-list compact" id="agents"></div></div>
+        </article>
+      </section>
+      <section class="stack stack-center">
         <article class="panel">
           <div class="panel-header"><div class="eyebrow">작업 항목</div></div>
-          <div class="panel-body">
-            <div class="pill-row" style="margin-bottom:14px;">
-              <span class="pill"><span class="dot" style="color:var(--good)"></span><span id="done-summary">완료 0</span></span>
-              <span class="pill"><span class="dot" style="color:var(--warn)"></span><span id="progress-summary">진행 0</span></span>
-              <span class="pill"><span class="dot" style="color:var(--rose-strong)"></span><span id="feature-summary">기능 0/0</span></span>
-              <span class="pill"><span class="dot" style="color:var(--info)"></span><span id="api-summary">API 0/0</span></span>
+          <div class="panel-body scroll-body">
+            <div class="board-note">
+              <div class="small"><strong>상태별 레인</strong>으로 한 화면에서 진행 흐름을 봅니다.</div>
+              <div class="pill-row">
+                <span class="pill"><span class="dot" style="color:var(--good)"></span><span id="done-summary">완료 0</span></span>
+                <span class="pill"><span class="dot" style="color:var(--warn)"></span><span id="progress-summary">진행 0</span></span>
+                <span class="pill"><span class="dot" style="color:var(--rose-strong)"></span><span id="feature-summary">기능 0/0</span></span>
+                <span class="pill"><span class="dot" style="color:var(--info)"></span><span id="api-summary">API 0/0</span></span>
+              </div>
             </div>
-            <div class="card-list" id="items"></div>
+            <div class="kanban-board" id="items"></div>
           </div>
         </article>
         <article class="panel">
           <div class="panel-header"><div class="eyebrow">최근 이벤트</div></div>
-          <div class="panel-body"><div class="card-list" id="events"></div></div>
+          <div class="panel-body scroll-body"><div class="card-list compact" id="events"></div></div>
         </article>
-      </article>
-      <article class="stack">
+      </section>
+      <section class="stack stack-right">
+        <article class="panel">
+          <div class="panel-header"><div class="eyebrow">즉시 집중</div></div>
+          <div class="panel-body scroll-body"><div class="card-list compact" id="next-focus"></div></div>
+        </article>
         <article class="panel">
           <div class="panel-header"><div class="eyebrow">Quick Links</div></div>
-          <div class="panel-body"><div class="link-list" id="quick-links"></div></div>
-        </article>
-        <article class="panel">
-          <div class="panel-header"><div class="eyebrow">에이전트 진행률</div></div>
-          <div class="panel-body"><div class="card-list" id="agents"></div></div>
+          <div class="panel-body scroll-body"><div class="link-grid" id="quick-links"></div></div>
         </article>
         <article class="panel">
           <div class="panel-header"><div class="eyebrow">차단 / 질문</div></div>
-          <div class="panel-body stack">
-            <div>
+          <div class="panel-body split-stack">
+            <div class="split-card">
               <div class="small" style="font-weight:700; color:var(--text); margin-bottom:10px;">차단 항목</div>
               <div class="card-list" id="blockers"></div>
             </div>
-            <div>
+            <div class="split-card">
               <div class="small" style="font-weight:700; color:var(--text); margin-bottom:10px;">미해결 질문</div>
               <div class="card-list" id="questions"></div>
             </div>
           </div>
         </article>
-      </article>
+      </section>
     </section>
   </div>
   <script>
@@ -627,6 +777,20 @@ function renderHtml(state) {
       }
       return minutes + ':' + seconds;
     }
+    function formatSnapshotTimestamp(value) {
+      if (!value) return '--';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return value;
+      return new Intl.DateTimeFormat('ko-KR', {
+        month: 'numeric',
+        day: 'numeric',
+        weekday: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      }).format(date);
+    }
     function updateClockChrome() {
       const now = new Date();
       document.getElementById('clock-value').textContent = formatClock(now);
@@ -659,24 +823,39 @@ function renderHtml(state) {
       )).join('');
     }
     function renderItems(items) {
-      return items.map((item) => {
-        const refs = []
-          .concat(item.feature_refs && item.feature_refs.length ? ['기능 ' + item.feature_refs.join(', ')] : [])
-          .concat(item.requirement_refs && item.requirement_refs.length ? ['요구 ' + item.requirement_refs.join(', ')] : [])
-          .concat(item.api_refs && item.api_refs.length ? ['API ' + item.api_refs.length] : [])
-          .concat(item.db_refs && item.db_refs.length ? ['DB ' + item.db_refs.length] : []);
-        const acceptance = (item.acceptance || []).map((entry) => '<span class="tag">' + escapeHtml(entry) + '</span>').join('');
+      const lanes = [
+        { key: 'active', label: '진행', tone: 'progress', statuses: ['IN_PROGRESS', 'REVIEW'] },
+        { key: 'queue', label: '대기 / 차단', tone: 'todo', statuses: ['TODO', 'BLOCKED'] },
+        { key: 'done', label: '완료', tone: 'done', statuses: ['DONE'] }
+      ];
+      return lanes.map((lane) => {
+        const laneItems = items.filter((item) => lane.statuses.includes(item.status));
+        const body = laneItems.length ? laneItems.map((item) => {
+          const refs = []
+            .concat(item.feature_refs && item.feature_refs.length ? ['기능 ' + item.feature_refs.join(', ')] : [])
+            .concat(item.requirement_refs && item.requirement_refs.length ? ['요구 ' + item.requirement_refs.join(', ')] : [])
+            .concat(item.api_refs && item.api_refs.length ? ['API ' + item.api_refs.length] : [])
+            .concat(item.db_refs && item.db_refs.length ? ['DB ' + item.db_refs.length] : []);
+          return (
+            '<div class="card-row compact">' +
+              '<div class="row-head">' +
+                '<strong>' + escapeHtml(item.todo_id + ' ' + item.title) + '</strong>' +
+                '<span class="badge ' + badgeClass(item.status) + '">' + escapeHtml(item.priority) + '</span>' +
+              '</div>' +
+              '<div class="small">상태: ' + escapeHtml(labelStatus(item.status)) + ' · 담당: ' + escapeHtml(labelAgent(item.owner_agent)) + '</div>' +
+              '<div class="small">' + escapeHtml(refs.join(' | ') || '참조 없음') + '</div>' +
+              (item.blocker ? '<div class="small" style="color:var(--bad); margin-top:6px;">차단 사유: ' + escapeHtml(item.blocker) + '</div>' : '') +
+            '</div>'
+          );
+        }).join('') : '<div class="empty">표시할 항목이 없습니다.</div>';
         return (
-          '<div class="card-row">' +
-            '<div class="row-head">' +
-              '<strong>' + escapeHtml(item.todo_id + ' ' + item.title) + '</strong>' +
-              '<span class="badge ' + badgeClass(item.status) + '">' + escapeHtml(item.priority + ' / ' + labelStatus(item.status)) + '</span>' +
+          '<section class="kanban-lane">' +
+            '<div class="lane-head">' +
+              '<div class="lane-title">' + escapeHtml(lane.label) + '</div>' +
+              '<span class="badge ' + lane.tone + '">' + laneItems.length + '</span>' +
             '</div>' +
-            '<div class="small">담당: ' + escapeHtml(labelAgent(item.owner_agent)) + '</div>' +
-            '<div class="small">' + escapeHtml(refs.join(' | ') || '참조 없음') + '</div>' +
-            (item.blocker ? '<div class="small" style="color:var(--bad); margin-top:6px;">차단 사유: ' + escapeHtml(item.blocker) + '</div>' : '') +
-            '<div style="margin-top:6px;">' + acceptance + '</div>' +
-          '</div>'
+            '<div class="lane-body">' + body + '</div>' +
+          '</section>'
         );
       }).join('');
     }
@@ -687,21 +866,21 @@ function renderHtml(state) {
             '<strong>' + escapeHtml(labelAgent(event.agent)) + '</strong>' +
             '<span class="badge ' + badgeClass(event.type) + '">' + escapeHtml(labelStatus(event.type)) + '</span>' +
           '</div>' +
-          '<div class="mono">' + escapeHtml(event.ts) + '</div>' +
-          '<div class="small">' + escapeHtml(event.message) + '</div>' +
+          '<div class="mono">' + escapeHtml(event.ts || event.timestamp || '--') + '</div>' +
+          '<div class="small">' + escapeHtml(event.message || event.summary || event.detail || '상세 없음') + '</div>' +
         '</div>'
       )).join('');
     }
     function renderLinks(links) {
       return links.map((link) => (
-        '<div class="link-row">' +
+        '<div class="link-tile">' +
           '<a href="' + escapeHtml(link.href) + '" target="_blank" rel="noreferrer">' +
-            '<div>' +
+            '<div class="link-topline">' +
               '<strong>' + escapeHtml(link.label) + '</strong>' +
-              '<div class="small">' + escapeHtml(link.note) + '</div>' +
-              '<div class="mono" style="margin-top:6px;">' + escapeHtml(link.href) + '</div>' +
+              '<span class="badge ' + linkBadgeClass(link.status) + '">' + escapeHtml(link.status === 'live' ? 'live' : 'planned') + '</span>' +
             '</div>' +
-            '<span class="badge ' + linkBadgeClass(link.status) + '">' + escapeHtml(link.status === 'live' ? 'live' : 'planned') + '</span>' +
+            '<div class="small">' + escapeHtml(link.note) + '</div>' +
+            '<div class="tiny">' + escapeHtml(link.href) + '</div>' +
           '</a>' +
         '</div>'
       )).join('');
@@ -749,7 +928,9 @@ function renderHtml(state) {
       )).join('');
     }
     function render(state) {
-      document.getElementById('updated-value').textContent = state.updated_at || '--';
+      const updated = document.getElementById('updated-value');
+      updated.textContent = formatSnapshotTimestamp(state.updated_at);
+      updated.title = state.updated_at || '';
       document.getElementById('active-items').textContent = state.counts.active_items;
       document.getElementById('todo-items').textContent = state.counts.todo_items;
       document.getElementById('blocked-items').textContent = state.counts.blocked_items;

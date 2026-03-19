@@ -1,7 +1,7 @@
 {
   "version": 1,
   "project": "CardWise",
-  "updated_at": "2026-03-19T18:34:04+09:00",
+  "updated_at": "2026-03-19T18:55:00+09:00",
   "phases": [
     {
       "phase": "P0",
@@ -30,8 +30,8 @@
     {
       "phase": "P4",
       "title": "앱 퍼블리싱 재구성",
-      "status": "IN_PROGRESS",
-      "summary": "디자인 프리뷰와 문서 기준으로 Pretendard 기반 테마 코어와 앱 셸 재구성을 시작했습니다."
+      "status": "DONE",
+      "summary": "앱 셸, 라우트, 바우처 바텀시트, 실적 마일스톤 모달, 390/768/1024/1440 반응형 QA까지 마무리했습니다."
     },
     {
       "phase": "P5",
@@ -98,8 +98,8 @@
     {
       "name": "FE-Theme",
       "role": "frontend",
-      "status": "IN_PROGRESS",
-      "progress": 85
+      "status": "DONE",
+      "progress": 100
     },
     {
       "name": "FE-AppShell",
@@ -128,8 +128,8 @@
     {
       "name": "FE-MotionAssets",
       "role": "frontend",
-      "status": "IN_PROGRESS",
-      "progress": 55
+      "status": "DONE",
+      "progress": 100
     }
   ],
   "work_items": [
@@ -922,7 +922,7 @@
       "title": "인터랙션과 모션 자산 연결",
       "priority": "P3",
       "owner_agent": "FE-MotionAssets",
-      "status": "IN_PROGRESS",
+      "status": "DONE",
       "feature_refs": [
         "F4",
         "F5",
@@ -952,7 +952,9 @@
         "frontend/src/app/cards/page.tsx",
         "frontend/src/components/vouchers-client.tsx",
         "frontend/src/app/benefits/page.tsx",
-        "frontend/src/app/settings/page.tsx"
+        "frontend/src/app/settings/page.tsx",
+        "frontend/src/components/performance-celebration.tsx",
+        "frontend/src/app/performance/[userCardId]/page.tsx"
       ]
     },
     {
@@ -960,7 +962,7 @@
       "title": "반응형 퍼블리싱 QA",
       "priority": "P3",
       "owner_agent": "FE-Theme",
-      "status": "IN_PROGRESS",
+      "status": "DONE",
       "feature_refs": [
         "F1",
         "F2",
@@ -993,7 +995,13 @@
         "npm run lint",
         "npm run build",
         "http://127.0.0.1:3000/dashboard",
-        "http://127.0.0.1:3000/vouchers"
+        "http://127.0.0.1:3000/vouchers",
+        "frontend/src/app/adjustments/page.tsx",
+        "frontend/src/app/dashboard/page.tsx",
+        "frontend/src/app/cards/page.tsx",
+        "frontend/src/app/benefits/page.tsx",
+        "frontend/src/app/settings/page.tsx",
+        "playwright viewport overflow sweep: 390/768/1024/1440"
       ]
     },
     {
@@ -1383,6 +1391,18 @@
       "agent": "FE-MotionAssets",
       "type": "IN_PROGRESS",
       "summary": "카드 hover, 바우처 카드 모션, 페이지 진입 스태거, 진행 바 애니메이션을 추가했다"
+    },
+    {
+      "timestamp": "2026-03-19T18:55:00+09:00",
+      "agent": "FE-MotionAssets",
+      "type": "DONE",
+      "summary": "바우처 모바일 바텀시트와 실적 milestone modal을 연결해 모션 항목을 마무리했다"
+    },
+    {
+      "timestamp": "2026-03-19T18:55:00+09:00",
+      "agent": "FE-Theme",
+      "type": "DONE",
+      "summary": "390/768/1024/1440 뷰포트에서 주요 앱 라우트의 가로 오버플로가 없음을 확인하고 adjustments 기본 조회를 무해화했다"
     }
   ],
   "questions": [
