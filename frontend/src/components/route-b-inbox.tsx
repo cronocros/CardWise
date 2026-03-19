@@ -32,6 +32,33 @@ function statusTone(status: string) {
   return "rose";
 }
 
+function priorityLabel(priority: string) {
+  if (priority === "HIGH") return "높음";
+  if (priority === "MEDIUM") return "보통";
+  if (priority === "LOW") return "낮음";
+  return priority;
+}
+
+function statusLabel(status: string) {
+  if (status === "PENDING") return "대기";
+  if (status === "RESOLVED") return "해결";
+  if (status === "DISMISSED") return "제외";
+  return status;
+}
+
+function actionTypeLabel(actionType: string) {
+  const labels: Record<string, string> = {
+    FX_CORRECTION_NEEDED: "환율 보정 필요",
+    BILLING_DISCOUNT_FOUND: "청구 할인 확인",
+    PAYMENT_CONFIRMATION: "결제 확인",
+    DUPLICATE_DETECTED: "중복 거래 확인",
+    CATEGORY_UNMAPPED: "카테고리 분류 필요",
+    EXCEL_REVIEW: "엑셀 검토",
+    PERFORMANCE_EXCLUSION_CHECK: "실적 제외 검토",
+  };
+  return labels[actionType] ?? actionType;
+}
+
 export function RouteBInbox({ initialActions, initialCount }: InboxRouteProps) {
   const [status, setStatus] = useState("PENDING");
   const [priority, setPriority] = useState("");
@@ -73,7 +100,7 @@ export function RouteBInbox({ initialActions, initialCount }: InboxRouteProps) {
       setItems(actionsJson.data ?? []);
       setPendingCount(getPendingCount(countJson));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load inbox");
+      setError(err instanceof Error ? err.message : "인박스를 불러오지 못했습니다.");
     } finally {
       setLoading(false);
     }
@@ -100,7 +127,7 @@ export function RouteBInbox({ initialActions, initialCount }: InboxRouteProps) {
           action.actionType === "BILLING_DISCOUNT_FOUND") &&
         (!adjustedAmount || Number.isNaN(Number(adjustedAmount)))
       ) {
-        throw new Error("Enter an adjusted amount before resolving this action.");
+        throw new Error("이 작업을 처리하려면 조정 금액을 먼저 입력하세요.");
       }
 
       if (adjustedAmount && !Number.isNaN(Number(adjustedAmount))) {
@@ -119,7 +146,7 @@ export function RouteBInbox({ initialActions, initialCount }: InboxRouteProps) {
       if (!response.ok) throw new Error(await response.text());
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to resolve item");
+      setError(err instanceof Error ? err.message : "작업을 처리하지 못했습니다.");
     } finally {
       setResolvingId(null);
     }
@@ -136,7 +163,7 @@ export function RouteBInbox({ initialActions, initialCount }: InboxRouteProps) {
       if (!response.ok) throw new Error(await response.text());
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to dismiss item");
+      setError(err instanceof Error ? err.message : "작업을 제외하지 못했습니다.");
     } finally {
       setResolvingId(null);
     }
@@ -144,45 +171,45 @@ export function RouteBInbox({ initialActions, initialCount }: InboxRouteProps) {
 
   return (
     <div className="grid gap-5">
-      <Panel title="Inbox control" subtitle="A Blossom-style review surface for triage, resolve, and dismiss actions." tone="minimal">
+      <Panel title="인박스 제어" subtitle="검토, 처리, 제외 동작을 한 화면에서 수행하는 로즈 미니멀 인박스입니다." tone="minimal">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <MetricCard label="Pending" value={String(pendingCount)} helper="Badge count" />
-          <MetricCard label="Visible" value={String(items.length)} helper="Current filter result" />
-          <MetricCard label="High" value={String(summary.high)} helper="Priority HIGH" />
-          <MetricCard label="Medium/Low" value={`${summary.medium}/${summary.low}`} helper="Lower priority mix" />
+          <MetricCard label="대기" value={String(pendingCount)} helper="배지 건수" />
+          <MetricCard label="표시 중" value={String(items.length)} helper="현재 필터 결과" />
+          <MetricCard label="높음" value={String(summary.high)} helper="우선순위 높음" />
+          <MetricCard label="보통/낮음" value={`${summary.medium}/${summary.low}`} helper="나머지 우선순위" />
         </div>
         <div className="mt-5 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <label className="flex flex-col gap-2">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-soft)]">Status</span>
+            <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-soft)]">상태</span>
             <select value={status} onChange={(event) => setStatus(event.target.value)} className="h-12 rounded-[16px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] px-4 text-sm text-[var(--text-strong)] outline-none">
-              <option value="PENDING">PENDING</option>
-              <option value="RESOLVED">RESOLVED</option>
-              <option value="DISMISSED">DISMISSED</option>
+              <option value="PENDING">대기</option>
+              <option value="RESOLVED">해결</option>
+              <option value="DISMISSED">제외</option>
             </select>
           </label>
           <label className="flex flex-col gap-2">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-soft)]">Priority</span>
+            <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-soft)]">우선순위</span>
             <select value={priority} onChange={(event) => setPriority(event.target.value)} className="h-12 rounded-[16px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] px-4 text-sm text-[var(--text-strong)] outline-none">
-              <option value="">All</option>
-              <option value="HIGH">HIGH</option>
-              <option value="MEDIUM">MEDIUM</option>
-              <option value="LOW">LOW</option>
+              <option value="">전체</option>
+              <option value="HIGH">높음</option>
+              <option value="MEDIUM">보통</option>
+              <option value="LOW">낮음</option>
             </select>
           </label>
           <div className="flex items-end">
             <ActionButton kind="secondary" onClick={() => load(status, priority)} disabled={loading} className="w-full">
-              {loading ? "Refreshing..." : "Refresh"}
+              {loading ? "새로고침 중..." : "새로고침"}
             </ActionButton>
           </div>
         </div>
         {error ? <div className="mt-4 rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
       </Panel>
 
-      <Panel title="Pending actions" subtitle="Resolve or dismiss actions in priority order." tone="minimal">
+      <Panel title="대기 작업" subtitle="우선순위 순서대로 작업을 처리하거나 제외할 수 있습니다." tone="minimal">
         <div className="grid gap-4">
           {items.length === 0 ? (
             <div className="rounded-[18px] border border-dashed border-[var(--surface-border)] bg-[var(--surface-soft)] px-5 py-10 text-center text-sm text-[var(--text-muted)]">
-              No items match the current filter.
+              현재 필터에 맞는 작업이 없습니다.
             </div>
           ) : (
             items.map((item) => (
@@ -190,16 +217,16 @@ export function RouteBInbox({ initialActions, initialCount }: InboxRouteProps) {
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div className="space-y-3">
                     <div className="flex flex-wrap gap-2">
-                      <Chip tone={priorityTone(item.priority)}>{item.priority}</Chip>
-                      <Chip tone={statusTone(item.status)}>{item.status}</Chip>
-                      <Chip tone="slate">{item.actionType}</Chip>
+                      <Chip tone={priorityTone(item.priority)}>{priorityLabel(item.priority)}</Chip>
+                      <Chip tone={statusTone(item.status)}>{statusLabel(item.status)}</Chip>
+                      <Chip tone="slate">{actionTypeLabel(item.actionType)}</Chip>
                     </div>
                     <div>
                       <h3 className="text-[15px] font-semibold tracking-[-0.02em] text-[var(--text-strong)]">{item.title}</h3>
                       <p className="mt-1 max-w-3xl text-sm leading-6 text-[var(--text-body)]">{item.description}</p>
                     </div>
                     <div className="flex flex-wrap gap-2 text-xs text-[var(--text-muted)]">
-                      <span>Reference: {item.referenceTable ?? "-"}</span>
+                      <span>참조: {item.referenceTable ?? "-"}</span>
                       <span>#{safeNumber(item.referenceId, 0)}</span>
                       <span>{formatDateTime(item.createdAt)}</span>
                     </div>
@@ -208,7 +235,7 @@ export function RouteBInbox({ initialActions, initialCount }: InboxRouteProps) {
                   <div className="flex shrink-0 flex-col gap-2 lg:w-64">
                     {(item.actionType === "FX_CORRECTION_NEEDED" || item.actionType === "BILLING_DISCOUNT_FOUND") && (
                       <TextField
-                        label="Adjusted amount"
+                        label="조정 금액"
                         type="number"
                         value={adjustedAmounts[item.pendingActionId] ?? ""}
                         onChange={(event) =>
@@ -222,10 +249,10 @@ export function RouteBInbox({ initialActions, initialCount }: InboxRouteProps) {
                     )}
                     <div className="flex flex-wrap gap-2">
                       <ActionButton kind="primary" onClick={() => resolve(item)} disabled={resolvingId === item.pendingActionId}>
-                        {resolvingId === item.pendingActionId ? "Saving..." : "Resolve"}
+                        {resolvingId === item.pendingActionId ? "저장 중..." : "처리"}
                       </ActionButton>
                       <ActionButton kind="ghost" onClick={() => dismiss(item.pendingActionId)} disabled={resolvingId === item.pendingActionId}>
-                        Dismiss
+                        제외
                       </ActionButton>
                     </div>
                   </div>

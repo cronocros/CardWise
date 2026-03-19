@@ -29,6 +29,12 @@ type NavItem = {
   icon: (props: SVGProps<SVGSVGElement>) => ReactNode;
 };
 
+const themeLabelMap: Record<ThemeKey, string> = {
+  blossom: "로즈 블로섬",
+  minimal: "로즈 미니멀",
+  glass: "로즈 글라스",
+};
+
 const navItems: NavItem[] = [
   { href: "/dashboard", label: "홈", key: "dashboard", icon: HomeIcon },
   { href: "/cards", label: "카드", key: "cards", icon: CardIcon },
@@ -66,6 +72,7 @@ export function AppShell({
   theme?: ThemeKey;
 }) {
   const currentNav = resolveActiveNav(active);
+  const themeLabel = themeLabelMap[theme];
 
   return (
     <div className="cw-page">
@@ -80,7 +87,7 @@ export function AppShell({
             </div>
             <div>
               <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-[var(--text-soft)]">
-                App First
+                앱 중심
               </p>
               <p className="text-[20px] font-semibold tracking-[-0.04em] text-[var(--text-strong)]">
                 CardWise
@@ -92,7 +99,7 @@ export function AppShell({
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-[11px] font-medium uppercase tracking-[0.26em] text-[var(--text-soft)]">
-                  Current Surface
+                  현재 화면
                 </p>
                 <h2 className="mt-2 text-[18px] font-semibold tracking-[-0.04em] text-[var(--text-strong)]">
                   {title}
@@ -138,7 +145,7 @@ export function AppShell({
 
           <div className="rounded-[24px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] p-4">
             <p className="text-[11px] font-medium uppercase tracking-[0.26em] text-[var(--text-soft)]">
-              Theme Core
+              테마 코어
             </p>
             <div className="mt-3 flex items-center gap-2">
               <ThemeSwatch className="bg-[linear-gradient(135deg,#fff8fb,#ffe4e6)] ring-[var(--surface-border-strong)]" />
@@ -146,11 +153,11 @@ export function AppShell({
               <ThemeSwatch className="bg-[linear-gradient(135deg,#3b0b1d,#12010a)]" />
             </div>
             <p className="mt-3 text-[13px] leading-6 text-[var(--text-body)]">
-              Blossom를 기본으로 두고 Minimal, Glass 스킨을 페이지 단위로 덮어쓸 수 있게 준비했습니다.
+              로즈 블로섬을 기본으로 두고 로즈 미니멀, 로즈 글라스 스킨을 페이지 단위로 덮어쓸 수 있게 준비했습니다.
             </p>
             <div className="mt-4 rounded-[18px] border border-[var(--surface-border)] bg-[var(--surface-soft)] px-3 py-3">
               <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">
-                Primary IA
+                핵심 라우트
               </div>
               <div className="mt-2 grid gap-2 text-[13px] text-[var(--text-body)]">
                 <span>/dashboard</span>
@@ -211,10 +218,10 @@ export function AppShell({
                   <div className="flex flex-wrap gap-2">
                     <span className="inline-flex items-center gap-2 rounded-full bg-[var(--accent-soft)] px-3 py-2 text-[12px] font-medium text-[var(--accent-strong)]">
                       <span className="h-2 w-2 rounded-full bg-[var(--accent)]" />
-                      Rose Blossom
+                      현재 스킨 · {themeLabel}
                     </span>
                     <span className="inline-flex items-center gap-2 rounded-full bg-white/70 px-3 py-2 text-[12px] font-medium text-[var(--text-muted)]">
-                      390px app baseline
+                      390px 앱 기준
                     </span>
                   </div>
                 )}

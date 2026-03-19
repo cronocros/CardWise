@@ -24,7 +24,24 @@ function progressFor(data: PerformanceResponse["data"]) {
 }
 
 function tierLabel(value: PerformanceResponse["data"]) {
-  return value.annual?.currentTier?.tierName ?? "Unrated";
+  return value.annual?.currentTier?.tierName ?? "미등급";
+}
+
+function unlockStateLabel(value: string) {
+  if (value === "UNLOCKED") return "사용 가능";
+  if (value === "ELIGIBLE") return "조건 충족";
+  if (value === "LOCKED") return "잠김";
+  return value;
+}
+
+function unlockTypeLabel(value: string) {
+  const labels: Record<string, string> = {
+    ANNUAL_SPEND: "연간 실적",
+    BENEFIT_TIER: "혜택 구간",
+    EVENT: "이벤트",
+    MANUAL: "수동",
+  };
+  return labels[value] ?? value;
 }
 
 export default async function PerformancePage(props: PageProps<"/performance/[userCardId]">) {
@@ -39,9 +56,9 @@ export default async function PerformancePage(props: PageProps<"/performance/[us
   return (
     <AppShell
       active="performance"
-      eyebrow="Performance detail"
-      title={data ? `${data.cardName}` : `User card #${userCardId}`}
-      description="This card detail keeps the backend contract intact while presenting the annual basis, monthly lag, grace period, and voucher unlock state in a denser app layout."
+      eyebrow="실적 상세"
+      title={data ? `${data.cardName}` : `사용 카드 #${userCardId}`}
+      description="연간 기준, 월별 시차, 유예 상태, 바우처 해금 상태를 카드 중심 앱 레이아웃으로 촘촘하게 보여주는 화면입니다."
       actions={seededIds.map((id) => (
         <Link
           key={id}
@@ -59,50 +76,50 @@ export default async function PerformancePage(props: PageProps<"/performance/[us
       {data ? (
         <>
           <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <MetricCard label="Annual accumulated" value={formatCurrency(data.annual?.accumulated)} helper={tierLabel(data)} />
-            <MetricCard label="Current month" value={data.currentMonth?.yearMonth ?? "-"} helper={formatCurrency(data.currentMonth?.monthlySpent)} />
-            <MetricCard label="Grace period" value={data.benefitQualification?.gracePeriod?.active ? "Active" : "Off"} helper={data.benefitQualification?.referenceMonth ?? "-"} />
-            <MetricCard label="Special period" value={data.specialPeriod?.active ? "On" : "Off"} helper={data.specialPeriod?.name ?? "-"} />
+            <MetricCard label="연간 누적 실적" value={formatCurrency(data.annual?.accumulated)} helper={tierLabel(data)} />
+            <MetricCard label="이번 달" value={data.currentMonth?.yearMonth ?? "-"} helper={formatCurrency(data.currentMonth?.monthlySpent)} />
+            <MetricCard label="유예 상태" value={data.benefitQualification?.gracePeriod?.active ? "활성" : "없음"} helper={data.benefitQualification?.referenceMonth ?? "-"} />
+            <MetricCard label="특별 기간" value={data.specialPeriod?.active ? "적용" : "없음"} helper={data.specialPeriod?.name ?? "-"} />
           </section>
 
           <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
-            <Panel title="Performance summary" subtitle="The card detail sits in the app shell now, so it reads like a task surface rather than a standalone report.">
+            <Panel title="실적 요약" subtitle="실적 상세를 단독 리포트가 아니라 앱 안의 작업 화면처럼 읽히도록 정리했습니다.">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="rounded-[22px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] p-4">
-                  <div className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--text-soft)]">Annual period</div>
+                  <div className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--text-soft)]">연간 기준 기간</div>
                   <div className="mt-3 grid gap-2 text-sm text-[var(--text-muted)]">
                     <div className="flex justify-between gap-4">
-                      <span>From</span>
+                      <span>시작</span>
                       <span>{data.annualPeriod?.from ?? "-"}</span>
                     </div>
                     <div className="flex justify-between gap-4">
-                      <span>To</span>
+                      <span>종료</span>
                       <span>{data.annualPeriod?.to ?? "-"}</span>
                     </div>
                     <div className="flex justify-between gap-4">
-                      <span>Basis</span>
+                      <span>기준</span>
                       <span>{data.annualPeriod?.basis ?? "-"}</span>
                     </div>
                   </div>
                 </div>
                 <div className="rounded-[22px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] p-4">
-                  <div className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--text-soft)]">Benefit qualification</div>
+                  <div className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--text-soft)]">혜택 실적 기준</div>
                   <div className="mt-3 grid gap-2 text-sm text-[var(--text-muted)]">
                     <div className="flex justify-between gap-4">
-                      <span>Reference month</span>
+                      <span>기준 월</span>
                       <span>{data.benefitQualification?.referenceMonth ?? "-"}</span>
                     </div>
                     <div className="flex justify-between gap-4">
-                      <span>Qualified tier</span>
+                      <span>적용 구간</span>
                       <span>{data.benefitQualification?.qualifiedTierName ?? "-"}</span>
                     </div>
                     <div className="flex justify-between gap-4">
-                      <span>Period lag</span>
+                      <span>실적 시차</span>
                       <span>{data.benefitQualification?.periodLagLabel ?? "-"}</span>
                     </div>
                     <div className="flex justify-between gap-4">
-                      <span>Grace period</span>
-                      <span>{data.benefitQualification?.gracePeriod?.active ? "Active" : "Off"}</span>
+                      <span>유예 상태</span>
+                      <span>{data.benefitQualification?.gracePeriod?.active ? "활성" : "없음"}</span>
                     </div>
                   </div>
                 </div>
@@ -111,10 +128,10 @@ export default async function PerformancePage(props: PageProps<"/performance/[us
               <div className="mt-4 rounded-[22px] border border-[var(--surface-border)] bg-[var(--surface-soft)] p-4">
                 <div className="flex flex-wrap gap-2">
                   <Chip tone={data.specialPeriod?.active ? "emerald" : "slate"}>
-                    {data.specialPeriod?.active ? "Special period" : "Normal period"}
+                    {data.specialPeriod?.active ? "특별 기간" : "일반 기간"}
                   </Chip>
                   <Chip tone="rose">{data.currentMonth?.yearMonth ?? "-"}</Chip>
-                  <Chip tone="amber">{data.benefitQualification?.periodLagLabel ?? "Lag -"}</Chip>
+                  <Chip tone="amber">{data.benefitQualification?.periodLagLabel ?? "시차 없음"}</Chip>
                 </div>
                 <div className="mt-4 h-2 overflow-hidden rounded-full bg-[var(--primary-100)]">
                   <div
@@ -123,15 +140,15 @@ export default async function PerformancePage(props: PageProps<"/performance/[us
                   />
                 </div>
                 <div className="mt-3 flex items-center justify-between gap-4 text-sm text-[var(--text-muted)]">
-                  <span>Monthly spent</span>
+                  <span>월 사용액</span>
                   <span>{formatCurrency(data.currentMonth?.monthlySpent)}</span>
                 </div>
                 <div className="mt-2 flex items-center justify-between gap-4 text-sm text-[var(--text-muted)]">
-                  <span>Previous month</span>
+                  <span>전월 사용액</span>
                   <span>{formatCurrency(data.currentMonth?.previousMonthSpent)}</span>
                 </div>
                 <div className="mt-2 flex items-center justify-between gap-4 text-sm text-[var(--text-muted)]">
-                  <span>Change</span>
+                  <span>증감</span>
                   <span>{formatPercent(data.currentMonth?.changeRate)}</span>
                 </div>
               </div>
@@ -139,7 +156,7 @@ export default async function PerformancePage(props: PageProps<"/performance/[us
               <div className="mt-4">
                 <PerformanceCelebration
                   cardName={data.cardName}
-                  currentTier={data.annual?.currentTier?.tierName ?? "Unrated"}
+                  currentTier={data.annual?.currentTier?.tierName ?? "미등급"}
                   nextTier={data.annual?.nextTier?.tierName ?? null}
                   progress={progressFor(data)}
                   specialActive={Boolean(data.specialPeriod?.active)}
@@ -151,25 +168,25 @@ export default async function PerformancePage(props: PageProps<"/performance/[us
 
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 <Link href="/dashboard" className="rounded-[20px] border border-[var(--surface-border)] bg-[var(--surface-soft)] px-4 py-4 transition hover:bg-[var(--surface-elevated)]">
-                  <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">Home</div>
-                  <div className="mt-2 text-[15px] font-semibold text-[var(--text-strong)]">Back to dashboard</div>
+                  <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">홈</div>
+                  <div className="mt-2 text-[15px] font-semibold text-[var(--text-strong)]">대시보드로 돌아가기</div>
                 </Link>
                 <Link href="/cards" className="rounded-[20px] border border-[var(--surface-border)] bg-[var(--surface-soft)] px-4 py-4 transition hover:bg-[var(--surface-elevated)]">
-                  <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">Cards</div>
-                  <div className="mt-2 text-[15px] font-semibold text-[var(--text-strong)]">Compare the deck</div>
+                  <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">카드</div>
+                  <div className="mt-2 text-[15px] font-semibold text-[var(--text-strong)]">카드 덱 비교</div>
                 </Link>
                 <Link href="/inbox" className="rounded-[20px] border border-[var(--surface-border)] bg-[var(--surface-soft)] px-4 py-4 transition hover:bg-[var(--surface-elevated)]">
-                  <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">Inbox</div>
-                  <div className="mt-2 text-[15px] font-semibold text-[var(--text-strong)]">Review pending actions</div>
+                  <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">인박스</div>
+                  <div className="mt-2 text-[15px] font-semibold text-[var(--text-strong)]">대기 작업 검토</div>
                 </Link>
                 <Link href="/adjustments" className="rounded-[20px] border border-[var(--surface-border)] bg-[var(--surface-soft)] px-4 py-4 transition hover:bg-[var(--surface-elevated)]">
-                  <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">Adjustments</div>
-                  <div className="mt-2 text-[15px] font-semibold text-[var(--text-strong)]">Open correction flow</div>
+                  <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">조정</div>
+                  <div className="mt-2 text-[15px] font-semibold text-[var(--text-strong)]">조정 흐름 열기</div>
                 </Link>
               </div>
             </Panel>
 
-            <Panel title="Monthly breakdown" subtitle="Use this to verify the seeded card history and annual accumulation path.">
+            <Panel title="월별 내역" subtitle="월별 누적 흐름과 실적 이력을 확인하는 구간입니다.">
               <div className="grid gap-3">
                 {(data.monthlyBreakdown ?? []).map((entry) => (
                   <div
@@ -183,19 +200,19 @@ export default async function PerformancePage(props: PageProps<"/performance/[us
               </div>
               <div className="mt-4 rounded-[22px] border border-[var(--surface-border)] bg-[var(--surface-soft)] p-4">
                 <div className="flex items-center justify-between text-sm text-[var(--text-muted)]">
-                  <span>Annual accumulated</span>
+                  <span>연간 누적 실적</span>
                   <span>{formatCurrency(data.annual?.accumulated)}</span>
                 </div>
                 <div className="mt-3 flex items-center justify-between text-sm text-[var(--text-muted)]">
-                  <span>Current tier</span>
+                  <span>현재 구간</span>
                   <span>{data.annual?.currentTier?.tierName ?? "-"}</span>
                 </div>
                 <div className="mt-3 flex items-center justify-between text-sm text-[var(--text-muted)]">
-                  <span>Next tier</span>
+                  <span>다음 구간</span>
                   <span>{data.annual?.nextTier?.tierName ?? "-"}</span>
                 </div>
                 <div className="mt-3 flex items-center justify-between text-sm text-[var(--text-muted)]">
-                  <span>Remaining</span>
+                  <span>남은 금액</span>
                   <span>{formatCurrency(data.annual?.nextTier?.remainingAmount)}</span>
                 </div>
               </div>
@@ -203,13 +220,13 @@ export default async function PerformancePage(props: PageProps<"/performance/[us
           </div>
 
           <Panel
-            title="Voucher unlock conditions"
-            subtitle="Unlock state is derived from the card voucher rules and the current annual performance."
+            title="바우처 해금 조건"
+            subtitle="카드별 바우처 규칙과 현재 연간 실적을 기준으로 해금 상태를 계산합니다."
           >
             <div className="grid gap-4 md:grid-cols-2">
               {data.voucherUnlocks.length === 0 ? (
                 <div className="rounded-[20px] border border-dashed border-[var(--surface-border)] bg-[var(--surface-soft)] px-5 py-10 text-center text-sm text-[var(--text-muted)] md:col-span-2">
-                  No voucher unlock rules are configured for this card.
+                  이 카드에는 설정된 바우처 해금 규칙이 없습니다.
                 </div>
               ) : (
                 data.voucherUnlocks.map((voucher) => (
@@ -220,7 +237,7 @@ export default async function PerformancePage(props: PageProps<"/performance/[us
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
                         <div className="text-base font-semibold tracking-[-0.03em] text-[var(--text-strong)]">{voucher.voucherName}</div>
-                        <div className="mt-1 text-sm text-[var(--text-muted)]">{voucher.notes ?? "No extra notes"}</div>
+                        <div className="mt-1 text-sm text-[var(--text-muted)]">{voucher.notes ?? "추가 메모가 없습니다"}</div>
                       </div>
                       <div className="flex flex-wrap gap-2">
                         <Chip
@@ -232,34 +249,34 @@ export default async function PerformancePage(props: PageProps<"/performance/[us
                                 : "rose"
                           }
                         >
-                          {voucher.unlockState}
+                          {unlockStateLabel(voucher.unlockState)}
                         </Chip>
-                        <Chip tone="slate">{voucher.unlockType}</Chip>
+                        <Chip tone="slate">{unlockTypeLabel(voucher.unlockType)}</Chip>
                       </div>
                     </div>
                     <div className="mt-4 grid gap-2 text-sm text-[var(--text-muted)]">
                       <div className="flex justify-between gap-4">
-                        <span>Annual requirement</span>
+                        <span>연간 조건</span>
                         <span>{formatCurrency(voucher.requiredAnnualPerformance)}</span>
                       </div>
                       <div className="flex justify-between gap-4">
-                        <span>Current annual</span>
+                        <span>현재 연간 실적</span>
                         <span>{formatCurrency(voucher.currentAnnualPerformance)}</span>
                       </div>
                       <div className="flex justify-between gap-4">
-                        <span>Remaining to unlock</span>
+                        <span>해금까지 남은 금액</span>
                         <span>{formatCurrency(voucher.remainingAmount)}</span>
                       </div>
                       <div className="flex justify-between gap-4">
-                        <span>Available at</span>
+                        <span>사용 가능 시점</span>
                         <span>{voucher.availableAt ?? "-"}</span>
                       </div>
                       <div className="flex justify-between gap-4">
-                        <span>Remaining / total</span>
+                        <span>잔여 / 전체</span>
                         <span>{voucher.remainingCount ?? "-"} / {voucher.totalCount ?? "-"}</span>
                       </div>
                       <div className="flex justify-between gap-4">
-                        <span>Valid until</span>
+                        <span>만료일</span>
                         <span>{voucher.validUntil ?? "-"}</span>
                       </div>
                     </div>
@@ -271,8 +288,8 @@ export default async function PerformancePage(props: PageProps<"/performance/[us
         </>
       ) : (
         <Panel
-          title="Performance unavailable"
-          subtitle="The backend endpoint did not return data yet. Check the seeded user card ids or bring the backend up."
+          title="실적 데이터를 불러오지 못했습니다"
+          subtitle="백엔드에서 아직 데이터를 반환하지 않았습니다. 시드 카드 ID와 백엔드 상태를 점검하세요."
         >
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             {seededIds.map((id) => (
@@ -281,14 +298,14 @@ export default async function PerformancePage(props: PageProps<"/performance/[us
                 href={`/performance/${id}`}
                 className="rounded-[20px] border border-[var(--surface-border)] bg-[var(--surface-soft)] px-4 py-4 text-sm font-medium text-[var(--text-strong)] transition hover:bg-[var(--surface-elevated)]"
               >
-                Seeded card #{id}
+                시드 카드 #{id}
               </Link>
             ))}
             <Link href="/dashboard" className="rounded-[20px] border border-[var(--surface-border)] bg-[var(--surface-soft)] px-4 py-4 text-sm font-medium text-[var(--text-strong)] transition hover:bg-[var(--surface-elevated)]">
-              Back to dashboard
+              대시보드로 돌아가기
             </Link>
             <Link href="/cards" className="rounded-[20px] border border-[var(--surface-border)] bg-[var(--surface-soft)] px-4 py-4 text-sm font-medium text-[var(--text-strong)] transition hover:bg-[var(--surface-elevated)]">
-              Open card deck
+              카드 덱 열기
             </Link>
           </div>
         </Panel>

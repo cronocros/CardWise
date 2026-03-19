@@ -21,9 +21,10 @@ export default async function InboxPage() {
   return (
     <AppShell
       active="inbox"
-      eyebrow="Ledger inbox"
-      title="Review and resolve pending actions"
-      description="The inbox now follows the Blossom language: soft surfaces, dense but readable cards, and quick triage controls."
+      theme="minimal"
+      eyebrow="가계부 인박스"
+      title="대기 작업을 검토하고 처리하는 화면"
+      description="인박스는 로즈 미니멀 톤으로 정리해 작업 카드 밀도를 높이고, 빠르게 검토하고 처리할 수 있게 구성했습니다."
     >
       <RouteBInbox initialActions={initialActions} initialCount={initialCount} />
     </AppShell>

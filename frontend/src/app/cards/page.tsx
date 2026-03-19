@@ -47,35 +47,35 @@ export default async function CardsPage() {
   return (
     <AppShell
       active="cards"
-      eyebrow="Card deck"
-      title="Cards and performance"
-      description="This is the app-first card surface: a compact deck of seeded performance snapshots with quick paths into performance detail, inbox triage, and voucher checks."
+      eyebrow="카드 덱"
+      title="카드와 실적"
+      description="카드 실적 스냅샷을 중심으로 상세 보기, 인박스 처리, 바우처 확인까지 이어지는 카드 화면입니다."
       actions={
         <>
           <Link
             href="/dashboard"
             className="rounded-full border border-[var(--surface-border)] bg-[var(--surface-elevated)] px-4 py-2 text-sm font-medium text-[var(--text-strong)] transition hover:bg-[var(--surface-soft)]"
           >
-            Back to home
+            홈으로
           </Link>
           <Link
             href={bestCard ? `/performance/${bestCard.userCardId}` : "/performance/1"}
             className="rounded-full border border-[var(--surface-border)] bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white transition hover:bg-[var(--accent-strong)]"
           >
-            Open top card
+            선두 카드 열기
           </Link>
         </>
       }
     >
       <section className="cw-stagger grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <MetricCard label="Tracked cards" value={String(cards.length)} helper="Seeded performance snapshots" />
-        <MetricCard label="Annual total" value={formatCurrency(annualTotal)} helper="Combined accumulated spend" />
-        <MetricCard label="Monthly avg" value={formatCurrency(averageMonthly)} helper="Current month average" />
-        <MetricCard label="Special / grace" value={`${specialCount}/${graceCount}`} helper="Boosted window / grace window" />
+        <MetricCard label="추적 카드" value={String(cards.length)} helper="실적 스냅샷 기준" />
+        <MetricCard label="연간 누적" value={formatCurrency(annualTotal)} helper="합산 누적 사용액" />
+        <MetricCard label="월 평균" value={formatCurrency(averageMonthly)} helper="이번 달 평균 사용액" />
+        <MetricCard label="특별 / 유예" value={`${specialCount}/${graceCount}`} helper="특별 기간 / 유예 기간" />
       </section>
 
       <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
-        <Panel title="Card deck" subtitle="Each card acts like a tappable app tile. Use the detail view to inspect tier thresholds, monthly breakdowns, and voucher unlocks.">
+        <Panel title="카드 덱" subtitle="각 카드는 앱 타일처럼 동작합니다. 상세에서 구간 기준, 월별 내역, 바우처 해금 조건을 바로 확인할 수 있습니다.">
           <div className="grid gap-4 md:grid-cols-2">
             {cards.map((card, index) => (
               <Link
@@ -85,17 +85,17 @@ export default async function CardsPage() {
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <div className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--text-soft)]">User card #{card.userCardId}</div>
+                    <div className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--text-soft)]">사용 카드 #{card.userCardId}</div>
                     <div className="mt-2 text-[20px] font-semibold tracking-[-0.05em] text-[var(--text-strong)]">{card.data.cardName}</div>
                   </div>
                   <Chip tone={card.data.specialPeriod?.active ? "emerald" : "slate"}>
-                    {card.data.specialPeriod?.active ? "Special" : "Normal"}
+                    {card.data.specialPeriod?.active ? "특별 기간" : "일반 기간"}
                   </Chip>
                 </div>
 
                 <div className="mt-4 rounded-[20px] bg-[linear-gradient(135deg,var(--primary-50),#fff)] p-4">
                   <div className="flex items-center justify-between gap-4 text-sm text-[var(--text-muted)]">
-                    <span>Annual accumulated</span>
+                    <span>연간 누적 실적</span>
                     <span>{formatCurrency(card.data.annual?.accumulated)}</span>
                   </div>
                   <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--primary-100)]">
@@ -105,61 +105,63 @@ export default async function CardsPage() {
                     />
                   </div>
                   <div className="mt-3 flex items-center justify-between gap-4 text-xs text-[var(--text-soft)]">
-                    <span>{card.data.annual?.currentTier?.tierName ?? "Unrated"}</span>
-                    <span>{card.data.annual?.nextTier?.tierName ?? "Top tier"}</span>
+                    <span>{card.data.annual?.currentTier?.tierName ?? "미등급"}</span>
+                    <span>{card.data.annual?.nextTier?.tierName ?? "최상위 구간"}</span>
                   </div>
                 </div>
 
                 <div className="mt-4 grid gap-2 text-sm text-[var(--text-muted)]">
                   <div className="flex items-center justify-between gap-4">
-                    <span>Current month</span>
+                    <span>이번 달</span>
                     <span>{card.data.currentMonth?.yearMonth ?? "-"}</span>
                   </div>
                   <div className="flex items-center justify-between gap-4">
-                    <span>Monthly spent</span>
+                    <span>월 사용액</span>
                     <span>{formatCurrency(card.data.currentMonth?.monthlySpent)}</span>
                   </div>
                   <div className="flex items-center justify-between gap-4">
-                    <span>Change</span>
+                    <span>증감</span>
                     <span>{formatPercent(card.data.currentMonth?.changeRate)}</span>
                   </div>
                 </div>
 
                 <div className="mt-4 flex flex-wrap gap-2">
                   <Chip tone="rose">#{index + 1}</Chip>
-                  <Chip tone="slate">{card.data.benefitQualification?.periodLagLabel ?? "Lag -"}</Chip>
-                  <Chip tone="amber">{card.data.benefitQualification?.gracePeriod?.active ? "Grace" : "No grace"}</Chip>
+                  <Chip tone="slate">{card.data.benefitQualification?.periodLagLabel ?? "시차 없음"}</Chip>
+                  <Chip tone="amber">{card.data.benefitQualification?.gracePeriod?.active ? "유예 적용" : "유예 없음"}</Chip>
                 </div>
               </Link>
             ))}
           </div>
         </Panel>
 
-        <Panel title="Review routes" subtitle="The deck keeps the rest of the app close by so the card flow feels like one continuous task surface.">
+        <Panel title="주요 동선" subtitle="카드 흐름 안에서 다른 화면으로 자연스럽게 이어지도록 연결했습니다.">
           <div className="grid gap-3">
             <Link href="/dashboard" className="rounded-[20px] border border-[var(--surface-border)] bg-[var(--surface-soft)] px-4 py-4 transition hover:bg-[var(--surface-elevated)]">
-              <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">Home</div>
-              <div className="mt-2 text-[15px] font-semibold text-[var(--text-strong)]">Return to the dashboard</div>
+              <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">홈</div>
+              <div className="mt-2 text-[15px] font-semibold text-[var(--text-strong)]">대시보드로 돌아가기</div>
             </Link>
             <Link href="/inbox" className="rounded-[20px] border border-[var(--surface-border)] bg-[var(--surface-soft)] px-4 py-4 transition hover:bg-[var(--surface-elevated)]">
-              <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">Inbox</div>
-              <div className="mt-2 text-[15px] font-semibold text-[var(--text-strong)]">Resolve queued actions</div>
+              <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">인박스</div>
+              <div className="mt-2 text-[15px] font-semibold text-[var(--text-strong)]">쌓인 작업 처리</div>
             </Link>
             <Link href="/adjustments" className="rounded-[20px] border border-[var(--surface-border)] bg-[var(--surface-soft)] px-4 py-4 transition hover:bg-[var(--surface-elevated)]">
-              <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">Adjustments</div>
-              <div className="mt-2 text-[15px] font-semibold text-[var(--text-strong)]">Settle payment corrections</div>
+              <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">조정</div>
+              <div className="mt-2 text-[15px] font-semibold text-[var(--text-strong)]">결제 조정 확인</div>
             </Link>
             <Link href="/vouchers" className="rounded-[20px] border border-[var(--surface-border)] bg-[var(--surface-soft)] px-4 py-4 transition hover:bg-[var(--surface-elevated)]">
-              <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">Vouchers</div>
-              <div className="mt-2 text-[15px] font-semibold text-[var(--text-strong)]">Inspect unlock conditions</div>
+              <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">바우처</div>
+              <div className="mt-2 text-[15px] font-semibold text-[var(--text-strong)]">해금 조건 보기</div>
             </Link>
           </div>
 
           {bestCard ? (
             <div className="mt-4 rounded-[24px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] p-4">
-              <div className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--text-soft)]">Leading card</div>
+              <div className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--text-soft)]">선두 카드</div>
               <div className="mt-2 text-[22px] font-semibold tracking-[-0.05em] text-[var(--text-strong)]">{bestCard.data.cardName}</div>
-              <div className="mt-2 text-sm text-[var(--text-muted)]">{formatCurrency(bestCard.data.annual?.accumulated)} accumulated, {bestCard.data.specialPeriod?.active ? "special period active" : "normal period"}.</div>
+              <div className="mt-2 text-sm text-[var(--text-muted)]">
+                {formatCurrency(bestCard.data.annual?.accumulated)} 누적, {bestCard.data.specialPeriod?.active ? "특별 기간 적용 중" : "일반 기간"}입니다.
+              </div>
             </div>
           ) : null}
         </Panel>

@@ -15,6 +15,17 @@ function differenceTone(value: number) {
   return "slate";
 }
 
+function adjustmentTypeLabel(value: string) {
+  const labels: Record<string, string> = {
+    FX_CORRECTION: "환율 보정",
+    BILLING_DISCOUNT: "청구 할인",
+    PAYMENT_DEDUCTION: "결제 차감",
+    CARD_FEE: "카드 수수료",
+    OTHER: "기타",
+  };
+  return labels[value] ?? value;
+}
+
 export function RouteBAdjustments({ initialPaymentId }: AdjustmentsRouteProps) {
   const [paymentId, setPaymentId] = useState(initialPaymentId);
   const [adjustmentType, setAdjustmentType] = useState("FX_CORRECTION");
@@ -50,7 +61,7 @@ export function RouteBAdjustments({ initialPaymentId }: AdjustmentsRouteProps) {
       const list = Array.isArray(json.data) ? json.data : [];
       setAdjustments(list as PaymentAdjustment[]);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load adjustments");
+      setError(err instanceof Error ? err.message : "조정 내역을 불러오지 못했습니다.");
     } finally {
       setLoading(false);
     }
@@ -65,7 +76,7 @@ export function RouteBAdjustments({ initialPaymentId }: AdjustmentsRouteProps) {
     const original = Number(originalKrwAmount);
     const adjusted = Number(adjustedKrwAmount);
     if (!paymentId || Number.isNaN(original) || Number.isNaN(adjusted)) {
-      setError("Payment ID, original amount, and adjusted amount are required.");
+      setError("결제 ID, 원 금액, 조정 금액은 필수입니다.");
       return;
     }
 
@@ -90,7 +101,7 @@ export function RouteBAdjustments({ initialPaymentId }: AdjustmentsRouteProps) {
       setReason("");
       await load(paymentId);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create adjustment");
+      setError(err instanceof Error ? err.message : "조정 내역을 생성하지 못했습니다.");
     } finally {
       setSubmitting(false);
     }
@@ -98,25 +109,25 @@ export function RouteBAdjustments({ initialPaymentId }: AdjustmentsRouteProps) {
 
   return (
     <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
-      <Panel title="Create adjustment" subtitle="FX correction, billing discount, and fee adjustments stay on a simple app-first form." tone="minimal">
+      <Panel title="조정 생성" subtitle="환율 보정, 청구 할인, 수수료 조정을 앱형 입력 폼으로 단순하게 처리합니다." tone="minimal">
         <div className="grid gap-4 md:grid-cols-2">
-          <TextField label="Payment ID" value={paymentId} onChange={(event) => setPaymentId(event.target.value)} placeholder="1" />
+          <TextField label="결제 ID" value={paymentId} onChange={(event) => setPaymentId(event.target.value)} placeholder="1" />
           <label className="flex flex-col gap-2">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-soft)]">Adjustment type</span>
+            <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-soft)]">조정 유형</span>
             <select value={adjustmentType} onChange={(event) => setAdjustmentType(event.target.value)} className="h-12 rounded-[16px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] px-4 text-sm text-[var(--text-strong)] outline-none">
-              <option value="FX_CORRECTION">FX_CORRECTION</option>
-              <option value="BILLING_DISCOUNT">BILLING_DISCOUNT</option>
-              <option value="PAYMENT_DEDUCTION">PAYMENT_DEDUCTION</option>
-              <option value="CARD_FEE">CARD_FEE</option>
-              <option value="OTHER">OTHER</option>
+              <option value="FX_CORRECTION">환율 보정</option>
+              <option value="BILLING_DISCOUNT">청구 할인</option>
+              <option value="PAYMENT_DEDUCTION">결제 차감</option>
+              <option value="CARD_FEE">카드 수수료</option>
+              <option value="OTHER">기타</option>
             </select>
           </label>
-          <TextField label="Original KRW" type="number" value={originalKrwAmount} onChange={(event) => setOriginalKrwAmount(event.target.value)} placeholder="58500" />
-          <TextField label="Adjusted KRW" type="number" value={adjustedKrwAmount} onChange={(event) => setAdjustedKrwAmount(event.target.value)} placeholder="57825" />
+          <TextField label="원 금액" type="number" value={originalKrwAmount} onChange={(event) => setOriginalKrwAmount(event.target.value)} placeholder="58500" />
+          <TextField label="조정 금액" type="number" value={adjustedKrwAmount} onChange={(event) => setAdjustedKrwAmount(event.target.value)} placeholder="57825" />
         </div>
 
         <TextAreaField
-          label="Reason"
+          label="사유"
           className="mt-4"
           value={reason}
           onChange={(event) => setReason(event.target.value)}
@@ -127,48 +138,48 @@ export function RouteBAdjustments({ initialPaymentId }: AdjustmentsRouteProps) {
 
         <div className="mt-5 flex flex-wrap gap-3">
           <ActionButton kind="primary" onClick={createAdjustment} disabled={submitting}>
-            {submitting ? "Creating..." : "Create adjustment"}
+            {submitting ? "생성 중..." : "조정 생성"}
           </ActionButton>
           <ActionButton kind="secondary" onClick={() => load(paymentId)} disabled={loading}>
-            {loading ? "Loading..." : "Refresh list"}
+            {loading ? "불러오는 중..." : "목록 새로고침"}
           </ActionButton>
         </div>
       </Panel>
 
-      <Panel title="Adjustment history" subtitle="Live list for the selected payment." tone="minimal">
+      <Panel title="조정 이력" subtitle="선택한 결제 기준의 실시간 조정 목록입니다." tone="minimal">
         <div className="grid gap-4">
           <div className="grid gap-3 md:grid-cols-2">
-            <MetricCard label="Payment" value={paymentId || "-"} helper="Current lookup id" />
-            <MetricCard label="Adjustments" value={String(totals.count)} helper={`Net delta ${formatCurrency(totals.totalDelta)}`} />
+            <MetricCard label="결제" value={paymentId || "-"} helper="현재 조회 ID" />
+            <MetricCard label="조정 건수" value={String(totals.count)} helper={`순 증감 ${formatCurrency(totals.totalDelta)}`} />
           </div>
 
           {adjustments.length === 0 ? (
             <div className="rounded-[18px] border border-dashed border-[var(--surface-border)] bg-[var(--surface-soft)] px-5 py-10 text-center text-sm text-[var(--text-muted)]">
-              No adjustments found for this payment id.
+              이 결제 ID에 대한 조정 내역이 없습니다.
             </div>
           ) : (
             adjustments.map((item) => (
               <article key={item.adjustmentId} className="rounded-[20px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] p-4 shadow-[0_12px_24px_rgba(190,24,60,0.05)]">
                 <div className="flex flex-wrap gap-2">
                   <Chip tone={differenceTone(item.differenceAmount)}>{formatCurrency(item.differenceAmount)}</Chip>
-                  <Chip tone="slate">{item.adjustmentType}</Chip>
+                  <Chip tone="slate">{adjustmentTypeLabel(item.adjustmentType)}</Chip>
                   <Chip tone="slate">#{item.adjustmentId}</Chip>
                 </div>
                 <div className="mt-3 grid gap-2 text-sm text-[var(--text-body)]">
                   <div className="flex justify-between gap-4">
-                    <span>Original</span>
+                    <span>원 금액</span>
                     <span>{formatCurrency(item.originalKrwAmount)}</span>
                   </div>
                   <div className="flex justify-between gap-4">
-                    <span>Adjusted</span>
+                    <span>조정 금액</span>
                     <span>{formatCurrency(item.adjustedKrwAmount)}</span>
                   </div>
                   <div className="flex justify-between gap-4">
-                    <span>Reason</span>
+                    <span>사유</span>
                     <span className="max-w-full text-right md:max-w-[18rem]">{item.reason ?? "-"}</span>
                   </div>
                   <div className="flex justify-between gap-4">
-                    <span>Created</span>
+                    <span>생성 시각</span>
                     <span>{formatDateTime(item.createdAt)}</span>
                   </div>
                 </div>

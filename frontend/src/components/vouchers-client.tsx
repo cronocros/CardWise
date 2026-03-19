@@ -30,12 +30,12 @@ type Scope = "all" | "active" | "expired";
 type Category = "ALL" | "COUPON" | "SERVICE" | "LOUNGE" | "INSURANCE" | "OTHER";
 
 const categoryOptions: Array<{ value: Category; label: string }> = [
-  { value: "ALL", label: "All" },
-  { value: "COUPON", label: "Coupon" },
-  { value: "SERVICE", label: "Service" },
-  { value: "LOUNGE", label: "Lounge" },
-  { value: "INSURANCE", label: "Insurance" },
-  { value: "OTHER", label: "Other" },
+  { value: "ALL", label: "전체" },
+  { value: "COUPON", label: "쿠폰" },
+  { value: "SERVICE", label: "서비스" },
+  { value: "LOUNGE", label: "라운지" },
+  { value: "INSURANCE", label: "보험" },
+  { value: "OTHER", label: "기타" },
 ];
 
 function normalizeCategory(value: string | null | undefined) {
@@ -50,11 +50,11 @@ function normalizeCategory(value: string | null | undefined) {
 function categoryLabel(value: string | null | undefined) {
   const normalized = normalizeCategory(value);
   const labels: Record<string, string> = {
-    COUPON: "Coupon",
-    SERVICE: "Service",
-    LOUNGE: "Lounge",
-    INSURANCE: "Insurance",
-    OTHER: "Other",
+    COUPON: "쿠폰",
+    SERVICE: "서비스",
+    LOUNGE: "라운지",
+    INSURANCE: "보험",
+    OTHER: "기타",
   };
   return labels[normalized] ?? normalized;
 }
@@ -92,6 +92,31 @@ function mergeVoucherLists(...lists: VoucherRecord[][]) {
   return Array.from(map.values());
 }
 
+function unlockStateLabel(value: string | null | undefined) {
+  if (value === "UNLOCKED") return "사용 가능";
+  if (value === "ELIGIBLE") return "조건 충족";
+  if (value === "LOCKED") return "잠김";
+  return "상태 미상";
+}
+
+function periodTypeLabel(value: string | null | undefined) {
+  const labels: Record<string, string> = {
+    ANNUAL: "연간",
+    MONTHLY: "월간",
+    ONCE: "1회성",
+  };
+  return labels[value ?? ""] ?? (value ?? "기간 미상");
+}
+
+function historyActionLabel(value: string | null | undefined) {
+  const labels: Record<string, string> = {
+    USE: "사용",
+    UNUSE: "사용 취소",
+    UPDATE: "수정",
+  };
+  return labels[value ?? ""] ?? (value ?? "수정");
+}
+
 function resolveDaysUntilExpiry(item: VoucherRecord) {
   if (typeof item.daysUntilExpiry === "number" && Number.isFinite(item.daysUntilExpiry)) {
     return item.daysUntilExpiry;
@@ -108,7 +133,7 @@ function resolveDaysUntilExpiry(item: VoucherRecord) {
 function toReasonMessage(value: unknown) {
   if (value instanceof Error) return value.message;
   if (typeof value === "string") return value;
-  return "Unexpected voucher error";
+  return "바우처 처리 중 알 수 없는 오류가 발생했습니다.";
 }
 
 async function fetchVoucherList(pathname: string) {
@@ -158,7 +183,7 @@ export function VouchersClient({
 
   const selectedCardLabel =
     seededCards.find((card) => String(card.userCardId) === selectedUserCardId)?.label ??
-    `User card #${selectedUserCardId}`;
+    `사용 카드 #${selectedUserCardId}`;
 
   useEffect(() => {
     void refreshData(selectedUserCardId);
@@ -387,11 +412,11 @@ export function VouchersClient({
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="space-y-3">
               <div className="flex flex-wrap gap-2">
-                <Chip tone={unlockTone(item.unlockState)}>{item.unlockState ?? "UNKNOWN"}</Chip>
-                <Chip tone={categoryTone(item.voucherType)}>{categoryLabel(item.voucherType)}</Chip>
-                <Chip tone={expiryTone(daysUntilExpiry)}>
-                  {expired ? "Expired" : formatDaysUntilExpiry(daysUntilExpiry)}
-                </Chip>
+                  <Chip tone={unlockTone(item.unlockState)}>{unlockStateLabel(item.unlockState)}</Chip>
+                  <Chip tone={categoryTone(item.voucherType)}>{categoryLabel(item.voucherType)}</Chip>
+                  <Chip tone={expiryTone(daysUntilExpiry)}>
+                    {expired ? "만료됨" : formatDaysUntilExpiry(daysUntilExpiry)}
+                  </Chip>
               </div>
               <div>
                 <h3 className="text-[17px] font-semibold tracking-[-0.04em] text-[var(--text-strong)]">
@@ -402,7 +427,7 @@ export function VouchersClient({
                   {item.cardNickname ? ` · ${item.cardNickname}` : ""}
                 </p>
                 <p className="mt-2 max-w-3xl text-[13px] leading-6 text-[var(--text-muted)]">
-                  {item.description ?? "No description available."}
+                  {item.description ?? "설명이 없습니다."}
                 </p>
               </div>
             </div>
@@ -410,8 +435,8 @@ export function VouchersClient({
             <div className="flex shrink-0 flex-col gap-2 lg:w-72">
               <div className="rounded-[22px] border border-[var(--surface-border)] bg-[linear-gradient(135deg,#fff4f6,#ffffff)] px-4 py-3">
                 <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.22em] text-[var(--text-soft)]">
-                  <span>Usage</span>
-                  <span>{totalCount === null ? "Unlimited" : `${usedCount ?? 0}/${totalCount}`}</span>
+                  <span>사용량</span>
+                  <span>{totalCount === null ? "제한 없음" : `${usedCount ?? 0}/${totalCount}`}</span>
                 </div>
                 {progressPercent !== null ? (
                   <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--primary-100)]">
@@ -421,17 +446,17 @@ export function VouchersClient({
                     />
                   </div>
                 ) : (
-                  <div className="mt-3 text-sm text-[var(--text-muted)]">No fixed counter</div>
+                  <div className="mt-3 text-sm text-[var(--text-muted)]">횟수 제한 없음</div>
                 )}
               </div>
 
               <div className="grid gap-1 text-sm text-[var(--text-body)]">
                 <div className="flex justify-between gap-4">
-                  <span>Valid from</span>
+                  <span>사용 시작</span>
                   <span>{formatDate(item.validFrom)}</span>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <span>Valid until</span>
+                  <span>만료일</span>
                   <span>{formatDate(item.validUntil)}</span>
                 </div>
               </div>
@@ -449,7 +474,7 @@ export function VouchersClient({
               }}
               disabled={actioningId === item.userVoucherId || !canUseVoucher(item)}
             >
-              Use
+              사용
             </ActionButton>
             <ActionButton
               kind="secondary"
@@ -459,9 +484,9 @@ export function VouchersClient({
               }}
               disabled={actioningId === item.userVoucherId || !canUnuseVoucher(item)}
             >
-              Unuse
+              사용 취소
             </ActionButton>
-            {item.unlockState === "ELIGIBLE" ? <Chip tone="amber">Unlock request needed</Chip> : null}
+            {item.unlockState === "ELIGIBLE" ? <Chip tone="amber">해금 요청 필요</Chip> : null}
           </div>
         ) : null}
       </article>
@@ -475,9 +500,9 @@ export function VouchersClient({
     <div className="grid gap-4">
       <div className="rounded-[24px] border border-[var(--surface-border)] bg-[linear-gradient(135deg,#fff5f7,#ffffff)] p-4">
         <div className="flex flex-wrap gap-2">
-          <Chip tone={unlockTone(selectedVoucher.unlockState)}>{selectedVoucher.unlockState ?? "UNKNOWN"}</Chip>
+          <Chip tone={unlockTone(selectedVoucher.unlockState)}>{unlockStateLabel(selectedVoucher.unlockState)}</Chip>
           <Chip tone={categoryTone(selectedVoucher.voucherType)}>{categoryLabel(selectedVoucher.voucherType)}</Chip>
-          <Chip tone="slate">{selectedVoucher.periodType ?? "UNKNOWN"}</Chip>
+          <Chip tone="slate">{periodTypeLabel(selectedVoucher.periodType)}</Chip>
         </div>
         <h3 className="mt-3 text-lg font-semibold tracking-[-0.04em] text-[var(--text-strong)]">
           {selectedVoucher.voucherName}
@@ -487,22 +512,22 @@ export function VouchersClient({
           {selectedVoucher.cardNickname ? ` · ${selectedVoucher.cardNickname}` : ""}
         </p>
         <p className="mt-3 text-sm leading-6 text-[var(--text-muted)]">
-          {selectedVoucher.description ?? "No description available."}
+          {selectedVoucher.description ?? "설명이 없습니다."}
         </p>
       </div>
 
       <div className="grid gap-3 md:grid-cols-2">
         <MetricCard
-          label="Remaining / total"
+          label="잔여 / 전체"
           value={
             selectedVoucher.totalCount === null || selectedVoucher.totalCount === undefined
-              ? "Unlimited"
+              ? "제한 없음"
               : `${selectedVoucher.remainingCount ?? 0} / ${selectedVoucher.totalCount}`
           }
-          helper="Current usage state"
+          helper="현재 사용 상태"
         />
         <MetricCard
-          label="Expiry"
+          label="만료"
           value={formatDaysUntilExpiry(resolveDaysUntilExpiry(selectedVoucher))}
           helper={formatDate(selectedVoucher.validUntil)}
         />
@@ -510,42 +535,42 @@ export function VouchersClient({
 
       <div className="grid gap-2 rounded-[24px] border border-[var(--surface-border)] bg-white p-4 text-sm text-[var(--text-body)]">
         <div className="flex justify-between gap-4">
-          <span>Annual requirement</span>
+          <span>연간 조건</span>
           <span>{formatCurrency(selectedVoucher.requiredAnnualPerformance)}</span>
         </div>
         <div className="flex justify-between gap-4">
-          <span>Current annual</span>
+          <span>현재 연간 실적</span>
           <span>{formatCurrency(selectedVoucher.currentAnnualPerformance)}</span>
         </div>
         <div className="flex justify-between gap-4">
-          <span>Remaining to unlock</span>
+          <span>해금까지 남은 금액</span>
           <span>{formatCurrency(selectedVoucher.remainingAmount)}</span>
         </div>
         <div className="flex justify-between gap-4">
-          <span>Available at</span>
+          <span>사용 가능 시점</span>
           <span>{selectedVoucher.availableAt ? formatDate(selectedVoucher.availableAt) : "-"}</span>
         </div>
         <div className="flex justify-between gap-4">
-          <span>Valid from</span>
+          <span>사용 시작</span>
           <span>{formatDate(selectedVoucher.validFrom)}</span>
         </div>
         <div className="flex justify-between gap-4">
-          <span>Valid until</span>
+          <span>만료일</span>
           <span>{formatDate(selectedVoucher.validUntil)}</span>
         </div>
       </div>
 
       <div>
         <div className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-[var(--text-soft)]">
-          History
+          이력
         </div>
         {historyLoading ? (
           <div className="rounded-[22px] border border-dashed border-[var(--surface-border)] bg-[var(--surface-soft)] px-5 py-10 text-center text-sm text-[var(--text-muted)]">
-            Loading history...
+            이력을 불러오는 중입니다...
           </div>
         ) : history.length === 0 ? (
           <div className="rounded-[22px] border border-dashed border-[var(--surface-border)] bg-[var(--surface-soft)] px-5 py-10 text-center text-sm text-[var(--text-muted)]">
-            No history entries yet.
+            아직 기록된 이력이 없습니다.
           </div>
         ) : (
           <div className="grid gap-3">
@@ -555,7 +580,7 @@ export function VouchersClient({
                 className="rounded-[22px] border border-[var(--surface-border)] bg-white p-4"
               >
                 <div className="flex flex-wrap gap-2">
-                  <Chip tone="slate">{entry.action ?? "UPDATE"}</Chip>
+                  <Chip tone="slate">{historyActionLabel(entry.action)}</Chip>
                   <Chip tone="slate">{formatDateTime(entry.createdAt)}</Chip>
                 </div>
                 <p className="mt-3 text-sm text-[var(--text-body)]">{entry.memo ?? "-"}</p>
@@ -572,27 +597,27 @@ export function VouchersClient({
     </div>
   ) : (
     <div className="rounded-[22px] border border-dashed border-[var(--surface-border)] bg-[var(--surface-soft)] px-5 py-10 text-center text-sm text-[var(--text-muted)]">
-      Select a voucher from the list to inspect its details and history.
+      목록에서 바우처를 선택하면 상세와 이력을 볼 수 있습니다.
     </div>
   );
 
   return (
     <div className="grid gap-5">
       <Panel
-        title="Voucher control"
-        subtitle="Switch cards, filter categories, and act on vouchers without leaving the screen."
+        title="바우처 제어"
+        subtitle="카드를 바꾸고, 카테고리를 필터링하고, 사용 동작까지 화면 안에서 바로 처리합니다."
       >
         <div className="grid gap-4 md:grid-cols-4">
-          <MetricCard label="Active" value={String(activeVouchers.length)} helper="Current live list" />
-          <MetricCard label="Expiring" value={String(filteredExpiringVouchers.length)} helper="D-7 window" />
-          <MetricCard label="Selected card" value={String(filteredSelectedCardVouchers.length)} helper={selectedCardLabel} />
-          <MetricCard label="Locked" value={String(selectedCardLockedCount)} helper="Unlock conditions pending" />
+          <MetricCard label="활성" value={String(activeVouchers.length)} helper="현재 활성 목록" />
+          <MetricCard label="만료 임박" value={String(filteredExpiringVouchers.length)} helper="7일 이내 확인" />
+          <MetricCard label="선택 카드" value={String(filteredSelectedCardVouchers.length)} helper={selectedCardLabel} />
+          <MetricCard label="잠김" value={String(selectedCardLockedCount)} helper="해금 조건 대기" />
         </div>
 
         <div className="mt-5 grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="grid gap-4 md:grid-cols-2">
             <TextField
-              label="User card ID"
+              label="카드 ID"
               value={selectedUserCardDraft}
               onChange={(event) => setSelectedUserCardDraft(event.target.value)}
               placeholder="1"
@@ -604,7 +629,7 @@ export function VouchersClient({
                 disabled={loading || refreshing}
                 className="w-full"
               >
-                {loading || refreshing ? "Loading..." : "Load card vouchers"}
+                {loading || refreshing ? "불러오는 중..." : "카드 바우처 불러오기"}
               </ActionButton>
             </div>
           </div>
@@ -642,7 +667,7 @@ export function VouchersClient({
                   : "border-[var(--surface-border)] bg-white text-[var(--text-body)] hover:border-[var(--surface-border-strong)]"
               }`}
             >
-              {value === "all" ? "All" : value === "active" ? "Active" : "Expired"}
+              {value === "all" ? "전체" : value === "active" ? "활성" : "만료"}
             </button>
           ))}
           {categoryOptions.map((item) => (
@@ -662,9 +687,9 @@ export function VouchersClient({
         </div>
 
         <div className="mt-4 flex flex-wrap gap-2">
-          <Chip tone="rose">Locked {stats.locked}</Chip>
-          <Chip tone="amber">Eligible {stats.eligible}</Chip>
-          <Chip tone="emerald">Expiring {stats.expiringSoon}</Chip>
+          <Chip tone="rose">잠김 {stats.locked}</Chip>
+          <Chip tone="amber">조건 충족 {stats.eligible}</Chip>
+          <Chip tone="emerald">만료 임박 {stats.expiringSoon}</Chip>
         </div>
 
         {error ? (
@@ -675,11 +700,11 @@ export function VouchersClient({
       </Panel>
 
       <div className="grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
-        <Panel title="Expiring soon" subtitle="Vouchers due within seven days are surfaced here for quick review.">
+        <Panel title="만료 임박" subtitle="7일 이내 만료되는 바우처를 먼저 모아 빠르게 검토할 수 있게 했습니다.">
           <div className="grid gap-3">
             {filteredExpiringVouchers.length === 0 ? (
               <div className="rounded-[22px] border border-dashed border-[var(--surface-border)] bg-[var(--surface-soft)] px-5 py-10 text-center text-sm text-[var(--text-muted)]">
-                No vouchers are expiring soon.
+                곧 만료되는 바우처가 없습니다.
               </div>
             ) : (
               filteredExpiringVouchers.map((item) => renderVoucherCard(item, false))
@@ -688,13 +713,13 @@ export function VouchersClient({
         </Panel>
 
         <Panel
-          title={`Selected card vouchers · ${selectedCardLabel}`}
-          subtitle="Use and unuse actions are available from the selected card view."
+          title={`선택 카드 바우처 · ${selectedCardLabel}`}
+          subtitle="선택 카드 목록에서 바로 사용과 사용 취소를 수행할 수 있습니다."
         >
           <div className="grid gap-3">
             {filteredSelectedCardVouchers.length === 0 ? (
               <div className="rounded-[22px] border border-dashed border-[var(--surface-border)] bg-[var(--surface-soft)] px-5 py-10 text-center text-sm text-[var(--text-muted)]">
-                This card currently has no vouchers loaded.
+                이 카드에는 불러온 바우처가 없습니다.
               </div>
             ) : (
               filteredSelectedCardVouchers.map((item) => renderVoucherCard(item, true))
@@ -704,11 +729,11 @@ export function VouchersClient({
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
-        <Panel title="All vouchers" subtitle="Combined active and expired lists from the BFF proxy.">
+        <Panel title="전체 바우처" subtitle="BFF 프록시를 통해 받은 활성 / 만료 목록을 한 번에 보여줍니다.">
           <div className="grid gap-3">
             {filteredGlobalVouchers.length === 0 ? (
               <div className="rounded-[22px] border border-dashed border-[var(--surface-border)] bg-[var(--surface-soft)] px-5 py-10 text-center text-sm text-[var(--text-muted)]">
-                No vouchers match the current filter.
+                현재 필터에 맞는 바우처가 없습니다.
               </div>
             ) : (
               filteredGlobalVouchers.map((item) => renderVoucherCard(item, false))
@@ -718,8 +743,8 @@ export function VouchersClient({
 
         <Panel
           className="hidden xl:block"
-          title="Voucher details"
-          subtitle="Open a voucher to inspect unlock state, counts, and the use / unuse history timeline."
+          title="바우처 상세"
+          subtitle="바우처를 열어 해금 상태, 잔여 횟수, 사용 / 사용 취소 이력을 확인할 수 있습니다."
         >
           {selectedVoucherDetails}
         </Panel>
@@ -730,11 +755,11 @@ export function VouchersClient({
           className="cw-sheet-backdrop xl:hidden"
           role="dialog"
           aria-modal="true"
-          aria-label="Voucher detail sheet"
+          aria-label="바우처 상세 시트"
         >
           <button
             type="button"
-            aria-label="Close voucher detail sheet"
+            aria-label="바우처 상세 시트 닫기"
             className="absolute inset-0 h-full w-full cursor-default bg-transparent"
             onClick={() => setDetailSheetOpen(false)}
           />
@@ -743,14 +768,14 @@ export function VouchersClient({
               <div className="min-w-0">
                 <div className="cw-sheet-handle mb-3" />
                 <p className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--text-soft)]">
-                  Voucher detail sheet
+                  바우처 상세 시트
                 </p>
                 <h3 className="mt-1 truncate text-[18px] font-semibold tracking-[-0.04em] text-[var(--text-strong)]">
                   {selectedVoucher.voucherName}
                 </h3>
               </div>
               <ActionButton kind="ghost" onClick={() => setDetailSheetOpen(false)}>
-                Close
+                닫기
               </ActionButton>
             </div>
             <div className="px-5 pb-6 pt-4">{selectedVoucherDetails}</div>

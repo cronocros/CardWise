@@ -120,7 +120,7 @@ export default function BenefitsPage() {
   return (
     <AppShell
       active="benefits"
-      eyebrow="Benefit search"
+      eyebrow="혜택 탐색"
       title="혜택을 검색하고, 추천받고, 적용 여부를 바로 판단하는 화면"
       description="문서 기준으로 혜택 화면은 검색 중심 구조를 유지합니다. 추천, 보유, 검토 상태를 한 번에 비교하고, 필요한 항목만 좁혀 볼 수 있게 구성했습니다."
       actions={
@@ -189,7 +189,7 @@ export default function BenefitsPage() {
                         <div className="flex flex-wrap gap-2">
                           <Chip tone={toneForStatus(item.status)}>{item.status}</Chip>
                           <Chip tone="slate">{item.category}</Chip>
-                          <Chip tone="slate">{item.match}% match</Chip>
+                          <Chip tone="slate">적합도 {item.match}%</Chip>
                         </div>
                         <h3 className="mt-3 text-[17px] font-semibold tracking-[-0.04em] text-[var(--text-strong)]">
                           {item.title}
@@ -202,7 +202,7 @@ export default function BenefitsPage() {
                     </div>
                     <p className="mt-3 text-sm leading-6 text-[var(--text-body)]">{item.summary}</p>
                     <div className="mt-3 flex items-center justify-between gap-4 rounded-[18px] bg-[var(--surface-soft)] px-4 py-3 text-sm text-[var(--text-body)]">
-                      <span>Best use</span>
+                      <span>추천 사용처</span>
                       <span className="font-medium text-[var(--text-strong)]">{item.bestUse}</span>
                     </div>
                   </article>

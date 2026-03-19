@@ -6,16 +6,16 @@ const statePath = path.join(rootDir, 'work-items.json');
 const seedPath = path.join(rootDir, 'seed-state.json');
 const REFRESH_INTERVAL_MS = 10_000;
 const QUICK_LINKS = [
-  { label: 'Live Dashboard', href: 'http://127.0.0.1:4173/', note: '운영 컨트롤센터', status: 'live' },
-  { label: 'Frontend', href: 'http://127.0.0.1:3000/', note: 'Next.js 앱', status: 'live' },
-  { label: 'Backend Health', href: 'http://127.0.0.1:8080/actuator/health', note: '런타임 헬스', status: 'live' },
-  { label: 'Backend Info', href: 'http://127.0.0.1:8080/actuator/info', note: '액추에이터 정보', status: 'live' },
-  { label: 'API Base', href: 'http://127.0.0.1:8080/api/v1', note: '백엔드 기본 경로', status: 'live' },
-  { label: 'Swagger UI', href: 'http://127.0.0.1:8080/swagger-ui.html', note: 'SpringDoc 연결 대상', status: 'live' },
-  { label: 'OpenAPI JSON', href: 'http://127.0.0.1:8080/v3/api-docs', note: '스키마 확인', status: 'live' },
-  { label: 'BFF Pending Count', href: 'http://127.0.0.1:3000/api/pending-actions/count?status=PENDING', note: 'BFF 스모크', status: 'live' },
-  { label: 'BFF Active Vouchers', href: 'http://127.0.0.1:3000/api/vouchers?status=active', note: '바우처 스모크', status: 'live' },
-  { label: 'BFF Performance', href: 'http://127.0.0.1:3000/api/cards/1/performance', note: '실적 스모크', status: 'live' }
+  { label: '라이브 대시보드', href: 'http://127.0.0.1:4173/', note: '운영 컨트롤센터', status: 'live' },
+  { label: '프론트 앱', href: 'http://127.0.0.1:3000/', note: '웹 앱', status: 'live' },
+  { label: '백엔드 헬스', href: 'http://127.0.0.1:8080/actuator/health', note: '런타임 헬스', status: 'live' },
+  { label: '백엔드 정보', href: 'http://127.0.0.1:8080/actuator/info', note: '액추에이터 정보', status: 'live' },
+  { label: 'API 기본 경로', href: 'http://127.0.0.1:8080/api/v1', note: '백엔드 기본 경로', status: 'live' },
+  { label: '스웨거 UI', href: 'http://127.0.0.1:8080/swagger-ui.html', note: 'API 문서 진입점', status: 'live' },
+  { label: 'OpenAPI 명세 JSON', href: 'http://127.0.0.1:8080/v3/api-docs', note: '스키마 확인', status: 'live' },
+  { label: 'BFF 대기 건수', href: 'http://127.0.0.1:3000/api/pending-actions/count?status=PENDING', note: 'BFF 스모크', status: 'live' },
+  { label: 'BFF 활성 바우처', href: 'http://127.0.0.1:3000/api/vouchers?status=active', note: '바우처 스모크', status: 'live' },
+  { label: 'BFF 실적', href: 'http://127.0.0.1:3000/api/cards/1/performance', note: '실적 스모크', status: 'live' }
 ];
 const statusLabels = {
   TODO: '대기',
@@ -638,9 +638,9 @@ function renderHtml(state) {
   <div class="page">
     <section class="top-grid">
       <article class="panel soft hero">
-        <span class="eyebrow">Wave 1 · Dashboard First</span>
+        <span class="eyebrow">1차 공개 · 대시보드 우선</span>
         <h1>CardWise 실행 대시보드</h1>
-        <p>첫 번째 가시 산출물은 라이브 대시보드입니다. 여기서 바로 현재 시각, 마지막 갱신, 다음 갱신 카운트다운, Quick Links, 신규 P4/P5 작업 트랙을 함께 확인할 수 있습니다.</p>
+        <p>첫 번째 가시 산출물은 라이브 대시보드입니다. 여기서 바로 현재 시각, 마지막 갱신, 다음 갱신 카운트다운, 바로가기, 신규 P4/P5 작업 트랙을 함께 확인할 수 있습니다.</p>
         <div class="hero-meta">
           <div class="hero-card">
             <div class="label">현재 시각</div>
@@ -662,7 +662,7 @@ function renderHtml(state) {
       <aside class="hero-rail">
         <article class="status-card">
           <div class="eyebrow" style="background:rgba(255,255,255,.08); color:#ffd5de;">운영 상태</div>
-          <div style="margin-top:14px; font-size:28px; font-weight:800; letter-spacing:-.04em;">실행 우선순위 재정렬</div>
+      <div style="margin-top:14px; font-size:28px; font-weight:800; letter-spacing:-.04em;">실행 우선순위 재정렬</div>
           <div class="small" style="color:rgba(255,248,251,.74); margin-top:10px;">대시보드를 먼저 공개하고, Swagger와 프론트 테마 코어를 병렬로 밀어 올리는 실행 모드입니다.</div>
           <div class="status-grid">
             <div class="status-chip"><div class="title">진행중 항목</div><div class="number" id="active-items">0</div></div>
@@ -712,7 +712,7 @@ function renderHtml(state) {
           <div class="panel-body scroll-body"><div class="card-list compact" id="next-focus"></div></div>
         </article>
         <article class="panel">
-          <div class="panel-header"><div class="eyebrow">Quick Links</div></div>
+          <div class="panel-header"><div class="eyebrow">바로가기</div></div>
           <div class="panel-body scroll-body"><div class="link-grid" id="quick-links"></div></div>
         </article>
         <article class="panel">
@@ -877,7 +877,7 @@ function renderHtml(state) {
           '<a href="' + escapeHtml(link.href) + '" target="_blank" rel="noreferrer">' +
             '<div class="link-topline">' +
               '<strong>' + escapeHtml(link.label) + '</strong>' +
-              '<span class="badge ' + linkBadgeClass(link.status) + '">' + escapeHtml(link.status === 'live' ? 'live' : 'planned') + '</span>' +
+              '<span class="badge ' + linkBadgeClass(link.status) + '">' + escapeHtml(link.status === 'live' ? '실행 중' : '예정') + '</span>' +
             '</div>' +
             '<div class="small">' + escapeHtml(link.note) + '</div>' +
             '<div class="tiny">' + escapeHtml(link.href) + '</div>' +

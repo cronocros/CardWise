@@ -22,7 +22,7 @@ export default async function VouchersPage() {
           );
           return {
             userCardId,
-            label: result?.data?.cardName ? `${result.data.cardName} #${userCardId}` : `User card #${userCardId}`,
+            label: result?.data?.cardName ? `${result.data.cardName} #${userCardId}` : `사용 카드 #${userCardId}`,
           };
         }),
       ),
@@ -35,9 +35,9 @@ export default async function VouchersPage() {
   return (
     <AppShell
       active="vouchers"
-      eyebrow="Voucher system"
+      eyebrow="바우처 시스템"
       title="바우처를 카드 중심으로 보고, 상태와 사용 흐름을 바로 확인하는 화면"
-      description="Rose Blossom 카드 시스템으로 재구성한 바우처 표면입니다. 선택 카드, 만료 임박, 사용 이력, use / unuse 동작을 유지하면서 더 읽기 쉬운 구조로 정리했습니다."
+      description="로즈 블로섬 카드 시스템으로 재구성한 바우처 표면입니다. 선택 카드, 만료 임박, 사용 이력, 사용 / 사용 취소 흐름을 유지하면서 더 읽기 쉬운 구조로 정리했습니다."
       actions={
         <>
           <Link
@@ -56,25 +56,25 @@ export default async function VouchersPage() {
       }
     >
       <section className="grid gap-4 md:grid-cols-4">
-        <MetricCard label="Active" value={String(activeVouchers?.data?.length ?? 0)} helper="Current live list" />
-        <MetricCard label="Expiring" value={String(expiringVouchers?.data?.length ?? 0)} helper="D-7 window" />
+        <MetricCard label="활성" value={String(activeVouchers?.data?.length ?? 0)} helper="현재 활성 목록" />
+        <MetricCard label="만료 임박" value={String(expiringVouchers?.data?.length ?? 0)} helper="7일 이내 확인" />
         <MetricCard
-          label="Selected card"
+          label="선택 카드"
           value={String(initialSelectedCardVouchers?.data?.length ?? 0)}
-          helper={seededCards[0]?.label ?? "User card #1"}
+          helper={seededCards[0]?.label ?? "사용 카드 #1"}
         />
-        <MetricCard label="Expired" value={String(expiredVouchers?.data?.length ?? 0)} helper="Archive view" />
+        <MetricCard label="만료" value={String(expiredVouchers?.data?.length ?? 0)} helper="보관 목록" />
       </section>
 
       <Panel
-        title="Quick context"
-        subtitle="If you are checking the voucher surface end-to-end, start from the selected card list and the expiring window."
+        title="빠른 맥락"
+        subtitle="바우처 흐름을 한 번에 점검하려면 선택 카드 목록과 만료 임박 목록부터 보는 것이 가장 빠릅니다."
       >
         <div className="flex flex-wrap gap-2">
-          <Chip tone="rose">Blossom cards</Chip>
-          <Chip tone="slate">Use / unuse preserved</Chip>
-          <Chip tone="emerald">History preserved</Chip>
-          <Chip tone="amber">Expiring window</Chip>
+          <Chip tone="rose">로즈 블로섬 카드</Chip>
+          <Chip tone="slate">사용 / 사용 취소 유지</Chip>
+          <Chip tone="emerald">이력 유지</Chip>
+          <Chip tone="amber">만료 임박 창</Chip>
         </div>
       </Panel>
 

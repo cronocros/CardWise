@@ -27,9 +27,10 @@ export default async function LedgerPage(props: PageProps<"/ledger">) {
   return (
     <AppShell
       active="ledger"
-      eyebrow="Ledger hub"
-      title="Ledger, inbox, and adjustment flow"
-      description="The ledger surface now coordinates review, correction, and payment follow-up in one app-first entry point."
+      theme="minimal"
+      eyebrow="가계부 허브"
+      title="가계부, 인박스, 조정 흐름"
+      description="가계부 화면은 로즈 미니멀 톤으로 정리해 검토, 정정, 결제 후속 작업을 한 번에 이어서 처리할 수 있게 구성했습니다."
     >
       <LedgerHub
         pendingCount={getPendingCount(countResponse)}

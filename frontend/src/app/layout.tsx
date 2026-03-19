@@ -4,7 +4,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "CardWise",
-  description: "CardWise app surfaces for cards, ledger, benefits, vouchers, and performance.",
+  description: "카드, 가계부, 혜택, 바우처, 실적 화면을 아우르는 CardWise 앱입니다.",
 };
 
 export default function RootLayout({

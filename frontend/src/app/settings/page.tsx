@@ -36,19 +36,19 @@ const initialToggles: ToggleState[] = [
 const themeOptions = [
   {
     key: "blossom",
-    title: "Rose Blossom",
+    title: "로즈 블로섬",
     subtitle: "기본 앱 화면",
     selected: true,
   },
   {
     key: "minimal",
-    title: "Rose Minimal",
+    title: "로즈 미니멀",
     subtitle: "리스트와 설정",
     selected: false,
   },
   {
     key: "glass",
-    title: "Rose Glass",
+    title: "로즈 글라스",
     subtitle: "특별 순간",
     selected: false,
   },
@@ -63,9 +63,9 @@ export default function SettingsPage() {
     <AppShell
       active="settings"
       theme="minimal"
-      eyebrow="Preferences"
+      eyebrow="환경 설정"
       title="앱 환경과 알림을 조용하고 밀도 있게 정리하는 화면"
-      description="설정은 Rose Minimal 톤으로 정리하되, 앱 전체의 Blossom 기반과 어긋나지 않게 구조만 더 단단하게 잡았습니다."
+      description="설정은 로즈 미니멀 톤으로 정리하되, 앱 전체의 로즈 블로섬 기반과 어긋나지 않게 구조만 더 단단하게 잡았습니다."
       actions={
         <>
           <Link
@@ -87,7 +87,7 @@ export default function SettingsPage() {
         <MetricCard label="활성 설정" value={String(enabledCount)} helper="켜진 항목 수" />
         <MetricCard label="알림 채널" value="3" helper="앱 / 이메일 / 배지" />
         <MetricCard label="연동 카드" value="4" helper="기준 카드 샘플" />
-        <MetricCard label="스킨" value="Minimal" helper="설정 화면 전용" />
+        <MetricCard label="스킨" value="로즈 미니멀" helper="설정 화면 전용" />
       </section>
 
       <div className="grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">
@@ -100,7 +100,7 @@ export default function SettingsPage() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap gap-2">
-                    <Chip tone="rose">Active</Chip>
+                    <Chip tone="rose">활성</Chip>
                     <Chip tone="slate">CardWise</Chip>
                   </div>
                   <h3 className="mt-3 text-[18px] font-semibold tracking-[-0.04em] text-[var(--text-strong)]">
@@ -114,15 +114,15 @@ export default function SettingsPage() {
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-[22px] border border-[var(--surface-border)] bg-[var(--surface-soft)] p-4">
                 <div className="text-xs font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">
-                  Locale
+                  언어
                 </div>
                 <div className="mt-2 text-base font-semibold text-[var(--text-strong)]">ko-KR</div>
               </div>
               <div className="rounded-[22px] border border-[var(--surface-border)] bg-[var(--surface-soft)] p-4">
                 <div className="text-xs font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">
-                  Sync
+                  동기화
                 </div>
-                <div className="mt-2 text-base font-semibold text-[var(--text-strong)]">Remote Supabase</div>
+                <div className="mt-2 text-base font-semibold text-[var(--text-strong)]">원격 Supabase</div>
               </div>
             </div>
           </div>
@@ -167,7 +167,7 @@ export default function SettingsPage() {
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
-        <Panel title="테마 스킨" subtitle="기본 앱은 Blossom, 조용한 설정은 Minimal, 이벤트는 Glass로 분리합니다.">
+        <Panel title="테마 스킨" subtitle="기본 앱은 로즈 블로섬, 조용한 설정은 로즈 미니멀, 이벤트는 로즈 글라스로 분리합니다.">
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {themeOptions.map((theme) => (
               <article
@@ -183,7 +183,7 @@ export default function SettingsPage() {
                     <div className="text-base font-semibold text-[var(--text-strong)]">{theme.title}</div>
                     <div className="mt-1 text-sm text-[var(--text-body)]">{theme.subtitle}</div>
                   </div>
-                  {theme.selected ? <Chip tone="rose">Active</Chip> : <Chip tone="slate">Available</Chip>}
+                  {theme.selected ? <Chip tone="rose">사용 중</Chip> : <Chip tone="slate">사용 가능</Chip>}
                 </div>
                 <div className="mt-4 h-24 rounded-[20px] bg-[linear-gradient(135deg,#fff1f2,#ffffff)] p-4">
                   <div className="h-3 w-20 rounded-full bg-[var(--primary-200)]" />
