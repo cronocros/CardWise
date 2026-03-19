@@ -27,6 +27,8 @@ data class NotificationSettingsResponse(
     val voucherExpiryAlert: Boolean,
     val performanceReminder: Boolean,
     val paymentConfirmAlert: Boolean,
+    val groupInviteAlert: Boolean,
+    val groupActivityAlert: Boolean,
     val emailNotification: Boolean,
     val pushNotification: Boolean,
     val updatedAt: OffsetDateTime,
@@ -36,6 +38,8 @@ data class NotificationSettingsPatchRequest(
     val voucherExpiryAlert: Boolean? = null,
     val performanceReminder: Boolean? = null,
     val paymentConfirmAlert: Boolean? = null,
+    val groupInviteAlert: Boolean? = null,
+    val groupActivityAlert: Boolean? = null,
     val emailNotification: Boolean? = null,
     val pushNotification: Boolean? = null,
 )

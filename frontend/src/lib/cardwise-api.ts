@@ -258,6 +258,8 @@ export interface NotificationSettingsResponse {
     voucherExpiryAlert: boolean;
     performanceReminder: boolean;
     paymentConfirmAlert: boolean;
+    groupInviteAlert: boolean;
+    groupActivityAlert: boolean;
     emailNotification: boolean;
     pushNotification: boolean;
     updatedAt: string;
@@ -268,6 +270,8 @@ export interface NotificationSettingsPatchRequest {
   voucherExpiryAlert?: boolean;
   performanceReminder?: boolean;
   paymentConfirmAlert?: boolean;
+  groupInviteAlert?: boolean;
+  groupActivityAlert?: boolean;
   emailNotification?: boolean;
   pushNotification?: boolean;
 }

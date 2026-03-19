@@ -1,48 +1,9 @@
 import Link from "next/link";
-import { AppShell, Chip, MetricCard, Panel } from "@/components/app-shell";
-import {
-  CategoryDonut,
-  DashboardFilterSummary,
-  TagRanking,
-  TrendBars,
-} from "@/components/dashboard/analytics-panels";
-import { CardThumbnail, TierProgressTrack } from "@/components/preview-primitives";
-import {
-  formatCurrency,
-  formatDateTime,
-  formatPercent,
-  formatSignedCurrency,
-  getPendingCount,
-  tryFetchBackendJson,
-  type DashboardCardSummaryResponse,
-  type DashboardCategorySummaryResponse,
-  type DashboardMonthlySummaryResponse,
-  type DashboardTagSummaryResponse,
-  type DashboardTrendResponse,
-  type GroupStatsEnvelope,
-  type GroupSummaryEnvelope,
-  type PendingActionCountResponse,
-  type PendingActionsResponse,
-  type PerformanceResponse,
-  type VoucherListResponse,
-} from "@/lib/cardwise-api";
+import Image from "next/image";
+import { AppShell } from "@/components/app-shell";
+import { formatDateTime, getPendingCount, tryFetchBackendJson, type PendingActionCountResponse, type PendingActionsResponse } from "@/lib/cardwise-api";
 
 export const dynamic = "force-dynamic";
-
-const seededUserCardIds = [1, 2, 3, 4];
-
-function progressFor(data: PerformanceResponse["data"]) {
-  const current = data.annual?.accumulated ?? 0;
-  const floor = data.annual?.currentTier?.minAmount ?? 0;
-  const ceiling = data.annual?.nextTier?.minAmount;
-
-  if (!ceiling) {
-    return 100;
-  }
-
-  const span = Math.max(ceiling - floor, 1);
-  return Math.min(100, Math.max(0, Math.round(((current - floor) / span) * 100)));
-}
 
 function priorityLabel(priority: string) {
   if (priority === "HIGH") return "높음";
@@ -52,573 +13,273 @@ function priorityLabel(priority: string) {
 }
 
 function pendingStatusLabel(status: string) {
-  if (status === "PENDING") return "대기";
-  if (status === "RESOLVED") return "해결";
-  if (status === "DISMISSED") return "제외";
+  if (status === "PENDING") return "대기 중";
+  if (status === "RESOLVED") return "해결됨";
+  if (status === "DISMISSED") return "제외됨";
   return status;
 }
 
 function actionTypeLabel(actionType: string) {
   const labels: Record<string, string> = {
-    FX_CORRECTION_NEEDED: "환율 보정 필요",
-    BILLING_DISCOUNT_FOUND: "청구 할인 확인",
+    FX_CORRECTION_NEEDED: "환율 보정",
+    BILLING_DISCOUNT_FOUND: "할인 탐지",
     PAYMENT_CONFIRMATION: "결제 확인",
-    DUPLICATE_DETECTED: "중복 거래 확인",
-    CATEGORY_UNMAPPED: "카테고리 분류 필요",
-    EXCEL_REVIEW: "엑셀 검토",
-    PERFORMANCE_EXCLUSION_CHECK: "실적 제외 검토",
+    DUPLICATE_DETECTED: "중복 탐지",
+    CATEGORY_UNMAPPED: "분류 필요",
+    EXCEL_REVIEW: "검토",
+    PERFORMANCE_EXCLUSION_CHECK: "실적 제외",
   };
   return labels[actionType] ?? actionType;
 }
 
-function specialPeriodLabel(data: PerformanceResponse["data"]) {
-  return data.specialPeriod?.active ? data.specialPeriod.name ?? "특별 기간" : "일반 기간";
-}
-
-type DashboardPageProps = {
-  searchParams?: Promise<{
-    groupId?: string | string[];
-  }>;
-};
-
-export default async function DashboardPage({ searchParams }: DashboardPageProps) {
-  const resolvedSearchParams = searchParams ? await searchParams : {};
-  const selectedGroupIdParam = Array.isArray(resolvedSearchParams.groupId)
-    ? resolvedSearchParams.groupId[0]
-    : resolvedSearchParams.groupId;
-  const now = new Date();
-  const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth() + 1;
-  const monthStart = `${currentYear}-${String(currentMonth).padStart(2, "0")}-01`;
-  const monthEnd = `${currentYear}-${String(currentMonth).padStart(2, "0")}-31`;
-  const yearMonthLabel = `${currentYear}-${String(currentMonth).padStart(2, "0")}`;
-
-  const [
-    pendingCountResponse,
-    pendingResponse,
-    activeVouchersResponse,
-    expiringVouchersResponse,
-    groupsResponse,
-    monthlySummaryResponse,
-    cardSummaryResponse,
-    categorySummaryResponse,
-    tagSummaryResponse,
-    trendResponse,
-    performanceResults,
-  ] =
-    await Promise.all([
-      tryFetchBackendJson<PendingActionCountResponse>("/pending-actions/count?status=PENDING"),
-      tryFetchBackendJson<PendingActionsResponse>("/pending-actions?status=PENDING&limit=4"),
-      tryFetchBackendJson<VoucherListResponse>("/vouchers?status=active"),
-      tryFetchBackendJson<VoucherListResponse>("/vouchers/expiring?days=7"),
-      tryFetchBackendJson<GroupSummaryEnvelope>("/groups"),
-      tryFetchBackendJson<DashboardMonthlySummaryResponse>(`/dashboard/monthly?year=${currentYear}&month=${currentMonth}`),
-      tryFetchBackendJson<DashboardCardSummaryResponse>(`/dashboard/cards?from=${monthStart}&to=${monthEnd}`),
-      tryFetchBackendJson<DashboardCategorySummaryResponse>(`/dashboard/categories?from=${monthStart}&to=${monthEnd}`),
-      tryFetchBackendJson<DashboardTagSummaryResponse>(`/tags/stats?from=${monthStart}&to=${monthEnd}`),
-      tryFetchBackendJson<DashboardTrendResponse>("/dashboard/trends?period=monthly&limit=6"),
-      Promise.all(
-        seededUserCardIds.map(async (userCardId) => ({
-          userCardId,
-          result: await tryFetchBackendJson<PerformanceResponse>(`/cards/${userCardId}/performance`),
-        })),
-      ),
-    ]);
+export default async function DashboardPage() {
+  const [pendingCountResponse, pendingResponse] = await Promise.all([
+    tryFetchBackendJson<PendingActionCountResponse>("/pending-actions/count?status=PENDING"),
+    tryFetchBackendJson<PendingActionsResponse>("/pending-actions?status=PENDING&limit=6"),
+  ]);
 
   const pendingCount = getPendingCount(pendingCountResponse);
   const pendingItems = pendingResponse?.data ?? [];
-  const activeVouchers = activeVouchersResponse?.data ?? [];
-  const expiringVouchers = expiringVouchersResponse?.data ?? [];
-  const groups = groupsResponse?.data ?? [];
-  const monthlySummary = monthlySummaryResponse?.data ?? null;
-  const cardSummaries = cardSummaryResponse?.data ?? [];
-  const categorySummaries = categorySummaryResponse?.data ?? [];
-  const tagSummaries = tagSummaryResponse?.data ?? [];
-  const trendPoints = trendResponse?.data ?? [];
-  const selectedGroup =
-    groups.find((group) => String(group.groupId) === selectedGroupIdParam) ?? null;
-  const selectedGroupStatsResponse =
-    selectedGroup !== null
-      ? await tryFetchBackendJson<GroupStatsEnvelope>(
-          `/groups/${selectedGroup.groupId}/stats?from=${monthStart}&to=${monthEnd}`,
-        )
-      : null;
-  const selectedGroupStats = selectedGroupStatsResponse?.data ?? null;
-  const cardSummaryMap = new Map(cardSummaries.map((item) => [item.userCardId, item]));
-  const cards = performanceResults
-    .map(({ userCardId, result }) => ({ userCardId, data: result?.data }))
-    .filter((item): item is { userCardId: number; data: PerformanceResponse["data"] } => Boolean(item.data));
-  const specialCount = cards.filter((card) => card.data.specialPeriod?.active).length;
-  const graceCount = cards.filter((card) => card.data.benefitQualification?.gracePeriod?.active).length;
-  const topCard = [...cards].sort((left, right) => (right.data.annual?.accumulated ?? 0) - (left.data.annual?.accumulated ?? 0))[0];
-  const nextFocusCard = [...cards].sort(
-    (left, right) =>
-      (left.data.annual?.nextTier?.remainingAmount ?? Number.MAX_SAFE_INTEGER) -
-      (right.data.annual?.nextTier?.remainingAmount ?? Number.MAX_SAFE_INTEGER),
-  )[0];
-  const unlockedVoucherCount = cards.reduce(
-    (sum, card) => sum + card.data.voucherUnlocks.filter((voucher) => voucher.unlockState === "UNLOCKED").length,
-    0,
-  );
-  const urgentPending = pendingItems.length > 0 ? pendingItems.filter((item) => item.priority === "HIGH").length : pendingCount;
+
+  // MOCK DATA for AI Operation Center
+  const activeAgents = [
+    {
+      id: "agent-1",
+      name: "Receipt Parser",
+      llm: "Gemini 1.5 Pro",
+      status: "processing",
+      currentTask: "영수증 이미지에서 내역 추출 중...",
+      successRate: 98.4,
+    },
+    {
+      id: "agent-2",
+      name: "Categorizer",
+      llm: "Claude 3.5 Sonnet",
+      status: "idle",
+      currentTask: "대기 중",
+      successRate: 99.1,
+    },
+    {
+      id: "agent-3",
+      name: "Benefit Matcher",
+      llm: "GPT-4o",
+      status: "processing",
+      currentTask: "결제 건과 최적 바우처 매칭 분석 중...",
+      successRate: 95.7,
+    },
+  ];
+
+  const recentActivities = [
+    {
+      id: 1,
+      time: "방금 전",
+      agent: "Receipt Parser",
+      action: "스타벅스 리저브 결제건 (M13401) 파싱 완료",
+      llm: "Gemini 1.5 Pro",
+      conf: 99,
+    },
+    {
+      id: 2,
+      time: "2분 전",
+      agent: "Categorizer",
+      action: "네이버페이 포인트 결제 (M13400) '쇼핑/디지털'로 자동 분류",
+      llm: "Claude 3.5 Sonnet",
+      conf: 94,
+    },
+    {
+      id: 3,
+      time: "5분 전",
+      agent: "Benefit Matcher",
+      action: "항공권 결제건에 마일리지 특별 적립 규칙(Rule-X9) 적용 발견",
+      llm: "GPT-4o",
+      conf: 88,
+    },
+  ];
 
   return (
     <AppShell
       active="dashboard"
-      eyebrow="앱 홈"
-      title="카드와이즈 홈"
-      description="인박스 확인, 카드 실적, 바우처 점검을 한 화면에 모은 모바일 우선 홈입니다."
+      eyebrow="Intelligence Hub"
+      title="운영 대시보드"
+      description="CardWise 내부의 AI 에이전트 동작 상태와 인간 개입(Human-in-the-loop)이 필요한 작업을 모니터링합니다."
       actions={
-        <>
-          <Link
-            href="/inbox"
-            className="rounded-full border border-[var(--surface-border)] bg-[var(--surface-elevated)] px-4 py-2 text-sm font-medium text-[var(--text-strong)] transition hover:bg-[var(--surface-soft)]"
-          >
-            인박스 열기
-          </Link>
-          <Link
-            href="/cards"
-            className="rounded-full border border-[var(--surface-border)] bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white transition hover:bg-[var(--accent-strong)]"
-          >
-            카드 보기
-          </Link>
-        </>
+        <Link
+          href="/inbox"
+          className="rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-[var(--accent-soft)] transition hover:bg-[var(--accent-strong)] transform hover:scale-105"
+        >
+          인박스 일괄 처리
+        </Link>
       }
     >
-      <DashboardFilterSummary
-        activeLabel={selectedGroup ? `${selectedGroup.groupName} 그룹 대시보드` : "이번 달 대시보드"}
-        rangeLabel={
-          selectedGroup
-            ? `${yearMonthLabel} 기준 집계 · 그룹 가계부 모드`
-            : `${yearMonthLabel} 기준 집계 · 개인 가계부`
-        }
-        scopeLabel={selectedGroup ? `${selectedGroup.groupName} 그룹` : "개인 가계부"}
-      />
-
-      <Panel
-        title="가계부 선택"
-        subtitle="F8 문서 기준으로 개인 가계부와 그룹 가계부를 대시보드에서 직접 전환합니다."
-      >
-        <div className="flex flex-wrap gap-2">
-          <Link
-            href="/dashboard"
-            className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
-              selectedGroup
-                ? "border-[var(--surface-border)] bg-white text-[var(--text-body)] hover:border-[var(--surface-border-strong)]"
-                : "border-[var(--surface-border-strong)] bg-[var(--accent-soft)] text-[var(--accent-strong)]"
-            }`}
-          >
-            개인
-          </Link>
-          {groups.map((group) => {
-            const isActive = selectedGroup?.groupId === group.groupId;
-            return (
-              <Link
-                key={group.groupId}
-                href={`/dashboard?groupId=${group.groupId}`}
-                className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
-                  isActive
-                    ? "border-[var(--surface-border-strong)] bg-[var(--accent-soft)] text-[var(--accent-strong)]"
-                    : "border-[var(--surface-border)] bg-white text-[var(--text-body)] hover:border-[var(--surface-border-strong)]"
-                }`}
-              >
-                {group.groupName}
-              </Link>
-            );
-          })}
-          <Link
-            href="/groups"
-            className="rounded-full border border-[var(--surface-border)] bg-[var(--surface-soft)] px-4 py-2 text-sm font-medium text-[var(--text-muted)] transition hover:border-[var(--surface-border-strong)]"
-          >
-            그룹 관리
-          </Link>
+      {/* Top System Metrics */}
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 mb-6">
+        <div className="relative overflow-hidden rounded-[24px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] p-5 backdrop-blur-xl">
+          <div className="text-[11px] font-bold uppercase tracking-widest text-[var(--accent)] flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[var(--accent)] animate-pulse"></span>
+            System Status
+          </div>
+          <div className="mt-3 text-[28px] font-semibold tracking-tight text-[var(--text-strong)] flex items-center justify-between">
+            Optimal
+            <Image
+              src="/mascot.png"
+              alt="CardWise Mascot"
+              width={64}
+              height={64}
+              className="absolute right-4 top-1/2 -translate-y-1/2 opacity-90 animate-[bounce_3s_infinite]"
+              priority
+            />
+          </div>
+          <div className="mt-1 text-sm text-[var(--text-muted)] relative z-10">모든 에이전트 정상 동작 중</div>
         </div>
-        {selectedGroup && selectedGroupStats ? (
-          <div className="mt-4 grid gap-4 xl:grid-cols-[0.92fr_1.08fr]">
-            <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-1">
-              <MetricCard label="그룹 총 지출" value={formatCurrency(selectedGroupStats.totalSpent)} helper={`${selectedGroup.groupName} · 이번 달`} />
-              <MetricCard label="멤버 수" value={`${selectedGroup.memberCount}명`} helper={`${selectedGroup.role} 참여 중`} />
-              <MetricCard label="그룹 결제" value={`${selectedGroupStats.paymentCount}건`} helper="선택 기간 기준" />
-            </div>
-            <div className="grid gap-4 lg:grid-cols-2">
-              <div className="rounded-[24px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] p-4">
-                <div className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--text-soft)]">멤버별 지출 비교</div>
-                <div className="mt-4 grid gap-3">
-                  {selectedGroupStats.memberStats.length === 0 ? (
-                    <div className="rounded-[18px] border border-dashed border-[var(--surface-border)] bg-[var(--surface-soft)] px-4 py-6 text-sm text-[var(--text-muted)]">
-                      아직 그룹 결제가 없어 멤버 비교를 표시하지 못했습니다.
-                    </div>
-                  ) : (
-                    selectedGroupStats.memberStats.map((member) => (
-                      <div key={member.accountId} className="rounded-[18px] border border-[var(--surface-border)] bg-white px-4 py-3">
-                        <div className="flex items-center justify-between gap-4">
-                          <div>
-                            <div className="text-sm font-semibold text-[var(--text-strong)]">{member.displayName}</div>
-                            <div className="mt-1 text-xs text-[var(--text-muted)]">{member.paymentCount}건 · {formatPercent(member.sharePercent)}</div>
-                          </div>
-                          <div className="text-sm font-semibold text-[var(--text-strong)]">{formatCurrency(member.spentAmount)}</div>
-                        </div>
-                        <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--surface-soft)]">
-                          <div className="h-full rounded-full bg-[linear-gradient(90deg,var(--accent),var(--accent-strong))]" style={{ width: `${Math.max(member.sharePercent, 6)}%` }} />
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-              <div className="rounded-[24px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] p-4">
-                <div className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--text-soft)]">그룹 태그 분포</div>
-                <div className="mt-4 grid gap-3">
-                  {selectedGroupStats.tagStats.length === 0 ? (
-                    <div className="rounded-[18px] border border-dashed border-[var(--surface-border)] bg-[var(--surface-soft)] px-4 py-6 text-sm text-[var(--text-muted)]">
-                      아직 태그가 연결된 그룹 결제가 없습니다.
-                    </div>
-                  ) : (
-                    selectedGroupStats.tagStats.slice(0, 5).map((tag) => (
-                      <div key={tag.tagName} className="rounded-[18px] border border-[var(--surface-border)] bg-white px-4 py-3">
-                        <div className="flex items-center justify-between gap-4">
-                          <div>
-                            <div className="text-sm font-semibold text-[var(--text-strong)]">{tag.tagName}</div>
-                            <div className="mt-1 text-xs text-[var(--text-muted)]">{tag.paymentCount}건 · {formatPercent(tag.sharePercent)}</div>
-                          </div>
-                          <div className="text-sm font-semibold text-[var(--text-strong)]">{formatCurrency(tag.spentAmount)}</div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <Link
-                    href={`/groups/${selectedGroup.groupId}/stats`}
-                    className="rounded-full border border-[var(--surface-border)] bg-white px-4 py-2 text-sm font-medium text-[var(--text-strong)] transition hover:bg-[var(--surface-soft)]"
-                  >
-                    그룹 통계 전체 보기
-                  </Link>
-                  <Link
-                    href={`/groups/${selectedGroup.groupId}/payments`}
-                    className="rounded-full border border-[var(--surface-border)] bg-[var(--surface-soft)] px-4 py-2 text-sm font-medium text-[var(--text-muted)] transition hover:border-[var(--surface-border-strong)]"
-                  >
-                    그룹 결제 보기
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : groups.length > 0 ? (
-          <div className="mt-4 rounded-[22px] border border-dashed border-[var(--surface-border)] bg-[var(--surface-soft)] px-5 py-6 text-sm text-[var(--text-muted)]">
-            그룹을 선택하면 멤버별 지출 비교와 그룹 태그 분포를 이 화면에서 바로 확인할 수 있습니다.
-          </div>
-        ) : (
-          <div className="mt-4 rounded-[22px] border border-dashed border-[var(--surface-border)] bg-[var(--surface-soft)] px-5 py-6 text-sm text-[var(--text-muted)]">
-            아직 참여 중인 그룹이 없습니다. 그룹을 만들면 대시보드에서 개인/그룹 모드를 전환할 수 있습니다.
-          </div>
-        )}
-      </Panel>
 
-      <section className="cw-stagger grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <MetricCard
-          label="총 지출"
-          value={formatCurrency(monthlySummary?.totalSpent ?? 0)}
-          helper={`${monthlySummary?.yearMonth ?? yearMonthLabel} 월간 집계`}
-        />
-        <MetricCard
-          label="결제 건수"
-          value={`${monthlySummary?.paymentCount ?? 0}건`}
-          helper="월간 결제 기준"
-        />
-        <MetricCard
-          label="혜택 절약"
-          value={formatCurrency(monthlySummary?.totalBenefit ?? 0)}
-          helper="적용된 혜택 합계"
-        />
-        <MetricCard
-          label="전월 대비"
-          value={formatSignedCurrency(monthlySummary?.changeAmount ?? 0)}
-          helper={
-            monthlySummary?.changeRate !== null && monthlySummary?.changeRate !== undefined
-              ? `${formatPercent(monthlySummary.changeRate)} 변화`
-              : "비교 데이터 없음"
-          }
-        />
+        <div className="relative overflow-hidden rounded-[24px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] p-5 backdrop-blur-xl">
+          <div className="text-[11px] font-bold uppercase tracking-widest text-[var(--text-soft)]">
+            Active Agents
+          </div>
+          <div className="mt-3 text-[28px] font-semibold tracking-tight text-[var(--text-strong)]">
+            {activeAgents.length}
+          </div>
+          <div className="mt-1 text-sm text-[var(--success)]">활성 상태의 특화 AI</div>
+        </div>
+
+        <div className="relative overflow-hidden rounded-[24px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] p-5 backdrop-blur-xl">
+          <div className="text-[11px] font-bold uppercase tracking-widest text-[var(--text-soft)]">
+            Tokens Processed
+          </div>
+          <div className="mt-3 text-[28px] font-semibold tracking-tight text-[var(--text-strong)]">
+            1.2M
+          </div>
+          <div className="mt-1 text-sm text-[var(--text-muted)]">이번 달 사용량 (비용 최적화)</div>
+        </div>
+
+        <div className="relative overflow-hidden rounded-[24px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] p-5 backdrop-blur-xl ring-2 ring-[var(--warning-soft)]">
+          <div className="text-[11px] font-bold uppercase tracking-widest text-[var(--warning)] flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[var(--warning)]"></span>
+            Human Review
+          </div>
+          <div className="mt-3 text-[28px] font-semibold tracking-tight text-[var(--text-strong)]">
+            {pendingCount}
+          </div>
+          <div className="mt-1 text-sm text-[var(--text-muted)]">사용자 승인 대기 건</div>
+        </div>
       </section>
 
-      <div className="grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
-        <Panel title="오늘의 브리프" subtitle="가장 강한 카드 흐름과 바로 처리할 일을 한 번에 읽도록 홈 구조를 재배치했습니다.">
-          <div className="grid gap-4 lg:grid-cols-[1.04fr_0.96fr]">
-            {topCard ? (
-              <div className="rounded-[28px] border border-[var(--surface-border)] bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(255,244,246,0.98))] p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <div className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--text-soft)]">리드 카드</div>
-                    <div className="mt-2 text-[24px] font-semibold tracking-[-0.05em] text-[var(--text-strong)]">
-                      {topCard.data.cardName}
-                    </div>
-                  </div>
-                  <Chip tone={topCard.data.specialPeriod?.active ? "emerald" : "slate"}>
-                    {specialPeriodLabel(topCard.data)}
-                  </Chip>
-                </div>
-
-                <div className="mt-4">
-                  <CardThumbnail
-                    seed={topCard.userCardId}
-                    title={topCard.data.cardName}
-                    subtitle={topCard.data.annual?.currentTier?.tierName ?? "메인 덱"}
-                    badge={topCard.data.specialPeriod?.active ? "Special" : "Lead"}
-                  />
-                </div>
-
-                <div className="mt-4">
-                  <TierProgressTrack
-                    currentTier={topCard.data.annual?.currentTier?.tierName ?? "미등급"}
-                    nextTier={topCard.data.annual?.nextTier?.tierName ?? "최상위 구간"}
-                    progress={progressFor(topCard.data)}
-                    accumulated={topCard.data.annual?.accumulated ?? 0}
-                    remainingAmount={topCard.data.annual?.nextTier?.remainingAmount}
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="rounded-[28px] border border-dashed border-[var(--surface-border)] bg-[var(--surface-soft)] p-6 text-sm text-[var(--text-muted)]">
-                아직 카드 실적 데이터를 불러오지 못했습니다.
-              </div>
-            )}
-
-            <div className="grid gap-3">
-              <div className="rounded-[24px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] p-4">
-                <div className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--text-soft)]">오늘 우선</div>
-                <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-[20px] bg-[var(--surface-soft)] p-4">
-                    <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">급한 작업</div>
-                    <div className="mt-2 text-[24px] font-semibold tracking-[-0.05em] text-[var(--text-strong)]">{urgentPending}</div>
-                    <div className="mt-2 text-sm text-[var(--text-muted)]">우선순위 높음</div>
-                  </div>
-                  <div className="rounded-[20px] bg-[var(--surface-soft)] p-4">
-                    <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">사용 가능</div>
-                    <div className="mt-2 text-[24px] font-semibold tracking-[-0.05em] text-[var(--text-strong)]">{unlockedVoucherCount}</div>
-                    <div className="mt-2 text-sm text-[var(--text-muted)]">즉시 쓸 수 있는 바우처</div>
-                  </div>
-                  <div className="rounded-[20px] bg-[var(--surface-soft)] p-4">
-                    <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">특별 기간</div>
-                    <div className="mt-2 text-[24px] font-semibold tracking-[-0.05em] text-[var(--text-strong)]">{specialCount}</div>
-                    <div className="mt-2 text-sm text-[var(--text-muted)]">가중 적용 카드</div>
-                  </div>
-                  <div className="rounded-[20px] bg-[var(--surface-soft)] p-4">
-                    <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">유예 보호</div>
-                    <div className="mt-2 text-[24px] font-semibold tracking-[-0.05em] text-[var(--text-strong)]">{graceCount}</div>
-                    <div className="mt-2 text-sm text-[var(--text-muted)]">실적 보호 상태</div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-[24px] border border-[var(--surface-border)] bg-[linear-gradient(135deg,#fff7f8,#ffffff)] p-4">
-                <div className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--text-soft)]">다음 구간 집중</div>
-                <div className="mt-2 text-[18px] font-semibold tracking-[-0.04em] text-[var(--text-strong)]">
-                  {nextFocusCard?.data.cardName ?? "데이터 없음"}
-                </div>
-                <div className="mt-2 text-sm leading-6 text-[var(--text-body)]">
-                  {nextFocusCard
-                    ? `${formatCurrency(nextFocusCard.data.annual?.nextTier?.remainingAmount)}만 채우면 ${
-                        nextFocusCard.data.annual?.nextTier?.tierName ?? "다음 구간"
-                      }에 들어갑니다.`
-                    : "집중 카드 정보를 불러오지 못했습니다."}
-                </div>
-              </div>
-
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Link href="/ledger" className="rounded-[20px] border border-[var(--surface-border)] bg-[var(--surface-soft)] px-4 py-4 transition hover:bg-[var(--surface-elevated)]">
-                  <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">가계부</div>
-                  <div className="mt-2 text-[15px] font-semibold text-[var(--text-strong)]">허브 열기</div>
-                </Link>
-                <Link href="/vouchers" className="rounded-[20px] border border-[var(--surface-border)] bg-[var(--surface-soft)] px-4 py-4 transition hover:bg-[var(--surface-elevated)]">
-                  <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">바우처</div>
-                  <div className="mt-2 text-[15px] font-semibold text-[var(--text-strong)]">해금 상태 보기</div>
-                </Link>
+      <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+        
+        {/* Left Column: Active Agents & Recent Activity */}
+        <div className="flex flex-col gap-6">
+          <div className="rounded-[32px] border border-[var(--surface-border-strong)] bg-white/70 backdrop-blur-2xl p-6 shadow-xl shadow-[var(--surface-shadow)]">
+            <div className="mb-5 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-bold text-[var(--text-strong)] tracking-tight">AI 에이전트 모니터링</h2>
+                <p className="mt-1 text-sm text-[var(--text-body)]">현재 백그라운드에서 동작 중인 LLM 에이전트 상태입니다.</p>
               </div>
             </div>
-          </div>
-        </Panel>
 
-        <Panel title="빠른 실행" subtitle="홈에서 바로 다음 액션으로 이어지도록 앱 기준 단축 동선을 묶었습니다.">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Link href="/inbox" className="rounded-[22px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] px-4 py-4 transition hover:bg-[var(--surface-soft)]">
-              <div className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--text-soft)]">인박스</div>
-              <div className="mt-2 text-[17px] font-semibold text-[var(--text-strong)]">대기 작업 처리</div>
-              <div className="mt-2 text-sm text-[var(--text-muted)]">{pendingCount}건 대기 중</div>
-            </Link>
-            <Link href="/cards" className="rounded-[22px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] px-4 py-4 transition hover:bg-[var(--surface-soft)]">
-              <div className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--text-soft)]">카드</div>
-              <div className="mt-2 text-[17px] font-semibold text-[var(--text-strong)]">카드 묶음 보기</div>
-              <div className="mt-2 text-sm text-[var(--text-muted)]">실적 트랙과 다음 구간 확인</div>
-            </Link>
-            <Link href="/adjustments" className="rounded-[22px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] px-4 py-4 transition hover:bg-[var(--surface-soft)]">
-              <div className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--text-soft)]">조정</div>
-              <div className="mt-2 text-[17px] font-semibold text-[var(--text-strong)]">정산 조정 보기</div>
-              <div className="mt-2 text-sm text-[var(--text-muted)]">수정/보정 흐름 검토</div>
-            </Link>
-            <Link href="/benefits" className="rounded-[22px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] px-4 py-4 transition hover:bg-[var(--surface-soft)]">
-              <div className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--text-soft)]">혜택</div>
-              <div className="mt-2 text-[17px] font-semibold text-[var(--text-strong)]">추천 혜택 보기</div>
-              <div className="mt-2 text-sm text-[var(--text-muted)]">매칭 높은 항목부터 점검</div>
-            </Link>
-          </div>
-
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Chip tone="rose">기본 스킨 · 로즈 블로섬</Chip>
-            <Chip tone="amber">앱 기준</Chip>
-            <Chip tone="slate">390px 기준</Chip>
-            <Chip tone="emerald">BFF 연동</Chip>
-          </div>
-        </Panel>
-      </div>
-
-      <div className="grid gap-4 xl:grid-cols-[1.02fr_0.98fr]">
-        <Panel
-          title="카테고리 분포"
-          subtitle="문서 기준 F8 대시보드의 카테고리 섹션을 맞춰, 이번 달 지출 비중과 혜택 기여를 함께 읽도록 정리했습니다."
-        >
-          <CategoryDonut items={categorySummaries} />
-        </Panel>
-
-        <Panel
-          title="태그 통계"
-          subtitle="상위 태그 지출 랭킹과 태그 통계/교차 분석 진입을 한 번에 제공하도록 정리했습니다."
-        >
-          <TagRanking items={tagSummaries} />
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Link
-              href="/dashboard/tags"
-              className="rounded-full border border-[var(--surface-border)] bg-[var(--surface-elevated)] px-4 py-2 text-sm font-medium text-[var(--text-strong)] transition hover:bg-[var(--surface-soft)]"
-            >
-              태그 통계 더보기
-            </Link>
-            <Link
-              href="/dashboard/tags/cross"
-              className="rounded-full border border-[var(--surface-border)] bg-[var(--accent-soft)] px-4 py-2 text-sm font-medium text-[var(--accent-strong)] transition hover:bg-white"
-            >
-              교차 분석 열기
-            </Link>
-          </div>
-        </Panel>
-      </div>
-
-      <div className="grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
-        <Panel
-          title="월간 추이"
-          subtitle="최근 월별 지출 흐름을 막대 차트로 노출해 전월 대비 감각을 홈에서 바로 읽게 했습니다."
-        >
-          <TrendBars items={trendPoints} />
-        </Panel>
-
-        <Panel
-          title="작업 상태"
-          subtitle="문서형 월간 통계와 운영형 작업 지표를 함께 볼 수 있도록 홈 상태를 따로 정리했습니다."
-        >
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="rounded-[22px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] px-4 py-4">
-              <div className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--text-soft)]">대기 작업</div>
-              <div className="mt-2 text-[26px] font-semibold tracking-[-0.05em] text-[var(--text-strong)]">{pendingCount}</div>
-              <div className="mt-2 text-sm text-[var(--text-muted)]">확인 필요한 서버 대기 건수</div>
-            </div>
-            <div className="rounded-[22px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] px-4 py-4">
-              <div className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--text-soft)]">사용 가능 바우처</div>
-              <div className="mt-2 text-[26px] font-semibold tracking-[-0.05em] text-[var(--text-strong)]">{activeVouchers.length}</div>
-              <div className="mt-2 text-sm text-[var(--text-muted)]">현재 즉시 사용 가능한 목록</div>
-            </div>
-            <div className="rounded-[22px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] px-4 py-4">
-              <div className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--text-soft)]">곧 만료</div>
-              <div className="mt-2 text-[26px] font-semibold tracking-[-0.05em] text-[var(--text-strong)]">{expiringVouchers.length}</div>
-              <div className="mt-2 text-sm text-[var(--text-muted)]">7일 이내 확인 대상</div>
-            </div>
-            <div className="rounded-[22px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] px-4 py-4">
-              <div className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--text-soft)]">추적 카드</div>
-              <div className="mt-2 text-[26px] font-semibold tracking-[-0.05em] text-[var(--text-strong)]">{cards.length}</div>
-              <div className="mt-2 text-sm text-[var(--text-muted)]">실적 스냅샷 기준</div>
-            </div>
-          </div>
-        </Panel>
-      </div>
-
-      <div className="grid gap-4 xl:grid-cols-[1.02fr_0.98fr]">
-        <Panel title="대기 작업 레인" subtitle="홈을 벗어나지 않고도 미해결 작업을 밀도 있게 훑을 수 있도록 카드형 레인으로 정리했습니다.">
-          <div className="grid gap-3">
-            {pendingItems.length === 0 ? (
-              <div className="rounded-[20px] border border-dashed border-[var(--surface-border)] bg-[var(--surface-soft)] px-5 py-10 text-center text-sm text-[var(--text-muted)]">
-                {pendingCount > 0
-                  ? `상세 작업 목록은 아직 못 불러왔지만 대기 건수는 ${pendingCount}건입니다.`
-                  : "아직 백엔드에서 대기 작업을 불러오지 못했습니다."}
-              </div>
-            ) : (
-              pendingItems.map((item) => (
-                <article key={item.pendingActionId} className="cw-interactive-card rounded-[22px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] p-4">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="flex flex-wrap gap-2">
-                      <Chip tone={item.priority === "HIGH" ? "rose" : item.priority === "MEDIUM" ? "amber" : "emerald"}>{priorityLabel(item.priority)}</Chip>
-                      <Chip tone="slate">{pendingStatusLabel(item.status)}</Chip>
-                    </div>
-                    <Chip tone="slate">{actionTypeLabel(item.actionType)}</Chip>
-                  </div>
-                  <h3 className="mt-3 text-base font-semibold tracking-[-0.03em] text-[var(--text-strong)]">{item.title}</h3>
-                  <p className="mt-1 text-sm leading-6 text-[var(--text-muted)]">{item.description}</p>
-                  <div className="mt-3 grid gap-2 text-xs text-[var(--text-soft)] sm:grid-cols-3">
-                    <span>{item.referenceTable ?? "-"}</span>
-                    <span>#{item.referenceId ?? "-"}</span>
-                    <span>{formatDateTime(item.createdAt)}</span>
-                  </div>
-                </article>
-              ))
-            )}
-          </div>
-        </Panel>
-
-        <Panel title="카드 플로우" subtitle="홈에서도 카드별 현재 위치와 다음 구간까지의 거리를 빠르게 읽을 수 있게 구성했습니다.">
-          <div className="grid gap-3">
-            {cards.map((card) => (
-              <Link
-                key={card.userCardId}
-                href={`/performance/${card.userCardId}`}
-                className="cw-interactive-card rounded-[22px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] p-4"
-              >
-                {(() => {
-                  const summary = cardSummaryMap.get(card.userCardId);
-                  return (
-                    <>
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <div className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--text-soft)]">
-                            카드 #{card.userCardId}
-                          </div>
-                          <div className="mt-2 text-[17px] font-semibold tracking-[-0.04em] text-[var(--text-strong)]">
-                            {card.data.cardName}
-                          </div>
+            <div className="grid gap-4">
+              {activeAgents.map((agent) => (
+                <div key={agent.id} className="group relative overflow-hidden rounded-[20px] border border-[var(--surface-border)] bg-gradient-to-br from-white to-[var(--surface-soft)] p-5 transition-all hover:shadow-md hover:-translate-y-0.5">
+                  <div className="flex justify-between items-start">
+                    <div className="flex gap-4">
+                      <div className={`mt-1 h-3 w-3 rounded-full flex-shrink-0 ${agent.status === "processing" ? "bg-[var(--accent)] animate-pulse" : "bg-[var(--neutral-300)]"}`} />
+                      <div>
+                        <div className="flex items-center gap-3">
+                          <h3 className="font-semibold text-lg text-[var(--text-strong)]">{agent.name}</h3>
+                          <span className="inline-flex rounded-full bg-[var(--accent-soft)] px-2.5 py-0.5 text-xs font-semibold text-[var(--accent-strong)]">
+                            {agent.llm}
+                          </span>
                         </div>
-                        <Chip tone={card.data.specialPeriod?.active ? "emerald" : "slate"}>
-                          {specialPeriodLabel(card.data)}
-                        </Chip>
+                        <p className="mt-1.5 text-sm text-[var(--text-body)] font-medium">
+                          {agent.currentTask}
+                        </p>
                       </div>
-                      <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--primary-100)]">
-                        <div
-                          className="cw-progress-fill-animated h-full rounded-full bg-[linear-gradient(90deg,var(--primary-300),var(--primary-500))]"
-                          style={{ width: `${progressFor(card.data)}%` }}
-                        />
-                      </div>
-                      <div className="mt-3 grid gap-2 text-sm text-[var(--text-body)] sm:grid-cols-3">
-                        <span>{summary?.currentTierName ?? card.data.annual?.currentTier?.tierName ?? "미등급"}</span>
-                        <span className="text-center">{formatCurrency(summary?.spentAmount ?? card.data.currentMonth?.monthlySpent)}</span>
-                        <span className="text-right">{formatCurrency(card.data.annual?.nextTier?.remainingAmount)} 남음</span>
-                      </div>
-                      <div className="mt-3 grid gap-2 text-xs text-[var(--text-soft)] sm:grid-cols-3">
-                        <span>월 결제 {summary?.paymentCount ?? 0}건</span>
-                        <span className="text-center">혜택 {formatCurrency(summary?.benefitAmount ?? 0)}</span>
-                        <span className="text-right">연간 누적 {formatCurrency(summary?.annualAccumulated ?? card.data.annual?.accumulated)}</span>
-                      </div>
-                    </>
-                  );
-                })()}
-              </Link>
-            ))}
+                    </div>
+                    <div className="text-right">
+                      <div className="text-[10px] uppercase font-bold text-[var(--text-soft)] tracking-widest">정확도</div>
+                      <div className="mt-1 text-base font-bold text-[var(--success)]">{agent.successRate}%</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-        </Panel>
+
+          <div className="rounded-[32px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] p-6">
+            <h2 className="text-lg font-bold text-[var(--text-strong)] tracking-tight mb-5">실시간 결정 로그</h2>
+            <div className="border-l-2 border-[var(--surface-border-strong)] ml-3 pl-5 space-y-6">
+              {recentActivities.map((act) => (
+                <div key={act.id} className="relative">
+                  <div className="absolute -left-[27px] top-1.5 h-3 w-3 rounded-full border-2 border-[var(--accent)] bg-white"></div>
+                  <div className="flex items-center gap-3 mb-1">
+                    <span className="text-xs font-bold text-[var(--accent-strong)]">{act.agent}</span>
+                    <span className="text-xs text-[var(--text-muted)]">{act.time}</span>
+                  </div>
+                  <p className="text-sm font-medium text-[var(--text-strong)] leading-relaxed">{act.action}</p>
+                  <div className="mt-2 flex gap-2">
+                    <span className="inline-block rounded-md bg-[var(--surface-soft)] px-2 py-1 text-[11px] text-[var(--text-body)] border border-[var(--surface-border)]">⚙ {act.llm}</span>
+                    <span className="inline-block rounded-md bg-[var(--success-soft)] px-2 py-1 text-[11px] text-[var(--success)] border border-[var(--success-soft)]">신뢰도 {act.conf}%</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column: Human-in-the-loop */}
+        <div>
+          <div className="sticky top-[100px] rounded-[32px] border border-[var(--warning-soft)] bg-gradient-to-b from-[#fffaf0] to-white p-6 shadow-2xl shadow-[var(--warning-soft)]">
+            <div className="mb-5 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-bold text-[var(--warning)] tracking-tight flex items-center gap-2">
+                  Human-in-the-Loop
+                </h2>
+                <p className="mt-1 text-sm text-[var(--text-body)]">AI가 인간의 확정을 기다리고 있는 항목</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {pendingItems.length === 0 ? (
+                <div className="rounded-[20px] border border-dashed border-[var(--warning-soft)] bg-white/50 px-5 py-10 text-center text-sm text-[var(--text-muted)]">
+                  현재 AI가 요청한 검토 대기열이 비어 있습니다.
+                </div>
+              ) : (
+                pendingItems.map((item) => (
+                  <article key={item.pendingActionId} className="group relative overflow-hidden rounded-[20px] border border-[var(--warning-soft)] bg-white p-4 transition-all hover:border-[var(--warning)] hover:shadow-lg">
+                    <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+                      <div className="flex gap-2">
+                        <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase ${item.priority === "HIGH" ? "bg-rose-100 text-rose-700" : "bg-amber-100 text-amber-700"}`}>
+                          {priorityLabel(item.priority)}
+                        </span>
+                        <span className="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-700">
+                          {actionTypeLabel(item.actionType)}
+                        </span>
+                      </div>
+                    </div>
+                    <h3 className="text-sm font-bold text-[var(--text-strong)] leading-snug">{item.title}</h3>
+                    <p className="mt-1.5 text-xs leading-5 text-[var(--text-body)]">{item.description}</p>
+                    <div className="mt-4 flex gap-2">
+                      <Link href="/inbox" className="flex-1 rounded-[12px] bg-[var(--text-strong)] py-2 text-center text-xs font-bold text-white transition hover:bg-black">
+                        결정하기
+                      </Link>
+                      <button className="flex-1 rounded-[12px] border border-[var(--surface-border-strong)] bg-white py-2 text-center text-xs font-bold text-[var(--text-strong)] transition hover:bg-[var(--surface-soft)]">
+                        자세히
+                      </button>
+                    </div>
+                  </article>
+                ))
+              )}
+            </div>
+
+            {pendingCount > 6 && (
+              <div className="mt-5 text-center">
+                <Link href="/inbox" className="text-sm font-bold text-[var(--accent-strong)] hover:underline">
+                  +{pendingCount - 6}개의 대기 항목 전체 보기
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+
       </div>
     </AppShell>
   );

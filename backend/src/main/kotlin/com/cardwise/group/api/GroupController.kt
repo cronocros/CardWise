@@ -2,7 +2,7 @@ package com.cardwise.group.api
 
 import com.cardwise.common.api.ApiResponse
 import com.cardwise.common.web.RequestAccountIdResolver
-import com.cardwise.group.application.GroupService
+import com.cardwise.group.application.port.`in`.GroupUseCase
 import jakarta.validation.Valid
 import java.time.LocalDate
 import org.springframework.format.annotation.DateTimeFormat
@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/api/v1/groups")
 class GroupController(
-    private val groupService: GroupService,
+    private val groupUseCase: GroupUseCase,
     private val requestAccountIdResolver: RequestAccountIdResolver,
 ) {
     @PostMapping
@@ -29,7 +29,7 @@ class GroupController(
         @Valid @RequestBody request: CreateGroupRequest,
     ): ApiResponse<GroupSummaryResponse> {
         return ApiResponse(
-            data = groupService.createGroup(
+            data = groupUseCase.createGroup(
                 accountId = requestAccountIdResolver.resolve(accountIdHeader),
                 request = request,
             ),
@@ -41,7 +41,7 @@ class GroupController(
         @RequestHeader(name = "X-Account-Id", required = false) accountIdHeader: String?,
     ): ApiResponse<List<GroupSummaryResponse>> {
         return ApiResponse(
-            data = groupService.getGroups(requestAccountIdResolver.resolve(accountIdHeader)),
+            data = groupUseCase.getGroups(requestAccountIdResolver.resolve(accountIdHeader)),
         )
     }
 
@@ -51,7 +51,7 @@ class GroupController(
         @PathVariable groupId: Long,
     ): ApiResponse<GroupDetailResponse> {
         return ApiResponse(
-            data = groupService.getGroupDetail(
+            data = groupUseCase.getGroupDetail(
                 accountId = requestAccountIdResolver.resolve(accountIdHeader),
                 groupId = groupId,
             ),
@@ -65,7 +65,7 @@ class GroupController(
         @Valid @RequestBody request: UpdateGroupRequest,
     ): ApiResponse<GroupDetailResponse> {
         return ApiResponse(
-            data = groupService.updateGroup(
+            data = groupUseCase.updateGroup(
                 accountId = requestAccountIdResolver.resolve(accountIdHeader),
                 groupId = groupId,
                 request = request,
@@ -79,7 +79,7 @@ class GroupController(
         @PathVariable groupId: Long,
     ): ApiResponse<GroupActionResponse> {
         return ApiResponse(
-            data = groupService.deleteGroup(
+            data = groupUseCase.deleteGroup(
                 accountId = requestAccountIdResolver.resolve(accountIdHeader),
                 groupId = groupId,
             ),
@@ -91,7 +91,7 @@ class GroupController(
         @RequestHeader(name = "X-Account-Id", required = false) accountIdHeader: String?,
     ): ApiResponse<List<GroupInvitationResponse>> {
         return ApiResponse(
-            data = groupService.getInvitations(requestAccountIdResolver.resolve(accountIdHeader)),
+            data = groupUseCase.getInvitations(requestAccountIdResolver.resolve(accountIdHeader)),
         )
     }
 
@@ -101,7 +101,7 @@ class GroupController(
         @PathVariable invitationId: Long,
     ): ApiResponse<GroupInvitationResponse> {
         return ApiResponse(
-            data = groupService.acceptInvitation(
+            data = groupUseCase.acceptInvitation(
                 accountId = requestAccountIdResolver.resolve(accountIdHeader),
                 invitationId = invitationId,
             ),
@@ -114,7 +114,7 @@ class GroupController(
         @PathVariable invitationId: Long,
     ): ApiResponse<GroupInvitationResponse> {
         return ApiResponse(
-            data = groupService.declineInvitation(
+            data = groupUseCase.declineInvitation(
                 accountId = requestAccountIdResolver.resolve(accountIdHeader),
                 invitationId = invitationId,
             ),
@@ -127,7 +127,7 @@ class GroupController(
         @PathVariable groupId: Long,
     ): ApiResponse<List<GroupInvitationResponse>> {
         return ApiResponse(
-            data = groupService.getGroupInvitations(
+            data = groupUseCase.getGroupInvitations(
                 accountId = requestAccountIdResolver.resolve(accountIdHeader),
                 groupId = groupId,
             ),
@@ -141,7 +141,7 @@ class GroupController(
         @Valid @RequestBody request: InviteGroupMemberRequest,
     ): ApiResponse<GroupInvitationResponse> {
         return ApiResponse(
-            data = groupService.inviteMember(
+            data = groupUseCase.inviteMember(
                 accountId = requestAccountIdResolver.resolve(accountIdHeader),
                 groupId = groupId,
                 request = request,
@@ -156,7 +156,7 @@ class GroupController(
         @PathVariable invitationId: Long,
     ): ApiResponse<GroupActionResponse> {
         return ApiResponse(
-            data = groupService.cancelInvitation(
+            data = groupUseCase.cancelInvitation(
                 accountId = requestAccountIdResolver.resolve(accountIdHeader),
                 groupId = groupId,
                 invitationId = invitationId,
@@ -173,7 +173,7 @@ class GroupController(
         @RequestParam(defaultValue = "40") limit: Int,
     ): ApiResponse<List<GroupPaymentResponse>> {
         return ApiResponse(
-            data = groupService.getGroupPayments(
+            data = groupUseCase.getGroupPayments(
                 accountId = requestAccountIdResolver.resolve(accountIdHeader),
                 groupId = groupId,
                 from = from,
@@ -190,7 +190,7 @@ class GroupController(
         @Valid @RequestBody request: CreateGroupPaymentRequest,
     ): ApiResponse<GroupPaymentResponse> {
         return ApiResponse(
-            data = groupService.createGroupPayment(
+            data = groupUseCase.createGroupPayment(
                 accountId = requestAccountIdResolver.resolve(accountIdHeader),
                 groupId = groupId,
                 request = request,
@@ -206,7 +206,7 @@ class GroupController(
         @Valid @RequestBody request: UpdateGroupPaymentRequest,
     ): ApiResponse<GroupPaymentResponse> {
         return ApiResponse(
-            data = groupService.updateGroupPayment(
+            data = groupUseCase.updateGroupPayment(
                 accountId = requestAccountIdResolver.resolve(accountIdHeader),
                 groupId = groupId,
                 paymentId = paymentId,
@@ -222,7 +222,7 @@ class GroupController(
         @PathVariable paymentId: Long,
     ): ApiResponse<GroupActionResponse> {
         return ApiResponse(
-            data = groupService.deleteGroupPayment(
+            data = groupUseCase.deleteGroupPayment(
                 accountId = requestAccountIdResolver.resolve(accountIdHeader),
                 groupId = groupId,
                 paymentId = paymentId,
@@ -237,7 +237,7 @@ class GroupController(
         @PathVariable memberAccountId: String,
     ): ApiResponse<GroupActionResponse> {
         return ApiResponse(
-            data = groupService.removeMember(
+            data = groupUseCase.removeMember(
                 accountId = requestAccountIdResolver.resolve(accountIdHeader),
                 groupId = groupId,
                 memberAccountId = memberAccountId,
@@ -251,7 +251,7 @@ class GroupController(
         @PathVariable groupId: Long,
     ): ApiResponse<GroupActionResponse> {
         return ApiResponse(
-            data = groupService.leaveGroup(
+            data = groupUseCase.leaveGroup(
                 accountId = requestAccountIdResolver.resolve(accountIdHeader),
                 groupId = groupId,
             ),
@@ -265,7 +265,7 @@ class GroupController(
         @Valid @RequestBody request: TransferOwnershipRequest,
     ): ApiResponse<GroupDetailResponse> {
         return ApiResponse(
-            data = groupService.transferOwnership(
+            data = groupUseCase.transferOwnership(
                 accountId = requestAccountIdResolver.resolve(accountIdHeader),
                 groupId = groupId,
                 request = request,
@@ -279,7 +279,7 @@ class GroupController(
         @PathVariable groupId: Long,
     ): ApiResponse<List<GroupTagResponse>> {
         return ApiResponse(
-            data = groupService.getGroupTags(
+            data = groupUseCase.getGroupTags(
                 accountId = requestAccountIdResolver.resolve(accountIdHeader),
                 groupId = groupId,
             ),
@@ -293,7 +293,7 @@ class GroupController(
         @Valid @RequestBody request: CreateGroupTagRequest,
     ): ApiResponse<GroupTagResponse> {
         return ApiResponse(
-            data = groupService.createGroupTag(
+            data = groupUseCase.createGroupTag(
                 accountId = requestAccountIdResolver.resolve(accountIdHeader),
                 groupId = groupId,
                 request = request,
@@ -309,7 +309,7 @@ class GroupController(
         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) to: LocalDate?,
     ): ApiResponse<GroupStatsResponse> {
         return ApiResponse(
-            data = groupService.getGroupStats(
+            data = groupUseCase.getGroupStats(
                 accountId = requestAccountIdResolver.resolve(accountIdHeader),
                 groupId = groupId,
                 from = from,

@@ -1,4 +1,4 @@
-package com.cardwise.group.infrastructure
+package com.cardwise.group.infrastructure.adapter
 
 import java.sql.ResultSet
 import java.time.LocalDate
@@ -518,6 +518,7 @@ class GroupRepository(
             select
                 p.payment_id,
                 p.account_id,
+                p.user_card_id,
                 coalesce(ap.display_name, a.email) as payer_name,
                 p.merchant_name_raw,
                 coalesce(p.final_krw_amount, p.krw_amount) as amount,
@@ -627,6 +628,311 @@ class GroupRepository(
         )
     }
 
+    fun findGroupMembers(groupId: Long): List<GroupMemberDetailRow> {
+        val sql = """
+            select 
+                a.account_id,
+                a.email,
+                coalesce(ap.display_name, a.email) as display_name,
+                gm.role::text as role,
+                gm.created_at as joined_at
+            from group_member gm
+            join account a on a.account_id = gm.account_id
+            left join account_profile ap on ap.account_id = a.account_id
+            where gm.group_id = :groupId
+            order by 
+                case when gm.role = 'OWNER' then 0 else 1 end,
+                gm.created_at asc
+        """.trimIndent()
+
+        return jdbcTemplate.query(
+            sql,
+            MapSqlParameterSource().addValue("groupId", groupId),
+            ::mapGroupMemberDetail
+        )
+    }
+
+    fun findCurrentMonthSpent(groupId: Long, month: YearMonth): Long {
+        val start = month.atDay(1).atStartOfDay().atOffset(java.time.ZoneOffset.UTC)
+        val end = month.plusMonths(1).atDay(1).atStartOfDay().atOffset(java.time.ZoneOffset.UTC)
+
+        val sql = """
+            select coalesce(sum(coalesce(final_krw_amount, krw_amount)), 0)
+            from payment
+            where group_id = :groupId
+              and deleted_at is null
+              and paid_at >= :fromInclusive
+              and paid_at < :toExclusive
+        """.trimIndent()
+        
+        return jdbcTemplate.queryForObject(
+            sql,
+            MapSqlParameterSource()
+                .addValue("groupId", groupId)
+                .addValue("fromInclusive", start)
+                .addValue("toExclusive", end),
+            Long::class.java
+        ) ?: 0L
+    }
+
+    fun countActiveInvitations(groupId: Long): Int {
+        val sql = """
+            select count(*)
+            from group_invitation
+            where group_id = :groupId
+              and invitation_status = 'PENDING'
+              and expires_at >= now()
+        """.trimIndent()
+        
+        return jdbcTemplate.queryForObject(
+            sql,
+            MapSqlParameterSource().addValue("groupId", groupId),
+            Int::class.java
+        ) ?: 0
+    }
+
+    fun deleteInvitation(groupId: Long, invitationId: Long): Int {
+        val sql = """
+            delete from group_invitation
+            where group_id = :groupId
+              and invitation_id = :invitationId
+              and invitation_status = 'PENDING'
+        """.trimIndent()
+
+        return jdbcTemplate.update(
+            sql,
+            MapSqlParameterSource()
+                .addValue("groupId", groupId)
+                .addValue("invitationId", invitationId)
+        )
+    }
+
+    fun findPayment(paymentId: Long): GroupPaymentRow? {
+        val sql = """
+            select 
+                p.payment_id,
+                p.account_id,
+                p.user_card_id,
+                coalesce(ap.display_name, a.email) as payer_name,
+                p.merchant_name_raw,
+                coalesce(p.final_krw_amount, p.krw_amount) as amount,
+                p.paid_at,
+                p.currency::text as currency,
+                p.memo
+            from payment p
+            join account a on a.account_id = p.account_id
+            left join account_profile ap on ap.account_id = a.account_id
+            where p.payment_id = :paymentId
+              and p.deleted_at is null
+        """.trimIndent()
+        
+        return jdbcTemplate.query(
+            sql, 
+            MapSqlParameterSource().addValue("paymentId", paymentId), 
+            ::mapPayment
+        ).firstOrNull()
+    }
+
+    fun createGroupPayment(
+        groupId: Long,
+        accountId: UUID,
+        userCardId: Long,
+        merchantName: String,
+        amount: Long,
+        paidAt: OffsetDateTime,
+        memo: String?
+    ): Long {
+        val sql = """
+            insert into payment (
+                group_id,
+                account_id,
+                user_card_id,
+                merchant_name_raw,
+                local_amount,
+                local_currency,
+                krw_amount,
+                final_krw_amount,
+                paid_at,
+                memo
+            )
+            values (
+                :groupId,
+                :accountId,
+                :userCardId,
+                :merchantName,
+                :amount,
+                'KRW',
+                :amount,
+                :amount,
+                :paidAt,
+                :memo
+            )
+            returning payment_id
+        """.trimIndent()
+
+        return jdbcTemplate.queryForObject(
+            sql,
+            MapSqlParameterSource()
+                .addValue("groupId", groupId)
+                .addValue("accountId", accountId)
+                .addValue("userCardId", userCardId)
+                .addValue("merchantName", merchantName)
+                .addValue("amount", amount)
+                .addValue("paidAt", paidAt)
+                .addValue("memo", memo),
+            Long::class.java
+        )!!
+    }
+
+    fun updateGroupPayment(
+        paymentId: Long,
+        userCardId: Long?,
+        merchantName: String?,
+        amount: Long?,
+        paidAt: OffsetDateTime?,
+        memo: String?
+    ) {
+        val sql = """
+            update payment
+            set 
+                user_card_id = coalesce(:userCardId, user_card_id),
+                merchant_name_raw = coalesce(:merchantName, merchant_name_raw),
+                local_amount = coalesce(:amount, local_amount),
+                krw_amount = coalesce(:amount, krw_amount),
+                final_krw_amount = coalesce(:amount, final_krw_amount),
+                paid_at = coalesce(:paidAt, paid_at),
+                memo = coalesce(:memo, memo),
+                updated_at = now()
+            where payment_id = :paymentId
+              and deleted_at is null
+        """.trimIndent()
+
+        jdbcTemplate.update(
+            sql,
+            MapSqlParameterSource()
+                .addValue("paymentId", paymentId)
+                .addValue("userCardId", userCardId)
+                .addValue("merchantName", merchantName)
+                .addValue("amount", amount)
+                .addValue("paidAt", paidAt)
+                .addValue("memo", memo)
+        )
+    }
+
+    fun softDeleteGroupPayment(paymentId: Long) {
+        val sql = """
+            update payment
+            set deleted_at = now(),
+                updated_at = now()
+            where payment_id = :paymentId
+              and deleted_at is null
+        """.trimIndent()
+        jdbcTemplate.update(sql, MapSqlParameterSource().addValue("paymentId", paymentId))
+    }
+
+    fun replacePaymentItems(paymentId: Long, amount: Long): Long {
+        jdbcTemplate.update(
+            "delete from payment_item where payment_id = :paymentId",
+            MapSqlParameterSource().addValue("paymentId", paymentId)
+        )
+        val sqlInsert = """
+            insert into payment_item (payment_id, item_name, unit_price, quantity, amount)
+            values (:paymentId, '총액', :amount, 1, :amount)
+            returning payment_item_id
+        """.trimIndent()
+        return jdbcTemplate.queryForObject(
+            sqlInsert,
+            MapSqlParameterSource()
+                .addValue("paymentId", paymentId)
+                .addValue("amount", amount),
+            Long::class.java
+        )!!
+    }
+
+    fun createOrFindGroupTag(groupId: Long, tagName: String): Long {
+        val findSql = """
+            select tag_id from tag 
+            where group_id = :groupId 
+              and lower(tag_name) = lower(:tagName)
+        """.trimIndent()
+        
+        val existingId = jdbcTemplate.query(
+            findSql,
+            MapSqlParameterSource()
+                .addValue("groupId", groupId)
+                .addValue("tagName", tagName)
+        ) { rs, _ -> rs.getLong("tag_id") }.firstOrNull()
+        
+        if (existingId != null) return existingId
+
+        val insertSql = """
+            insert into tag (group_id, tag_name, color, is_default, usage_count)
+            values (:groupId, :tagName, '#94A3B8', false, 0)
+            returning tag_id
+        """.trimIndent()
+        return jdbcTemplate.queryForObject(
+            insertSql,
+            MapSqlParameterSource()
+                .addValue("groupId", groupId)
+                .addValue("tagName", tagName),
+            Long::class.java
+        )!!
+    }
+
+    fun replacePaymentTags(paymentItemId: Long, tagIds: List<Long>) {
+        jdbcTemplate.update(
+            "delete from payment_item_tag where payment_item_id = :paymentItemId",
+            MapSqlParameterSource().addValue("paymentItemId", paymentItemId)
+        )
+
+        if (tagIds.isEmpty()) return
+
+        val insertSql = """
+            insert into payment_item_tag (payment_item_id, tag_id)
+            values (:paymentItemId, :tagId)
+        """.trimIndent()
+
+        val batchArgs = tagIds.map { tagId ->
+            MapSqlParameterSource()
+                .addValue("paymentItemId", paymentItemId)
+                .addValue("tagId", tagId)
+        }.toTypedArray()
+
+        jdbcTemplate.batchUpdate(insertSql, batchArgs)
+    }
+
+    fun findPaymentTagNames(paymentId: Long): List<String> {
+        val sql = """
+            select t.tag_name
+            from payment_item pi
+            join payment_item_tag pit on pit.payment_item_id = pi.payment_item_id
+            join tag t on t.tag_id = pit.tag_id
+            where pi.payment_id = :paymentId
+            order by t.tag_name asc
+        """.trimIndent()
+
+        return jdbcTemplate.query(sql, MapSqlParameterSource().addValue("paymentId", paymentId)) { rs, _ ->
+            rs.getString("tag_name")
+        }
+    }
+
+    fun findGroupTags(groupId: Long): List<GroupTagRow> {
+        val sql = """
+            select tag_id, tag_name, color
+            from tag
+            where group_id = :groupId
+            order by tag_name asc
+        """.trimIndent()
+        
+        return jdbcTemplate.query(sql, MapSqlParameterSource().addValue("groupId", groupId)) { rs, _ ->
+            GroupTagRow(
+                tagId = rs.getLong("tag_id"),
+                tagName = rs.getString("tag_name"),
+                color = rs.getString("color")
+            )
+        }
+    }
+
     private fun buildDateParams(groupId: Long, from: LocalDate, to: LocalDate): MapSqlParameterSource {
         return MapSqlParameterSource()
             .addValue("groupId", groupId)
@@ -680,6 +986,7 @@ class GroupRepository(
             invitationId = resultSet.getLong("invitation_id"),
             groupId = resultSet.getLong("group_id"),
             groupName = resultSet.getString("group_name"),
+            inviterId = java.util.UUID.randomUUID(),
             inviterName = resultSet.getString("inviter_name"),
             inviteeEmail = resultSet.getString("invitee_email"),
             invitationStatus = resultSet.getString("invitation_status"),
@@ -692,6 +999,7 @@ class GroupRepository(
         return GroupPaymentRow(
             paymentId = resultSet.getLong("payment_id"),
             accountId = UUID.fromString(resultSet.getString("account_id")),
+            userCardId = resultSet.getLong("user_card_id"),
             payerName = resultSet.getString("payer_name"),
             merchantName = resultSet.getString("merchant_name_raw"),
             amount = resultSet.getLong("amount"),
@@ -723,6 +1031,16 @@ class GroupRepository(
             yearMonth = resultSet.getString("year_month"),
             totalSpent = resultSet.getLong("total_spent"),
             paymentCount = resultSet.getInt("payment_count"),
+        )
+    }
+
+    private fun mapGroupMemberDetail(resultSet: ResultSet, rowNum: Int): GroupMemberDetailRow {
+        return GroupMemberDetailRow(
+            accountId = UUID.fromString(resultSet.getString("account_id")),
+            email = resultSet.getString("email"),
+            displayName = resultSet.getString("display_name"),
+            role = resultSet.getString("role"),
+            joinedAt = resultSet.getObject("joined_at", OffsetDateTime::class.java)
         )
     }
 }
