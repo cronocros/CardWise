@@ -8,6 +8,7 @@ import {
   Panel,
   TextField,
 } from "@/components/app-shell";
+import { CardThumbnail } from "@/components/preview-primitives";
 import type { VoucherHistoryEntry, VoucherRecord } from "@/lib/cardwise-api";
 import {
   formatCurrency,
@@ -115,6 +116,16 @@ function historyActionLabel(value: string | null | undefined) {
     UPDATE: "수정",
   };
   return labels[value ?? ""] ?? (value ?? "수정");
+}
+
+function unlockTypeLabel(value: string | null | undefined) {
+  const labels: Record<string, string> = {
+    ANNUAL_PERFORMANCE: "연간 실적",
+    MONTHLY_PERFORMANCE: "월간 실적",
+    IMMEDIATE: "즉시",
+    MANUAL: "수동",
+  };
+  return labels[value ?? ""] ?? (value ?? "조건");
 }
 
 function resolveDaysUntilExpiry(item: VoucherRecord) {
@@ -409,34 +420,109 @@ export function VouchersClient({
           onClick={() => void selectVoucher(item.userVoucherId)}
           className="block w-full text-left"
         >
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div className="space-y-3">
-              <div className="flex flex-wrap gap-2">
-                  <Chip tone={unlockTone(item.unlockState)}>{unlockStateLabel(item.unlockState)}</Chip>
-                  <Chip tone={categoryTone(item.voucherType)}>{categoryLabel(item.voucherType)}</Chip>
-                  <Chip tone={expiryTone(daysUntilExpiry)}>
-                    {expired ? "만료됨" : formatDaysUntilExpiry(daysUntilExpiry)}
-                  </Chip>
-              </div>
-              <div>
-                <h3 className="text-[17px] font-semibold tracking-[-0.04em] text-[var(--text-strong)]">
-                  {item.voucherName}
-                </h3>
-                <p className="mt-1 text-[13px] leading-6 text-[var(--text-body)]">
-                  {item.cardName}
-                  {item.cardNickname ? ` · ${item.cardNickname}` : ""}
-                </p>
-                <p className="mt-2 max-w-3xl text-[13px] leading-6 text-[var(--text-muted)]">
-                  {item.description ?? "설명이 없습니다."}
-                </p>
+          <div className="grid gap-4">
+            <div className="cw-voucher-flip">
+              <div className="cw-voucher-flip__inner">
+                <div className="cw-voucher-flip__face rounded-[24px] border border-[var(--surface-border)] bg-[linear-gradient(160deg,#fff8fa,#ffffff)] p-4">
+                  <div className="grid gap-4 lg:grid-cols-[0.88fr_1.12fr]">
+                    <CardThumbnail
+                      seed={item.userCardId}
+                      title={item.cardName}
+                      subtitle={item.cardNickname ?? categoryLabel(item.voucherType)}
+                      badge={unlockStateLabel(item.unlockState)}
+                      compact
+                    />
+
+                    <div className="space-y-3">
+                      <div className="flex flex-wrap gap-2">
+                        <Chip tone={unlockTone(item.unlockState)}>{unlockStateLabel(item.unlockState)}</Chip>
+                        <Chip tone={categoryTone(item.voucherType)}>{categoryLabel(item.voucherType)}</Chip>
+                        <Chip tone={expiryTone(daysUntilExpiry)}>
+                          {expired ? "만료됨" : formatDaysUntilExpiry(daysUntilExpiry)}
+                        </Chip>
+                      </div>
+                      <div>
+                        <h3 className="text-[17px] font-semibold tracking-[-0.04em] text-[var(--text-strong)]">
+                          {item.voucherName}
+                        </h3>
+                        <p className="mt-1 text-[13px] leading-6 text-[var(--text-body)]">
+                          {item.cardName}
+                          {item.cardNickname ? ` · ${item.cardNickname}` : ""}
+                        </p>
+                        <p className="mt-2 max-w-3xl text-[13px] leading-6 text-[var(--text-muted)]">
+                          {item.description ?? "설명이 없습니다."}
+                        </p>
+                      </div>
+
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        <div className="rounded-[18px] bg-[var(--surface-soft)] px-4 py-3 text-sm text-[var(--text-body)]">
+                          <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">
+                            사용량
+                          </div>
+                          <div className="mt-2 font-medium text-[var(--text-strong)]">
+                            {totalCount === null ? "제한 없음" : `${usedCount ?? 0}/${totalCount}`}
+                          </div>
+                        </div>
+                        <div className="rounded-[18px] bg-[var(--surface-soft)] px-4 py-3 text-sm text-[var(--text-body)]">
+                          <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">
+                            만료일
+                          </div>
+                          <div className="mt-2 font-medium text-[var(--text-strong)]">{formatDate(item.validUntil)}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="cw-voucher-flip__face cw-voucher-flip__face--back rounded-[24px] border border-[var(--surface-border)] bg-[linear-gradient(160deg,#fff2f5,#fffafc)] p-4">
+                  <div className="grid h-full gap-4">
+                    <div className="flex flex-wrap gap-2">
+                      <Chip tone="rose">{unlockTypeLabel(item.unlockType)}</Chip>
+                      <Chip tone="slate">{periodTypeLabel(item.periodType)}</Chip>
+                    </div>
+                    <div>
+                      <div className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--text-soft)]">
+                        해금 브리프
+                      </div>
+                      <div className="mt-2 text-[18px] font-semibold tracking-[-0.04em] text-[var(--text-strong)]">
+                        {item.unlockState === "UNLOCKED"
+                          ? "이미 사용 가능한 상태입니다."
+                          : item.unlockState === "ELIGIBLE"
+                            ? "조건은 충족했고, 반영 시점만 남았습니다."
+                            : `${formatCurrency(item.remainingAmount)} 더 채우면 열립니다.`}
+                      </div>
+                    </div>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <div className="rounded-[18px] border border-[var(--surface-border)] bg-white px-4 py-3 text-sm text-[var(--text-body)]">
+                        <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">
+                          현재 / 필요 실적
+                        </div>
+                        <div className="mt-2 font-medium text-[var(--text-strong)]">
+                          {formatCurrency(item.currentAnnualPerformance)} / {formatCurrency(item.requiredAnnualPerformance)}
+                        </div>
+                      </div>
+                      <div className="rounded-[18px] border border-[var(--surface-border)] bg-white px-4 py-3 text-sm text-[var(--text-body)]">
+                        <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">
+                          사용 가능 시점
+                        </div>
+                        <div className="mt-2 font-medium text-[var(--text-strong)]">
+                          {item.availableAt ? formatDate(item.availableAt) : "즉시"}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="rounded-[18px] border border-dashed border-[var(--surface-border)] bg-white/70 px-4 py-3 text-sm text-[var(--text-body)]">
+                      {item.notes ?? "카드를 열면 상세와 사용 이력을 바로 확인할 수 있습니다."}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="flex shrink-0 flex-col gap-2 lg:w-72">
+            <div className="grid gap-3 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
               <div className="rounded-[22px] border border-[var(--surface-border)] bg-[linear-gradient(135deg,#fff4f6,#ffffff)] px-4 py-3">
                 <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.22em] text-[var(--text-soft)]">
-                  <span>사용량</span>
-                  <span>{totalCount === null ? "제한 없음" : `${usedCount ?? 0}/${totalCount}`}</span>
+                  <span>남은 사용량</span>
+                  <span>{totalCount === null ? "제한 없음" : `${remainingCount ?? 0}회 남음`}</span>
                 </div>
                 {progressPercent !== null ? (
                   <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--primary-100)]">
@@ -458,6 +544,10 @@ export function VouchersClient({
                 <div className="flex justify-between gap-4">
                   <span>만료일</span>
                   <span>{formatDate(item.validUntil)}</span>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <span>남은 금액</span>
+                  <span>{formatCurrency(item.remainingAmount)}</span>
                 </div>
               </div>
             </div>
@@ -612,6 +702,46 @@ export function VouchersClient({
           <MetricCard label="만료 임박" value={String(filteredExpiringVouchers.length)} helper="7일 이내 확인" />
           <MetricCard label="선택 카드" value={String(filteredSelectedCardVouchers.length)} helper={selectedCardLabel} />
           <MetricCard label="잠김" value={String(selectedCardLockedCount)} helper="해금 조건 대기" />
+        </div>
+
+        <div className="mt-5 rounded-[26px] border border-[var(--surface-border)] bg-[linear-gradient(180deg,#fff8fa,#ffffff)] p-4">
+          <div className="grid gap-4 lg:grid-cols-[0.88fr_1.12fr]">
+            <CardThumbnail
+              seed={Number(selectedUserCardId)}
+              title={selectedCardLabel}
+              subtitle={stats.locked > 0 ? `${stats.locked}개 잠김` : "사용 가능 흐름 점검"}
+              badge={stats.expiringSoon > 0 ? `D-7 ${stats.expiringSoon}` : "Deck"}
+            />
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="rounded-[20px] border border-[var(--surface-border)] bg-white px-4 py-4">
+                <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">
+                  조건 충족
+                </div>
+                <div className="mt-2 text-[24px] font-semibold tracking-[-0.05em] text-[var(--text-strong)]">
+                  {stats.eligible}
+                </div>
+                <div className="mt-2 text-sm text-[var(--text-muted)]">반영 시점 확인 필요</div>
+              </div>
+              <div className="rounded-[20px] border border-[var(--surface-border)] bg-white px-4 py-4">
+                <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">
+                  잠김
+                </div>
+                <div className="mt-2 text-[24px] font-semibold tracking-[-0.05em] text-[var(--text-strong)]">
+                  {stats.locked}
+                </div>
+                <div className="mt-2 text-sm text-[var(--text-muted)]">추가 실적 필요</div>
+              </div>
+              <div className="rounded-[20px] border border-[var(--surface-border)] bg-white px-4 py-4">
+                <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">
+                  만료 임박
+                </div>
+                <div className="mt-2 text-[24px] font-semibold tracking-[-0.05em] text-[var(--text-strong)]">
+                  {stats.expiringSoon}
+                </div>
+                <div className="mt-2 text-sm text-[var(--text-muted)]">먼저 확인할 항목</div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="mt-5 grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">

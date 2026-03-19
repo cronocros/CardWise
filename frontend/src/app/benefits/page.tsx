@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { AppShell, ActionButton, Chip, MetricCard, Panel, TextField } from "@/components/app-shell";
+import { MatchGauge } from "@/components/preview-primitives";
 
 type BenefitItem = {
   id: string;
@@ -116,6 +117,9 @@ export default function BenefitsPage() {
   const avgMatch = Math.round(
     benefitItems.reduce((sum, item) => sum + item.match, 0) / benefitItems.length,
   );
+  const topPick = filteredItems[0] ?? benefitItems[0];
+  const keepPick = benefitItems.find((item) => item.status === "보유") ?? benefitItems[1];
+  const reviewPick = benefitItems.find((item) => item.status === "검토") ?? benefitItems[2];
 
   return (
     <AppShell
@@ -148,29 +152,42 @@ export default function BenefitsPage() {
       </section>
 
       <div className="grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
-        <Panel title="혜택 검색" subtitle="검색어와 카테고리로 혜택을 좁히고, 바로 판단할 수 있도록 요약을 붙였습니다.">
+        <Panel
+          title="혜택 검색"
+          subtitle="검색어와 카테고리를 상단 툴바에 고정해 두고, 아래 카드에서 추천 이유와 적합도를 바로 읽게 구성했습니다."
+          className="overflow-visible"
+        >
           <div className="grid gap-4">
-            <TextField
-              label="혜택 검색"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="라운지, 주유, OTT, 멤버십..."
-            />
-            <div className="flex flex-wrap gap-2">
-              {categoryOptions.map((option) => (
-                <button
-                  key={option}
-                  type="button"
-                  onClick={() => setCategory(option)}
-                  className={`rounded-full border px-4 py-2 text-sm transition ${
-                    category === option
-                      ? "border-[var(--surface-border-strong)] bg-[var(--accent-soft)] text-[var(--accent-strong)]"
-                      : "border-[var(--surface-border)] bg-white text-[var(--text-body)] hover:border-[var(--surface-border-strong)]"
-                  }`}
-                >
-                  {option}
-                </button>
-              ))}
+            <div className="sticky top-[6.1rem] z-10 rounded-[24px] border border-[var(--surface-border)] bg-[rgba(255,255,255,0.88)] p-4 shadow-[0_18px_34px_rgba(190,24,60,0.1)] backdrop-blur-xl">
+              <div className="grid gap-4">
+                <TextField
+                  label="혜택 검색"
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="라운지, 주유, OTT, 멤버십..."
+                />
+                <div className="flex flex-wrap gap-2">
+                  {categoryOptions.map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => setCategory(option)}
+                      className={`rounded-full border px-4 py-2 text-sm transition ${
+                        category === option
+                          ? "border-[var(--surface-border-strong)] bg-[var(--accent-soft)] text-[var(--accent-strong)]"
+                          : "border-[var(--surface-border)] bg-white text-[var(--text-body)] hover:border-[var(--surface-border-strong)]"
+                      }`}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Chip tone="rose">검색 결과 {filteredItems.length}</Chip>
+                  <Chip tone="emerald">추천 {filteredItems.filter((item) => item.status === "추천").length}</Chip>
+                  <Chip tone="amber">검토 {filteredItems.filter((item) => item.status === "검토").length}</Chip>
+                </div>
+              </div>
             </div>
 
             <div className="grid gap-3">
@@ -182,28 +199,37 @@ export default function BenefitsPage() {
                 filteredItems.map((item) => (
                   <article
                     key={item.id}
-                    className="cw-interactive-card rounded-[24px] border border-[var(--surface-border)] bg-white p-4 shadow-[0_14px_28px_rgba(190,24,60,0.05)]"
+                    className="cw-interactive-card rounded-[26px] border border-[var(--surface-border)] bg-white p-4 shadow-[0_14px_28px_rgba(190,24,60,0.05)]"
                   >
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div>
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                      <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap gap-2">
                           <Chip tone={toneForStatus(item.status)}>{item.status}</Chip>
                           <Chip tone="slate">{item.category}</Chip>
-                          <Chip tone="slate">적합도 {item.match}%</Chip>
                         </div>
                         <h3 className="mt-3 text-[17px] font-semibold tracking-[-0.04em] text-[var(--text-strong)]">
                           {item.title}
                         </h3>
                         <p className="mt-1 text-sm text-[var(--text-muted)]">{item.provider}</p>
+                        <p className="mt-3 text-sm leading-6 text-[var(--text-body)]">{item.summary}</p>
                       </div>
-                      <div className="rounded-full bg-[var(--primary-50)] px-3 py-1 text-xs font-medium text-[var(--accent-strong)]">
-                        {item.deadline}
+                      <div className="rounded-[22px] border border-[var(--surface-border)] bg-[linear-gradient(180deg,#fff8fa,#ffffff)] px-4 py-4">
+                        <MatchGauge value={item.match} helper={item.deadline} />
                       </div>
                     </div>
-                    <p className="mt-3 text-sm leading-6 text-[var(--text-body)]">{item.summary}</p>
-                    <div className="mt-3 flex items-center justify-between gap-4 rounded-[18px] bg-[var(--surface-soft)] px-4 py-3 text-sm text-[var(--text-body)]">
-                      <span>추천 사용처</span>
-                      <span className="font-medium text-[var(--text-strong)]">{item.bestUse}</span>
+                    <div className="mt-4 grid gap-3 md:grid-cols-[1fr_auto]">
+                      <div className="rounded-[18px] bg-[var(--surface-soft)] px-4 py-3 text-sm text-[var(--text-body)]">
+                        <span className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">
+                          추천 사용처
+                        </span>
+                        <div className="mt-2 font-medium text-[var(--text-strong)]">{item.bestUse}</div>
+                      </div>
+                      <div className="rounded-[18px] border border-[var(--surface-border)] bg-white px-4 py-3 text-sm text-[var(--text-body)]">
+                        <span className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">
+                          적용 시점
+                        </span>
+                        <div className="mt-2 font-medium text-[var(--accent-strong)]">{item.deadline}</div>
+                      </div>
                     </div>
                   </article>
                 ))
@@ -213,42 +239,43 @@ export default function BenefitsPage() {
         </Panel>
 
         <div className="grid gap-5">
-          <Panel title="AI 추천" subtitle="추천 흐름은 카드 실적과 사용 습관을 기준으로 보여주는 자리입니다.">
+          <Panel title="AI 추천" subtitle="추천 흐름을 카드형으로 묶고, 적합도와 추천 이유를 먼저 읽게 구성했습니다.">
             <div className="grid gap-3">
-              <article className="cw-interactive-card rounded-[24px] border border-[var(--surface-border)] bg-[linear-gradient(135deg,#fff7f8,#ffffff)] p-4">
+              <article className="cw-interactive-card rounded-[26px] border border-[var(--surface-border)] bg-[linear-gradient(135deg,#fff7f8,#ffffff)] p-5">
                 <div className="flex flex-wrap gap-2">
                   <Chip tone="rose">추천 1위</Chip>
-                  <Chip tone="slate">여행</Chip>
+                  <Chip tone="slate">{topPick.category}</Chip>
                 </div>
-                <h3 className="mt-3 text-base font-semibold text-[var(--text-strong)]">
-                  라운지 패스는 이번 달에 바로 쓰기 좋습니다.
-                </h3>
-                <p className="mt-2 text-sm leading-6 text-[var(--text-body)]">
-                  최근 이동 패턴과 카드 실적에 맞아떨어지는 경우 우선 적용 후보로 올립니다.
-                </p>
+                <div className="mt-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-base font-semibold text-[var(--text-strong)]">{topPick.title}</h3>
+                    <p className="mt-2 text-sm leading-6 text-[var(--text-body)]">{topPick.summary}</p>
+                  </div>
+                  <div className="rounded-[22px] border border-[var(--surface-border)] bg-white px-4 py-4">
+                    <MatchGauge value={topPick.match} helper={topPick.bestUse} />
+                  </div>
+                </div>
               </article>
               <article className="cw-interactive-card rounded-[24px] border border-[var(--surface-border)] bg-white p-4">
                 <div className="flex flex-wrap gap-2">
                   <Chip tone="emerald">유지 권장</Chip>
-                  <Chip tone="slate">생활</Chip>
+                  <Chip tone="slate">{keepPick.category}</Chip>
                 </div>
                 <h3 className="mt-3 text-base font-semibold text-[var(--text-strong)]">
-                  주유 캐시백은 실적 유지용으로 안정적입니다.
+                  {keepPick.title}
                 </h3>
                 <p className="mt-2 text-sm leading-6 text-[var(--text-body)]">
-                  월 평균 지출과 대비했을 때 잔여 조건이 작아 유지 효율이 높습니다.
+                  {keepPick.summary}
                 </p>
               </article>
               <article className="cw-interactive-card rounded-[24px] border border-[var(--surface-border)] bg-[var(--surface-soft)] p-4">
                 <div className="flex flex-wrap gap-2">
                   <Chip tone="amber">검토 필요</Chip>
-                  <Chip tone="slate">정기구독</Chip>
+                  <Chip tone="slate">{reviewPick.category}</Chip>
                 </div>
-                <h3 className="mt-3 text-base font-semibold text-[var(--text-strong)]">
-                  중복 구독은 묶어서 정리하는 편이 낫습니다.
-                </h3>
+                <h3 className="mt-3 text-base font-semibold text-[var(--text-strong)]">{reviewPick.title}</h3>
                 <p className="mt-2 text-sm leading-6 text-[var(--text-body)]">
-                  혜택은 좋아도 실제 사용 빈도가 낮으면 삭제 후보로 이동시킵니다.
+                  {reviewPick.summary}
                 </p>
               </article>
             </div>
