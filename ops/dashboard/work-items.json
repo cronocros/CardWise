@@ -1,7 +1,7 @@
 {
   "version": 1,
   "project": "CardWise",
-  "updated_at": "2026-03-19T11:15:00+09:00",
+  "updated_at": "2026-03-19T18:55:00+09:00",
   "phases": [
     {
       "phase": "P0",
@@ -26,14 +26,26 @@
       "title": "통합 검증과 원격 스모크",
       "status": "DONE",
       "summary": "로컬 정적 검증, Supabase 원격 스모크, 그리고 원격 DB를 붙인 스프링 런타임/API 확인까지 완료했습니다."
+    },
+    {
+      "phase": "P4",
+      "title": "앱 퍼블리싱 재구성",
+      "status": "DONE",
+      "summary": "앱 셸, 라우트, 바우처 바텀시트, 실적 마일스톤 모달, 390/768/1024/1440 반응형 QA까지 마무리했습니다."
+    },
+    {
+      "phase": "P5",
+      "title": "대시보드 우선 공개",
+      "status": "DONE",
+      "summary": "라이브 대시보드를 먼저 공개하기 위해 레이아웃, 시계, 카운트다운, 바로가기, 스웨거 연결을 병렬 진행 중입니다."
     }
   ],
   "agents": [
     {
       "name": "Orchestrator",
       "role": "coordination",
-      "status": "DONE",
-      "progress": 100
+      "status": "IN_PROGRESS",
+      "progress": 72
     },
     {
       "name": "BE-Platform",
@@ -67,6 +79,54 @@
     },
     {
       "name": "FE-Vouchers",
+      "role": "frontend",
+      "status": "DONE",
+      "progress": 100
+    },
+    {
+      "name": "Dashboard-UX",
+      "role": "frontend",
+      "status": "DONE",
+      "progress": 100
+    },
+    {
+      "name": "Senior Designer",
+      "role": "frontend",
+      "status": "DONE",
+      "progress": 100
+    },
+    {
+      "name": "FE-Theme",
+      "role": "frontend",
+      "status": "DONE",
+      "progress": 100
+    },
+    {
+      "name": "FE-AppShell",
+      "role": "frontend",
+      "status": "DONE",
+      "progress": 100
+    },
+    {
+      "name": "FE-Route-A",
+      "role": "frontend",
+      "status": "DONE",
+      "progress": 100
+    },
+    {
+      "name": "FE-Route-B",
+      "role": "frontend",
+      "status": "DONE",
+      "progress": 100
+    },
+    {
+      "name": "FE-Route-C",
+      "role": "frontend",
+      "status": "DONE",
+      "progress": 100
+    },
+    {
+      "name": "FE-MotionAssets",
       "role": "frontend",
       "status": "DONE",
       "progress": 100
@@ -165,6 +225,57 @@
       "evidence": [
         "ops/dashboard/traceability-map.json",
         "supabase/seeds/seed-metadata.json"
+      ]
+    },
+    {
+      "todo_id": "P0-4",
+      "title": "현실적인 Supabase 시드 데이터 준비 및 반영",
+      "priority": "P0",
+      "owner_agent": "Orchestrator",
+      "status": "DONE",
+      "feature_refs": [
+        "F1",
+        "F2",
+        "F3",
+        "F4",
+        "F6"
+      ],
+      "requirement_refs": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "api_refs": [
+        "GET /cards/{cardId}/performance",
+        "POST /payments/{paymentId}/adjustments",
+        "GET /pending-actions",
+        "GET /pending-actions/count"
+      ],
+      "db_refs": [
+        "card_company",
+        "card",
+        "card_benefit",
+        "card_voucher",
+        "payment",
+        "payment_item",
+        "payment_adjustment",
+        "user_pending_action",
+        "user_performance",
+        "user_voucher"
+      ],
+      "acceptance": [
+        "Seed SQL is idempotent",
+        "Seed metadata maps feature/requirement/api/db",
+        "Seed applied to linked Supabase project"
+      ],
+      "dependencies": [
+        "P0-1"
+      ],
+      "blocker": null,
+      "evidence": [
+        "supabase/seeds/cardwise_mvp_seed.sql",
+        "supabase/seeds/seed-metadata.json",
+        "supabase/seeds/README.md"
       ]
     },
     {
@@ -283,6 +394,51 @@
       ]
     },
     {
+      "todo_id": "P1-3",
+      "title": "프론트 BFF와 원장 화면 구현",
+      "priority": "P1",
+      "owner_agent": "FE-Foundation",
+      "status": "DONE",
+      "feature_refs": [
+        "F2",
+        "F3"
+      ],
+      "requirement_refs": [
+        "R3"
+      ],
+      "api_refs": [
+        "POST /payments/{paymentId}/adjustments",
+        "GET /payments/{paymentId}/adjustments",
+        "GET /pending-actions",
+        "GET /pending-actions/count",
+        "PATCH /pending-actions/{actionId}/resolve",
+        "PATCH /pending-actions/{actionId}/dismiss"
+      ],
+      "db_refs": [
+        "payment",
+        "payment_adjustment",
+        "user_pending_action"
+      ],
+      "acceptance": [
+        "BFF proxies backend APIs",
+        "Inbox UI resolves and dismisses actions",
+        "Adjustments UI lists and creates entries"
+      ],
+      "dependencies": [
+        "P1-0"
+      ],
+      "blocker": null,
+      "evidence": [
+        "frontend/src/app/api/pending-actions/route.ts",
+        "frontend/src/app/api/pending-actions/count/route.ts",
+        "frontend/src/app/api/payments/[paymentId]/adjustments/route.ts",
+        "frontend/src/app/inbox/page.tsx",
+        "frontend/src/app/adjustments/page.tsx",
+        "frontend/src/components/inbox-client.tsx",
+        "frontend/src/components/adjustments-client.tsx"
+      ]
+    },
+    {
       "todo_id": "P2-1",
       "title": "실적 계산 규칙 엔진 구현",
       "priority": "P2",
@@ -354,51 +510,6 @@
       ]
     },
     {
-      "todo_id": "P1-3",
-      "title": "프론트 BFF와 원장 화면 구현",
-      "priority": "P1",
-      "owner_agent": "FE-Foundation",
-      "status": "DONE",
-      "feature_refs": [
-        "F2",
-        "F3"
-      ],
-      "requirement_refs": [
-        "R3"
-      ],
-      "api_refs": [
-        "POST /payments/{paymentId}/adjustments",
-        "GET /payments/{paymentId}/adjustments",
-        "GET /pending-actions",
-        "GET /pending-actions/count",
-        "PATCH /pending-actions/{actionId}/resolve",
-        "PATCH /pending-actions/{actionId}/dismiss"
-      ],
-      "db_refs": [
-        "payment",
-        "payment_adjustment",
-        "user_pending_action"
-      ],
-      "acceptance": [
-        "BFF proxies backend APIs",
-        "Inbox UI resolves and dismisses actions",
-        "Adjustments UI lists and creates entries"
-      ],
-      "dependencies": [
-        "P1-0"
-      ],
-      "blocker": null,
-      "evidence": [
-        "frontend/src/app/api/pending-actions/route.ts",
-        "frontend/src/app/api/pending-actions/count/route.ts",
-        "frontend/src/app/api/payments/[paymentId]/adjustments/route.ts",
-        "frontend/src/app/inbox/page.tsx",
-        "frontend/src/app/adjustments/page.tsx",
-        "frontend/src/components/inbox-client.tsx",
-        "frontend/src/components/adjustments-client.tsx"
-      ]
-    },
-    {
       "todo_id": "P2-3",
       "title": "바우처 관리 백엔드 API 구현",
       "priority": "P2",
@@ -439,84 +550,6 @@
       ]
     },
     {
-      "todo_id": "P3-1",
-      "title": "라이브 대시보드 한글화 및 10초 갱신",
-      "priority": "P3",
-      "owner_agent": "Orchestrator",
-      "status": "DONE",
-      "feature_refs": [],
-      "requirement_refs": [],
-      "api_refs": [],
-      "db_refs": [
-        "ops/dashboard/work-items.json"
-      ],
-      "acceptance": [
-        "웹 대시보드가 한글 UI를 사용한다",
-        "터미널 대시보드가 한글 상태 라벨을 사용한다",
-        "웹과 터미널 갱신 주기가 10초다"
-      ],
-      "dependencies": [
-        "P0-2"
-      ],
-      "blocker": null,
-      "evidence": [
-        "ops/dashboard/dashboard-lib.js",
-        "ops/dashboard/render-terminal.js",
-        "ops/dashboard/serve.js"
-      ]
-    },
-    {
-      "todo_id": "P0-4",
-      "title": "Prepare and apply realistic Supabase seed dataset",
-      "priority": "P0",
-      "owner_agent": "Orchestrator",
-      "status": "DONE",
-      "feature_refs": [
-        "F1",
-        "F2",
-        "F3",
-        "F4",
-        "F6"
-      ],
-      "requirement_refs": [
-        "R1",
-        "R2",
-        "R3"
-      ],
-      "api_refs": [
-        "GET /cards/{cardId}/performance",
-        "POST /payments/{paymentId}/adjustments",
-        "GET /pending-actions",
-        "GET /pending-actions/count"
-      ],
-      "db_refs": [
-        "card_company",
-        "card",
-        "card_benefit",
-        "card_voucher",
-        "payment",
-        "payment_item",
-        "payment_adjustment",
-        "user_pending_action",
-        "user_performance",
-        "user_voucher"
-      ],
-      "acceptance": [
-        "Seed SQL is idempotent",
-        "Seed metadata maps feature/requirement/api/db",
-        "Seed applied to linked Supabase project"
-      ],
-      "dependencies": [
-        "P0-1"
-      ],
-      "blocker": null,
-      "evidence": [
-        "supabase/seeds/cardwise_mvp_seed.sql",
-        "supabase/seeds/seed-metadata.json",
-        "supabase/seeds/README.md"
-      ]
-    },
-    {
       "todo_id": "P2-4",
       "title": "바우처 프론트/BFF 화면 구현",
       "priority": "P2",
@@ -553,6 +586,33 @@
         "frontend/src/app/vouchers/page.tsx",
         "frontend/src/components/vouchers-client.tsx",
         "frontend/src/app/api/vouchers/route.ts"
+      ]
+    },
+    {
+      "todo_id": "P3-1",
+      "title": "라이브 대시보드 한글화 및 10초 갱신",
+      "priority": "P3",
+      "owner_agent": "Orchestrator",
+      "status": "DONE",
+      "feature_refs": [],
+      "requirement_refs": [],
+      "api_refs": [],
+      "db_refs": [
+        "ops/dashboard/work-items.json"
+      ],
+      "acceptance": [
+        "웹 대시보드가 한글 UI를 사용한다",
+        "터미널 대시보드가 한글 상태 라벨을 사용한다",
+        "웹과 터미널 갱신 주기가 10초다"
+      ],
+      "dependencies": [
+        "P0-2"
+      ],
+      "blocker": null,
+      "evidence": [
+        "ops/dashboard/dashboard-lib.js",
+        "ops/dashboard/render-terminal.js",
+        "ops/dashboard/serve.js"
       ]
     },
     {
@@ -621,6 +681,468 @@
         "GET http://127.0.0.1:3000/vouchers",
         "GET http://127.0.0.1:3000/performance/1"
       ]
+    },
+    {
+      "todo_id": "P4-1",
+      "title": "디자인 프리뷰 분석 및 스킨 규칙 고정",
+      "priority": "P1",
+      "owner_agent": "Senior Designer",
+      "status": "DONE",
+      "feature_refs": [
+        "F1",
+        "F2",
+        "F4",
+        "F5",
+        "F6",
+        "F8"
+      ],
+      "requirement_refs": [
+        "R1",
+        "R2",
+        "R3",
+        "R4",
+        "R5"
+      ],
+      "api_refs": [],
+      "db_refs": [],
+      "acceptance": [
+        "로즈 블로섬, 로즈 미니멀, 로즈 글라스의 쓰임새가 분리된다",
+        "모바일 앱 중심 레이아웃 기준이 고정된다",
+        "Pretendard 우선 폰트 전략이 정해진다"
+      ],
+      "dependencies": [],
+      "blocker": null,
+      "evidence": [
+        "design-preview/sample-a-rose-glass.html",
+        "design-preview/sample-b-rose-blossom.html",
+        "design-preview/sample-b-rose-minimal.html",
+        "docs/design/design-system.md"
+      ]
+    },
+    {
+      "todo_id": "P4-2",
+      "title": "Pretendard 기반 테마 코어",
+      "priority": "P1",
+      "owner_agent": "FE-Theme",
+      "status": "DONE",
+      "feature_refs": [
+        "F1",
+        "F5",
+        "F6",
+        "F8"
+      ],
+      "requirement_refs": [
+        "R1",
+        "R2",
+        "R4",
+        "R5"
+      ],
+      "api_refs": [],
+      "db_refs": [],
+      "acceptance": [
+        "globals.css에 라이트 기반 로즈 토큰이 들어간다",
+        "Pretendard 중심 폰트가 적용된다",
+        "블로섬, 미니멀, 글라스 변형을 수용할 수 있는 변수 구조가 준비된다"
+      ],
+      "dependencies": [
+        "P4-1"
+      ],
+      "blocker": null,
+      "evidence": [
+        "frontend/src/app/globals.css",
+        "frontend/src/app/layout.tsx",
+        "frontend/src/components/app-shell.tsx"
+      ]
+    },
+    {
+      "todo_id": "P4-3",
+      "title": "앱 셸과 라우트 재배치 준비",
+      "priority": "P1",
+      "owner_agent": "FE-AppShell",
+      "status": "DONE",
+      "feature_refs": [
+        "F1",
+        "F2",
+        "F5",
+        "F6",
+        "F8"
+      ],
+      "requirement_refs": [
+        "R1",
+        "R2",
+        "R3",
+        "R4",
+        "R5"
+      ],
+      "api_refs": [],
+      "db_refs": [],
+      "acceptance": [
+        "/dashboard 중심 앱 셸 구조가 준비된다",
+        "하단 탭바와 데스크톱 확장 셸 방향이 고정된다",
+        "현재 운영형 셸이 앱 중심 셸로 교체될 준비가 된다"
+      ],
+      "dependencies": [
+        "P4-2"
+      ],
+      "blocker": null,
+      "evidence": [
+        "frontend/src/components/app-shell.tsx",
+        "frontend/src/app/layout.tsx",
+        "frontend/src/app/globals.css",
+        "frontend/src/app/page.tsx",
+        "frontend/src/app/dashboard/page.tsx"
+      ]
+    },
+    {
+      "todo_id": "P4-4",
+      "title": "카드와 실적 화면 리디자인",
+      "priority": "P2",
+      "owner_agent": "FE-Route-A",
+      "status": "DONE",
+      "feature_refs": [
+        "F1",
+        "F4",
+        "F8"
+      ],
+      "requirement_refs": [
+        "R1",
+        "R2",
+        "R5"
+      ],
+      "api_refs": [
+        "GET /cards/{cardId}/performance"
+      ],
+      "db_refs": [
+        "user_card",
+        "user_performance"
+      ],
+      "acceptance": [
+        "/cards와 /performance가 문서형 실적 표현으로 재구성된다",
+        "카드 썸네일과 미니 게이지가 들어간다"
+      ],
+      "dependencies": [
+        "P4-3"
+      ],
+      "blocker": null,
+      "evidence": [
+        "frontend/src/app/dashboard/page.tsx",
+        "frontend/src/app/cards/page.tsx",
+        "frontend/src/app/performance/[userCardId]/page.tsx",
+        "http://127.0.0.1:3000/dashboard",
+        "http://127.0.0.1:3000/cards",
+        "http://127.0.0.1:3000/performance/1"
+      ]
+    },
+    {
+      "todo_id": "P4-5",
+      "title": "가계부 허브와 인박스/조정 화면 리디자인",
+      "priority": "P2",
+      "owner_agent": "FE-Route-B",
+      "status": "DONE",
+      "feature_refs": [
+        "F2",
+        "F3"
+      ],
+      "requirement_refs": [
+        "R3"
+      ],
+      "api_refs": [
+        "GET /pending-actions",
+        "GET /pending-actions/count",
+        "POST /payments/{paymentId}/adjustments"
+      ],
+      "db_refs": [
+        "payment",
+        "payment_adjustment",
+        "user_pending_action"
+      ],
+      "acceptance": [
+        "/ledger가 상위 허브로 정리된다",
+        "/inbox와 /adjustments가 새 앱 셸 안으로 편입된다"
+      ],
+      "dependencies": [
+        "P4-3"
+      ],
+      "blocker": null,
+      "evidence": [
+        "frontend/src/app/ledger/page.tsx",
+        "frontend/src/app/inbox/page.tsx",
+        "frontend/src/app/adjustments/page.tsx",
+        "frontend/src/components/route-b-ledger.tsx",
+        "frontend/src/components/route-b-inbox.tsx",
+        "frontend/src/components/route-b-adjustments.tsx",
+        "http://127.0.0.1:3000/ledger",
+        "http://127.0.0.1:3000/inbox",
+        "http://127.0.0.1:3000/adjustments"
+      ]
+    },
+    {
+      "todo_id": "P4-6",
+      "title": "혜택, 바우처, 설정 화면 리디자인",
+      "priority": "P2",
+      "owner_agent": "FE-Route-C",
+      "status": "DONE",
+      "feature_refs": [
+        "F5",
+        "F6"
+      ],
+      "requirement_refs": [
+        "R2",
+        "R4"
+      ],
+      "api_refs": [
+        "GET /vouchers",
+        "GET /vouchers/expiring"
+      ],
+      "db_refs": [
+        "user_voucher",
+        "user_voucher_log"
+      ],
+      "acceptance": [
+        "혜택 검색 화면 구조가 문서형으로 잡힌다",
+        "바우처 화면이 flip-card 중심으로 재구성된다",
+        "설정 셸이 추가된다"
+      ],
+      "dependencies": [
+        "P4-3"
+      ],
+      "blocker": null,
+      "evidence": [
+        "frontend/src/app/benefits/page.tsx",
+        "frontend/src/app/vouchers/page.tsx",
+        "frontend/src/app/settings/page.tsx",
+        "frontend/src/components/vouchers-client.tsx",
+        "http://127.0.0.1:3000/benefits",
+        "http://127.0.0.1:3000/vouchers",
+        "http://127.0.0.1:3000/settings"
+      ]
+    },
+    {
+      "todo_id": "P4-7",
+      "title": "인터랙션과 모션 자산 연결",
+      "priority": "P3",
+      "owner_agent": "FE-MotionAssets",
+      "status": "DONE",
+      "feature_refs": [
+        "F4",
+        "F5",
+        "F6",
+        "F8"
+      ],
+      "requirement_refs": [
+        "R2",
+        "R4",
+        "R5"
+      ],
+      "api_refs": [],
+      "db_refs": [],
+      "acceptance": [
+        "카드 틸트, 바우처 플립, 바텀시트, 실적 트랙 애니메이션이 들어간다",
+        "필요 시 정적 자산은 imagegen, 모션 루프는 Sora로 계획된다"
+      ],
+      "dependencies": [
+        "P4-4",
+        "P4-5",
+        "P4-6"
+      ],
+      "blocker": null,
+      "evidence": [
+        "frontend/src/app/globals.css",
+        "frontend/src/components/app-shell.tsx",
+        "frontend/src/app/cards/page.tsx",
+        "frontend/src/components/vouchers-client.tsx",
+        "frontend/src/app/benefits/page.tsx",
+        "frontend/src/app/settings/page.tsx",
+        "frontend/src/components/performance-celebration.tsx",
+        "frontend/src/app/performance/[userCardId]/page.tsx"
+      ]
+    },
+    {
+      "todo_id": "P4-8",
+      "title": "반응형 퍼블리싱 QA",
+      "priority": "P3",
+      "owner_agent": "FE-Theme",
+      "status": "DONE",
+      "feature_refs": [
+        "F1",
+        "F2",
+        "F4",
+        "F5",
+        "F6",
+        "F8"
+      ],
+      "requirement_refs": [
+        "R1",
+        "R2",
+        "R3",
+        "R4",
+        "R5"
+      ],
+      "api_refs": [],
+      "db_refs": [],
+      "acceptance": [
+        "390px, 768px, 1024px, 1440px에서 레이아웃이 깨지지 않는다",
+        "Pretendard 기반 시안 느낌이 유지된다"
+      ],
+      "dependencies": [
+        "P4-2",
+        "P4-4",
+        "P4-5",
+        "P4-6"
+      ],
+      "blocker": null,
+      "evidence": [
+        "npm run lint",
+        "npm run build",
+        "http://127.0.0.1:3000/dashboard",
+        "http://127.0.0.1:3000/vouchers",
+        "frontend/src/app/adjustments/page.tsx",
+        "frontend/src/app/dashboard/page.tsx",
+        "frontend/src/app/cards/page.tsx",
+        "frontend/src/app/benefits/page.tsx",
+        "frontend/src/app/settings/page.tsx",
+        "playwright viewport overflow sweep: 390/768/1024/1440"
+      ]
+    },
+    {
+      "todo_id": "P5-1",
+      "title": "라이브 대시보드 정보 구조 재설계",
+      "priority": "P1",
+      "owner_agent": "Dashboard-UX",
+      "status": "DONE",
+      "feature_refs": [],
+      "requirement_refs": [],
+      "api_refs": [
+        "/api/state"
+      ],
+      "db_refs": [
+        "ops/dashboard/work-items.json"
+      ],
+      "acceptance": [
+        "대시보드가 데스크톱 기준 3열 레이아웃으로 재배치된다",
+        "즉시 집중 항목과 작업 항목이 분리되어 보인다",
+        "바로가기와 운영 상태가 한 화면에서 읽힌다"
+      ],
+      "dependencies": [
+        "P0-2"
+      ],
+      "blocker": null,
+      "evidence": [
+        "ops/dashboard/dashboard-lib.js",
+        "ops/dashboard/serve.js",
+        "http://127.0.0.1:4173/"
+      ]
+    },
+    {
+      "todo_id": "P5-2",
+      "title": "실시간 시계와 다음 갱신 카운트다운",
+      "priority": "P1",
+      "owner_agent": "Dashboard-UX",
+      "status": "DONE",
+      "feature_refs": [],
+      "requirement_refs": [],
+      "api_refs": [
+        "/api/state"
+      ],
+      "db_refs": [],
+      "acceptance": [
+        "현재 시각이 1초 단위로 갱신된다",
+        "다음 갱신 카운트다운이 0이 되면 자동 새로고침된다",
+        "상태 JSON에는 초 단위 write-noise가 생기지 않는다"
+      ],
+      "dependencies": [
+        "P5-1"
+      ],
+      "blocker": null,
+      "evidence": [
+        "ops/dashboard/dashboard-lib.js",
+        "http://127.0.0.1:4173/"
+      ]
+    },
+    {
+      "todo_id": "P5-3",
+      "title": "바로가기 허브 추가",
+      "priority": "P1",
+      "owner_agent": "Dashboard-UX",
+      "status": "DONE",
+      "feature_refs": [],
+      "requirement_refs": [],
+      "api_refs": [
+        "GET /actuator/health",
+        "GET /actuator/info",
+        "GET /v3/api-docs"
+      ],
+      "db_refs": [],
+      "acceptance": [
+        "프론트, 백엔드, 헬스, API 기본 경로 링크가 보인다",
+        "스웨거 UI와 OpenAPI 명세 JSON 링크가 포함된다",
+        "BFF 스모크 링크가 함께 노출된다"
+      ],
+      "dependencies": [
+        "P5-1"
+      ],
+      "blocker": null,
+      "evidence": [
+        "ops/dashboard/dashboard-lib.js",
+        "http://127.0.0.1:4173/",
+        "http://127.0.0.1:8080/swagger-ui.html",
+        "http://127.0.0.1:8080/v3/api-docs"
+      ]
+    },
+    {
+      "todo_id": "P5-4",
+      "title": "대시보드 상태 요약과 증빙 강화",
+      "priority": "P2",
+      "owner_agent": "Orchestrator",
+      "status": "DONE",
+      "feature_refs": [],
+      "requirement_refs": [],
+      "api_refs": [],
+      "db_refs": [
+        "ops/dashboard/work-items.json"
+      ],
+      "acceptance": [
+        "신규 P4/P5 트랙이 work-items에 반영된다",
+        "이벤트와 evidence가 신규 트랙에 연결된다",
+        "터미널 렌더러와 웹 렌더러가 같은 상태를 읽는다"
+      ],
+      "dependencies": [
+        "P5-1"
+      ],
+      "blocker": null,
+      "evidence": [
+        "ops/dashboard/work-items.json",
+        "ops/dashboard/dashboard-lib.js",
+        "ops/dashboard/render-terminal.js"
+      ]
+    },
+    {
+      "todo_id": "P5-5",
+      "title": "스웨거와 OpenAPI 실제 노출",
+      "priority": "P1",
+      "owner_agent": "BE-Platform",
+      "status": "DONE",
+      "feature_refs": [],
+      "requirement_refs": [],
+      "api_refs": [
+        "GET /swagger-ui.html",
+        "GET /v3/api-docs"
+      ],
+      "db_refs": [],
+      "acceptance": [
+        "백엔드 로컬 런타임에서 Swagger UI가 열린다",
+        "OpenAPI 명세 JSON이 200으로 응답한다",
+        "대시보드 링크가 dead link가 아니다"
+      ],
+      "dependencies": [
+        "P1-0"
+      ],
+      "blocker": null,
+      "evidence": [
+        "backend/build.gradle.kts",
+        "http://127.0.0.1:8080/swagger-ui.html",
+        "http://127.0.0.1:8080/v3/api-docs"
+      ]
     }
   ],
   "events": [
@@ -628,67 +1150,67 @@
       "ts": "2026-03-19T09:30:00+09:00",
       "agent": "Orchestrator",
       "type": "DECISION",
-      "message": "Snapshot is frozen and dashboard work starts from the shared JSON state."
+      "message": "스냅샷을 고정했고 공유 JSON 상태를 기준으로 대시보드 작업을 시작했습니다."
     },
     {
       "ts": "2026-03-19T09:30:10+09:00",
       "agent": "Orchestrator",
       "type": "QUESTION",
-      "message": "Need feature-to-requirement traceability in the dashboard for every todo."
+      "message": "모든 작업 항목에 대해 대시보드에서 기능-요구사항 추적이 가능해야 합니다."
     },
     {
       "ts": "2026-03-19T09:30:20+09:00",
       "agent": "System",
       "type": "ANSWER",
-      "message": "Track F*, R*, API, and DB references per todo."
+      "message": "각 작업 항목마다 F*, R*, API, DB 참조를 추적합니다."
     },
     {
       "ts": "2026-03-19T09:39:42+09:00",
       "agent": "Orchestrator",
       "type": "DECISION",
-      "message": "P0-2 completed: terminal and web dashboards are now live on shared work-items state."
+      "message": "P0-2 완료: 터미널과 웹 대시보드가 공유 work-items 상태를 기준으로 동작합니다."
     },
     {
       "ts": "2026-03-19T09:39:42+09:00",
       "agent": "Orchestrator",
       "type": "DECISION",
-      "message": "P0-3 completed: feature, requirement, API, and DB traceability map is published."
-    },
-    {
-      "ts": "2026-03-19T09:50:00+09:00",
-      "agent": "Orchestrator",
-      "type": "DECISION",
-      "message": "Execution moved into implementation: backend platform, ledger, performance, and frontend streams are now in progress."
+      "message": "P0-3 완료: 기능, 요구사항, API, DB 추적 맵을 공개했습니다."
     },
     {
       "ts": "2026-03-19T09:42:42+09:00",
       "agent": "Orchestrator",
       "type": "DECISION",
-      "message": "P0-4 completed: realistic seed dataset applied to linked Supabase project."
+      "message": "P0-4 완료: 연결된 Supabase 프로젝트에 현실적인 시드 데이터를 반영했습니다."
+    },
+    {
+      "ts": "2026-03-19T09:50:00+09:00",
+      "agent": "Orchestrator",
+      "type": "DECISION",
+      "message": "구현 단계로 전환했고 백엔드 플랫폼, 가계부, 실적, 프론트 스트림이 모두 진행 중입니다."
     },
     {
       "ts": "2026-03-19T10:12:31+09:00",
       "agent": "BE-Ledger",
       "type": "DECISION",
-      "message": "F2/F3 backend endpoints are implemented with adjustment, inbox, resolve, dismiss, and performance-exclusion handling."
+      "message": "F2/F3 백엔드 엔드포인트에 조정, 인박스, 해결, 제외, 실적 제외 처리 흐름을 구현했습니다."
     },
     {
       "ts": "2026-03-19T10:12:31+09:00",
       "agent": "BE-Performance",
       "type": "DECISION",
-      "message": "F4/F6 performance response now includes annual basis, lag, grace period, special period, and voucher unlock summaries."
+      "message": "F4/F6 실적 응답에 연간 기준, 시차, 유예 기간, 특별 기간, 바우처 해금 요약을 포함했습니다."
     },
     {
       "ts": "2026-03-19T10:12:31+09:00",
       "agent": "FE-Foundation",
       "type": "DECISION",
-      "message": "BFF routes and ledger/performance surfaces build cleanly on Next.js 16."
+      "message": "BFF 라우트와 가계부/실적 화면이 Next.js 16에서 정상 빌드됩니다."
     },
     {
       "ts": "2026-03-19T10:12:31+09:00",
       "agent": "Orchestrator",
       "type": "DECISION",
-      "message": "Backend tests and frontend lint/build passed after integrating voucher unlock state into the performance surface."
+      "message": "바우처 해금 상태를 실적 화면에 통합한 뒤 백엔드 테스트와 프론트 lint/build를 모두 통과했습니다."
     },
     {
       "ts": "2026-03-19T10:18:00+09:00",
@@ -761,20 +1283,140 @@
       "agent": "Orchestrator",
       "type": "DONE",
       "message": "프론트 dev 서버와 BFF를 띄운 뒤 /, /vouchers, /performance/1 UI와 주요 BFF API가 모두 200으로 응답하는 E2E 스모크를 완료했습니다."
+    },
+    {
+      "ts": "2026-03-19T12:03:00+09:00",
+      "agent": "Dashboard-UX",
+      "type": "DONE",
+      "message": "라이브 대시보드를 3열 컨트롤센터로 재배치하고 현재 시각, 마지막 갱신, 다음 갱신 카운트다운, 바로가기를 http://127.0.0.1:4173/ 에서 바로 확인 가능하게 만들었습니다."
+    },
+    {
+      "ts": "2026-03-19T12:04:00+09:00",
+      "agent": "BE-Platform",
+      "type": "DONE",
+      "message": "SpringDoc를 실제 런타임에 반영해 /swagger-ui.html 은 302, /v3/api-docs 는 200으로 응답하도록 확인했습니다."
+    },
+    {
+      "ts": "2026-03-19T12:05:00+09:00",
+      "agent": "FE-Theme",
+      "type": "DONE",
+      "message": "Pretendard 우선 폰트와 로즈 블로섬, 로즈 미니멀, 로즈 글라스 토큰 시스템을 layout, globals, app-shell에 반영해 앱 셸 리디자인 기반을 마련했습니다."
+    },
+    {
+      "ts": "2026-03-19T12:10:00+09:00",
+      "agent": "Orchestrator",
+      "type": "DECISION",
+      "message": "우선순위를 재정렬해 라이브 대시보드를 첫 번째 가시 산출물로 고정하고 P4/P5 트랙을 시작했습니다."
+    },
+    {
+      "ts": "2026-03-19T12:10:00+09:00",
+      "agent": "Dashboard-UX",
+      "type": "IN_PROGRESS",
+      "message": "운영 컨트롤센터형 대시보드 레이아웃, 실시간 시계, 링크 허브를 구현 중입니다."
+    },
+    {
+      "ts": "2026-03-19T12:10:00+09:00",
+      "agent": "BE-Platform",
+      "type": "IN_PROGRESS",
+      "message": "SpringDoc을 추가해 /swagger-ui.html 과 /v3/api-docs 를 실제 로컬 링크로 노출하는 작업을 시작했습니다."
+    },
+    {
+      "ts": "2026-03-19T12:10:00+09:00",
+      "agent": "Senior Designer",
+      "type": "IN_PROGRESS",
+      "message": "로즈 블로섬, 로즈 미니멀, 로즈 글라스의 화면별 사용 규칙과 스킨 전략을 구현 기준으로 고정 중입니다."
+    },
+    {
+      "ts": "2026-03-19T12:10:00+09:00",
+      "agent": "FE-Theme",
+      "type": "IN_PROGRESS",
+      "message": "Pretendard 중심 타이포그래피와 앱 퍼블리싱용 테마 코어를 준비 중입니다."
+    },
+    {
+      "ts": "2026-03-19T14:03:00+09:00",
+      "agent": "Orchestrator",
+      "type": "DECISION",
+      "message": "실행 순서를 대시보드 우선 공개로 재정렬하고 P4 앱 퍼블리싱, P5 운영 대시보드 트랙을 병렬로 열었습니다."
+    },
+    {
+      "ts": "2026-03-19T14:06:00+09:00",
+      "agent": "Dashboard-UX",
+      "type": "IN_PROGRESS",
+      "message": "라이브 대시보드 레이아웃 재배치, 실시간 시계, 다음 갱신 카운트다운, 바로가기 허브 구현을 시작했습니다."
+    },
+    {
+      "ts": "2026-03-19T14:08:00+09:00",
+      "agent": "BE-Platform",
+      "type": "IN_PROGRESS",
+      "message": "SpringDoc를 추가해 /swagger-ui.html 과 /v3/api-docs 를 실제 노출하는 작업을 시작했습니다."
+    },
+    {
+      "ts": "2026-03-19T14:09:00+09:00",
+      "agent": "Senior Designer",
+      "type": "DONE",
+      "message": "로즈 블로섬을 기본 앱 UI, 로즈 미니멀을 고밀도 리스트, 로즈 글라스를 특별 순간에만 쓰는 스킨 규칙과 Pretendard 우선 폰트 전략을 고정했습니다."
+    },
+    {
+      "timestamp": "2026-03-19T18:30:43+09:00",
+      "agent": "FE-AppShell",
+      "type": "DONE",
+      "summary": "앱 셸을 문서 IA 기준 5탭 구조와 /dashboard 진입으로 정리했다"
+    },
+    {
+      "timestamp": "2026-03-19T18:30:43+09:00",
+      "agent": "FE-Route-A",
+      "type": "DONE",
+      "summary": "/dashboard, /cards, /performance를 로즈 블로섬 앱 구조로 재구성했다"
+    },
+    {
+      "timestamp": "2026-03-19T18:30:43+09:00",
+      "agent": "FE-Route-B",
+      "type": "DONE",
+      "summary": "/ledger 허브와 /inbox, /adjustments를 앱 흐름 안으로 편입했다"
+    },
+    {
+      "timestamp": "2026-03-19T18:30:43+09:00",
+      "agent": "FE-Route-C",
+      "type": "DONE",
+      "summary": "/benefits, /vouchers, /settings를 앱 표면으로 정리했다"
+    },
+    {
+      "timestamp": "2026-03-19T18:30:43+09:00",
+      "agent": "Orchestrator",
+      "type": "IN_PROGRESS",
+      "summary": "프론트 lint/build와 주요 라우트 및 대시보드/Swagger 링크 응답을 검증했다"
+    },
+    {
+      "timestamp": "2026-03-19T18:34:04+09:00",
+      "agent": "FE-MotionAssets",
+      "type": "IN_PROGRESS",
+      "summary": "카드 hover, 바우처 카드 모션, 페이지 진입 스태거, 진행 바 애니메이션을 추가했다"
+    },
+    {
+      "timestamp": "2026-03-19T18:55:00+09:00",
+      "agent": "FE-MotionAssets",
+      "type": "DONE",
+      "summary": "바우처 모바일 바텀시트와 실적 마일스톤 모달을 연결해 모션 항목을 마무리했다"
+    },
+    {
+      "timestamp": "2026-03-19T18:55:00+09:00",
+      "agent": "FE-Theme",
+      "type": "DONE",
+      "summary": "390/768/1024/1440 뷰포트에서 주요 앱 라우트의 가로 오버플로가 없음을 확인하고 adjustments 기본 조회를 무해화했다"
     }
   ],
   "questions": [
     {
       "question_id": "Q-1",
       "status": "RESOLVED",
-      "topic": "Snapshot scope",
-      "detail": "Include code, docs, and DB schema state."
+      "topic": "스냅샷 범위",
+      "detail": "코드, 문서, DB 스키마 상태를 포함합니다."
     },
     {
       "question_id": "Q-2",
       "status": "RESOLVED",
-      "topic": "Implementing F2/F3 first",
-      "detail": "Parallel by domain with orchestrator integration branch cadence."
+      "topic": "F2/F3 우선 구현",
+      "detail": "도메인별 병렬 진행 후 오케스트레이터 통합 브랜치 주기로 합칩니다."
     }
   ]
 }

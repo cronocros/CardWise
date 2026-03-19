@@ -1,5 +1,5 @@
 import { AppShell } from "@/components/app-shell";
-import { InboxClient } from "@/components/inbox-client";
+import { RouteBInbox } from "@/components/route-b-inbox";
 import {
   getPendingCount,
   tryFetchBackendJson,
@@ -21,11 +21,12 @@ export default async function InboxPage() {
   return (
     <AppShell
       active="inbox"
-      eyebrow="Ledger inbox"
-      title="Confirm or dismiss system actions"
-      description="This page mirrors the pending-actions workflow from the spec: FX correction, billing discount, duplicate detection, category mapping, Excel review, and performance exclusion checks."
+      theme="minimal"
+      eyebrow="가계부 인박스"
+      title="대기 작업을 검토하고 처리하는 화면"
+      description="인박스는 로즈 미니멀 톤으로 정리해 작업 카드 밀도를 높이고, 빠르게 검토하고 처리할 수 있게 구성했습니다."
     >
-      <InboxClient initialActions={initialActions} initialCount={initialCount} />
+      <RouteBInbox initialActions={initialActions} initialCount={initialCount} />
     </AppShell>
   );
 }

@@ -1,5 +1,5 @@
 import { AppShell } from "@/components/app-shell";
-import { AdjustmentsClient } from "@/components/adjustments-client";
+import { RouteBAdjustments } from "@/components/route-b-adjustments";
 
 export const dynamic = "force-dynamic";
 
@@ -9,16 +9,17 @@ function firstSearchValue(value: string | string[] | undefined) {
 
 export default async function AdjustmentsPage(props: PageProps<"/adjustments">) {
   const searchParams = await props.searchParams;
-  const paymentId = firstSearchValue(searchParams.paymentId) ?? "1";
+  const paymentId = firstSearchValue(searchParams.paymentId) ?? "";
 
   return (
     <AppShell
       active="adjustments"
-      eyebrow="Payment adjustments"
-      title="Create and review settlement corrections"
-      description="Use the BFF proxy to create FX corrections, billing discounts, and other amount adjustments tied to a payment record."
+      theme="minimal"
+      eyebrow="결제 조정"
+      title="정산 정정 내역을 만들고 검토하는 화면"
+      description="조정 화면은 로즈 미니멀 톤으로 분리해 기존 BFF 흐름을 유지하면서도 앱 안에서 가볍게 입력하고 검토할 수 있도록 정리했습니다."
     >
-      <AdjustmentsClient initialPaymentId={paymentId} />
+      <RouteBAdjustments initialPaymentId={paymentId} />
     </AppShell>
   );
 }
