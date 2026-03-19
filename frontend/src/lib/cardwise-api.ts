@@ -129,6 +129,49 @@ export interface PerformanceResponse {
   };
 }
 
+export interface VoucherRecord {
+  userVoucherId: number;
+  cardVoucherId: number;
+  userCardId: number;
+  cardId?: number | null;
+  cardName: string;
+  cardNickname?: string | null;
+  voucherName: string;
+  voucherType?: string | null;
+  periodType?: string | null;
+  description?: string | null;
+  remainingCount?: number | null;
+  totalCount?: number | null;
+  validFrom?: string | null;
+  validUntil?: string | null;
+  unlockType?: string | null;
+  unlockState?: "LOCKED" | "ELIGIBLE" | "UNLOCKED" | string | null;
+  requiredAnnualPerformance?: number | null;
+  currentAnnualPerformance?: number | null;
+  remainingAmount?: number | null;
+  availableAt?: string | null;
+  notes?: string | null;
+  status?: string | null;
+  daysUntilExpiry?: number | null;
+}
+
+export interface VoucherHistoryEntry {
+  voucherHistoryId?: number;
+  action?: string | null;
+  memo?: string | null;
+  createdAt: string;
+  beforeRemainingCount?: number | null;
+  afterRemainingCount?: number | null;
+}
+
+export interface VoucherListResponse {
+  data: VoucherRecord[];
+}
+
+export interface VoucherHistoryResponse {
+  data: VoucherHistoryEntry[];
+}
+
 export interface SeededCardSummary {
   userCardId: number;
   label: string;
@@ -190,6 +233,11 @@ export function unwrapData<T>(value: unknown): T | null {
   return value as T;
 }
 
+export function unwrapArray<T>(value: unknown): T[] {
+  const unwrapped = unwrapData<unknown>(value);
+  return Array.isArray(unwrapped) ? (unwrapped as T[]) : [];
+}
+
 export function getPendingCount(value: PendingActionCountResponse | null) {
   if (!value) {
     return 0;
@@ -238,6 +286,18 @@ export function formatDate(value: string | null | undefined) {
     month: "short",
     day: "2-digit",
   }).format(new Date(value));
+}
+
+export function formatDaysUntilExpiry(value: number | null | undefined) {
+  if (value === null || value === undefined) {
+    return "-";
+  }
+
+  if (value < 0) {
+    return `만료 ${Math.abs(value)}일 전`;
+  }
+
+  return `D-${value}`;
 }
 
 export function formatDateTime(value: string | null | undefined) {
