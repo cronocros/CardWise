@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { AppShell, Chip, MetricCard, Panel } from "@/components/app-shell";
 import { PerformanceCelebration } from "@/components/performance-celebration";
+import { CardThumbnail, TierProgressTrack } from "@/components/preview-primitives";
 import {
   formatCurrency,
+  formatDate,
   formatPercent,
   tryFetchBackendJson,
   type PerformanceResponse,
@@ -44,6 +46,10 @@ function unlockTypeLabel(value: string) {
   return labels[value] ?? value;
 }
 
+function specialPeriodLabel(data: PerformanceResponse["data"]) {
+  return data.specialPeriod?.active ? data.specialPeriod.name ?? "특별 기간" : "일반 기간";
+}
+
 export default async function PerformancePage(props: PageProps<"/performance/[userCardId]">) {
   const { userCardId } = await props.params;
   const response = await tryFetchBackendJson<PerformanceResponse>(
@@ -52,6 +58,7 @@ export default async function PerformancePage(props: PageProps<"/performance/[us
   const data = response?.data;
   const seededIds = [1, 2, 3, 4];
   const unlockedCount = data?.voucherUnlocks.filter((voucher) => voucher.unlockState === "UNLOCKED").length ?? 0;
+  const monthlyPeak = Math.max(...(data?.monthlyBreakdown.map((entry) => entry.spent) ?? [0]), 1);
 
   return (
     <AppShell
@@ -83,18 +90,61 @@ export default async function PerformancePage(props: PageProps<"/performance/[us
           </section>
 
           <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
-            <Panel title="실적 요약" subtitle="실적 상세를 단독 리포트가 아니라 앱 안의 작업 화면처럼 읽히도록 정리했습니다.">
-              <div className="grid gap-4 sm:grid-cols-2">
+            <Panel title="실적 요약" subtitle="카드 히어로, 티어 트랙, 기준 기간을 한 화면에서 읽도록 재구성했습니다.">
+              <div className="grid gap-4 lg:grid-cols-[0.92fr_1.08fr]">
+                <CardThumbnail
+                  seed={Number(userCardId)}
+                  title={data.cardName}
+                  subtitle={data.annual?.currentTier?.tierName ?? "메인 덱"}
+                  badge={data.specialPeriod?.active ? "Special" : "Core"}
+                />
+
+                <div className="grid gap-3">
+                  <TierProgressTrack
+                    currentTier={data.annual?.currentTier?.tierName ?? "미등급"}
+                    nextTier={data.annual?.nextTier?.tierName ?? "최상위 구간"}
+                    progress={progressFor(data)}
+                    accumulated={data.annual?.accumulated ?? 0}
+                    remainingAmount={data.annual?.nextTier?.remainingAmount}
+                  />
+
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <div className="rounded-[20px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] p-4">
+                      <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">이번 달</div>
+                      <div className="mt-2 text-[22px] font-semibold tracking-[-0.05em] text-[var(--text-strong)]">
+                        {formatCurrency(data.currentMonth?.monthlySpent)}
+                      </div>
+                      <div className="mt-2 text-sm text-[var(--text-muted)]">{data.currentMonth?.yearMonth ?? "-"}</div>
+                    </div>
+                    <div className="rounded-[20px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] p-4">
+                      <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">증감</div>
+                      <div className="mt-2 text-[22px] font-semibold tracking-[-0.05em] text-[var(--text-strong)]">
+                        {formatPercent(data.currentMonth?.changeRate)}
+                      </div>
+                      <div className="mt-2 text-sm text-[var(--text-muted)]">전월 대비</div>
+                    </div>
+                    <div className="rounded-[20px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] p-4">
+                      <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">사용 가능</div>
+                      <div className="mt-2 text-[22px] font-semibold tracking-[-0.05em] text-[var(--text-strong)]">
+                        {unlockedCount}
+                      </div>
+                      <div className="mt-2 text-sm text-[var(--text-muted)]">바우처 즉시 사용 가능</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <div className="rounded-[22px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] p-4">
                   <div className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--text-soft)]">연간 기준 기간</div>
                   <div className="mt-3 grid gap-2 text-sm text-[var(--text-muted)]">
                     <div className="flex justify-between gap-4">
                       <span>시작</span>
-                      <span>{data.annualPeriod?.from ?? "-"}</span>
+                      <span>{formatDate(data.annualPeriod?.from)}</span>
                     </div>
                     <div className="flex justify-between gap-4">
                       <span>종료</span>
-                      <span>{data.annualPeriod?.to ?? "-"}</span>
+                      <span>{formatDate(data.annualPeriod?.to)}</span>
                     </div>
                     <div className="flex justify-between gap-4">
                       <span>기준</span>
@@ -127,29 +177,27 @@ export default async function PerformancePage(props: PageProps<"/performance/[us
 
               <div className="mt-4 rounded-[22px] border border-[var(--surface-border)] bg-[var(--surface-soft)] p-4">
                 <div className="flex flex-wrap gap-2">
-                  <Chip tone={data.specialPeriod?.active ? "emerald" : "slate"}>
-                    {data.specialPeriod?.active ? "특별 기간" : "일반 기간"}
-                  </Chip>
+                  <Chip tone={data.specialPeriod?.active ? "emerald" : "slate"}>{specialPeriodLabel(data)}</Chip>
                   <Chip tone="rose">{data.currentMonth?.yearMonth ?? "-"}</Chip>
                   <Chip tone="amber">{data.benefitQualification?.periodLagLabel ?? "시차 없음"}</Chip>
                 </div>
-                <div className="mt-4 h-2 overflow-hidden rounded-full bg-[var(--primary-100)]">
-                  <div
-                    className="h-full rounded-full bg-[linear-gradient(90deg,var(--primary-300),var(--primary-500))]"
-                    style={{ width: `${progressFor(data)}%` }}
-                  />
-                </div>
-                <div className="mt-3 flex items-center justify-between gap-4 text-sm text-[var(--text-muted)]">
-                  <span>월 사용액</span>
-                  <span>{formatCurrency(data.currentMonth?.monthlySpent)}</span>
-                </div>
-                <div className="mt-2 flex items-center justify-between gap-4 text-sm text-[var(--text-muted)]">
-                  <span>전월 사용액</span>
-                  <span>{formatCurrency(data.currentMonth?.previousMonthSpent)}</span>
-                </div>
-                <div className="mt-2 flex items-center justify-between gap-4 text-sm text-[var(--text-muted)]">
-                  <span>증감</span>
-                  <span>{formatPercent(data.currentMonth?.changeRate)}</span>
+                <div className="mt-4 grid gap-2 text-sm text-[var(--text-muted)] sm:grid-cols-3">
+                  <div className="rounded-[18px] bg-white/80 px-4 py-3">
+                    <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">전월 사용액</div>
+                    <div className="mt-2 font-medium text-[var(--text-strong)]">{formatCurrency(data.currentMonth?.previousMonthSpent)}</div>
+                  </div>
+                  <div className="rounded-[18px] bg-white/80 px-4 py-3">
+                    <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">유예 조건</div>
+                    <div className="mt-2 font-medium text-[var(--text-strong)]">
+                      {formatCurrency(data.benefitQualification?.gracePeriod?.minSpendPerMonth)}
+                    </div>
+                  </div>
+                  <div className="rounded-[18px] bg-white/80 px-4 py-3">
+                    <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">유예 만료</div>
+                    <div className="mt-2 font-medium text-[var(--text-strong)]">
+                      {formatDate(data.benefitQualification?.gracePeriod?.expiresAt)}
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -186,34 +234,57 @@ export default async function PerformancePage(props: PageProps<"/performance/[us
               </div>
             </Panel>
 
-            <Panel title="월별 내역" subtitle="월별 누적 흐름과 실적 이력을 확인하는 구간입니다.">
-              <div className="grid gap-3">
-                {(data.monthlyBreakdown ?? []).map((entry) => (
-                  <div
-                    key={entry.yearMonth}
-                    className="flex items-center justify-between rounded-[20px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] px-4 py-3"
-                  >
-                    <span className="text-sm text-[var(--text-muted)]">{entry.yearMonth}</span>
-                    <span className="text-sm font-medium text-[var(--text-strong)]">{formatCurrency(entry.spent)}</span>
+            <Panel title="월별 내역" subtitle="월별 누적 흐름을 바 형태로 보여주고, 현재 위치를 오른쪽 요약 카드로 함께 읽게 구성했습니다.">
+              <div className="grid gap-4 lg:grid-cols-[1.08fr_0.92fr]">
+                <div className="grid gap-3">
+                  {(data.monthlyBreakdown ?? []).map((entry) => (
+                    <div
+                      key={entry.yearMonth}
+                      className="rounded-[22px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] px-4 py-4"
+                    >
+                      <div className="flex items-center justify-between gap-4">
+                        <span className="text-sm font-medium text-[var(--text-strong)]">{entry.yearMonth}</span>
+                        <span className="text-sm text-[var(--text-muted)]">{formatCurrency(entry.spent)}</span>
+                      </div>
+                      <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--primary-100)]">
+                        <div
+                          className="cw-progress-fill-animated h-full rounded-full bg-[linear-gradient(90deg,var(--primary-300),var(--primary-500))]"
+                          style={{ width: `${Math.max(8, Math.round((entry.spent / monthlyPeak) * 100))}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="grid gap-3">
+                  <div className="rounded-[22px] border border-[var(--surface-border)] bg-[linear-gradient(180deg,#fff8fa,#ffffff)] p-4">
+                    <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">현재 구간</div>
+                    <div className="mt-2 text-[22px] font-semibold tracking-[-0.05em] text-[var(--text-strong)]">
+                      {data.annual?.currentTier?.tierName ?? "-"}
+                    </div>
+                    <div className="mt-2 text-sm text-[var(--text-muted)]">
+                      다음 구간 {data.annual?.nextTier?.tierName ?? "-"}
+                    </div>
                   </div>
-                ))}
-              </div>
-              <div className="mt-4 rounded-[22px] border border-[var(--surface-border)] bg-[var(--surface-soft)] p-4">
-                <div className="flex items-center justify-between text-sm text-[var(--text-muted)]">
-                  <span>연간 누적 실적</span>
-                  <span>{formatCurrency(data.annual?.accumulated)}</span>
-                </div>
-                <div className="mt-3 flex items-center justify-between text-sm text-[var(--text-muted)]">
-                  <span>현재 구간</span>
-                  <span>{data.annual?.currentTier?.tierName ?? "-"}</span>
-                </div>
-                <div className="mt-3 flex items-center justify-between text-sm text-[var(--text-muted)]">
-                  <span>다음 구간</span>
-                  <span>{data.annual?.nextTier?.tierName ?? "-"}</span>
-                </div>
-                <div className="mt-3 flex items-center justify-between text-sm text-[var(--text-muted)]">
-                  <span>남은 금액</span>
-                  <span>{formatCurrency(data.annual?.nextTier?.remainingAmount)}</span>
+
+                  <div className="rounded-[22px] border border-[var(--surface-border)] bg-[var(--surface-soft)] p-4">
+                    <div className="flex items-center justify-between text-sm text-[var(--text-muted)]">
+                      <span>연간 누적 실적</span>
+                      <span>{formatCurrency(data.annual?.accumulated)}</span>
+                    </div>
+                    <div className="mt-3 flex items-center justify-between text-sm text-[var(--text-muted)]">
+                      <span>다음 구간</span>
+                      <span>{data.annual?.nextTier?.tierName ?? "-"}</span>
+                    </div>
+                    <div className="mt-3 flex items-center justify-between text-sm text-[var(--text-muted)]">
+                      <span>남은 금액</span>
+                      <span>{formatCurrency(data.annual?.nextTier?.remainingAmount)}</span>
+                    </div>
+                    <div className="mt-3 flex items-center justify-between text-sm text-[var(--text-muted)]">
+                      <span>실적 시차</span>
+                      <span>{data.benefitQualification?.periodLagLabel ?? "-"}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </Panel>
@@ -232,7 +303,7 @@ export default async function PerformancePage(props: PageProps<"/performance/[us
                 data.voucherUnlocks.map((voucher) => (
                   <article
                     key={voucher.voucherName}
-                    className="rounded-[22px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] p-4"
+                    className="cw-interactive-card rounded-[24px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] p-4"
                   >
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
@@ -254,30 +325,49 @@ export default async function PerformancePage(props: PageProps<"/performance/[us
                         <Chip tone="slate">{unlockTypeLabel(voucher.unlockType)}</Chip>
                       </div>
                     </div>
-                    <div className="mt-4 grid gap-2 text-sm text-[var(--text-muted)]">
-                      <div className="flex justify-between gap-4">
-                        <span>연간 조건</span>
-                        <span>{formatCurrency(voucher.requiredAnnualPerformance)}</span>
+                    <div className="mt-4 rounded-[20px] border border-[var(--surface-border)] bg-[linear-gradient(135deg,#fff8fa,#ffffff)] p-4">
+                      <div className="text-sm font-medium text-[var(--text-strong)]">
+                        {voucher.unlockState === "UNLOCKED"
+                          ? "이미 사용 가능한 상태입니다."
+                          : voucher.unlockState === "ELIGIBLE"
+                            ? "조건은 충족했고 반영 시점만 남았습니다."
+                            : `${formatCurrency(voucher.remainingAmount)} 더 채우면 열립니다.`}
                       </div>
-                      <div className="flex justify-between gap-4">
-                        <span>현재 연간 실적</span>
-                        <span>{formatCurrency(voucher.currentAnnualPerformance)}</span>
+                      <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--primary-100)]">
+                        <div
+                          className="cw-progress-fill-animated h-full rounded-full bg-[linear-gradient(90deg,var(--primary-300),var(--primary-500))]"
+                          style={{
+                            width: `${
+                              voucher.requiredAnnualPerformance && voucher.requiredAnnualPerformance > 0
+                                ? Math.min(100, Math.max(0, Math.round(((voucher.currentAnnualPerformance ?? 0) / voucher.requiredAnnualPerformance) * 100)))
+                                : voucher.unlockState === "UNLOCKED"
+                                  ? 100
+                                  : 0
+                            }%`,
+                          }}
+                        />
                       </div>
-                      <div className="flex justify-between gap-4">
-                        <span>해금까지 남은 금액</span>
-                        <span>{formatCurrency(voucher.remainingAmount)}</span>
+                    </div>
+                    <div className="mt-4 grid gap-3 text-sm text-[var(--text-muted)] sm:grid-cols-2">
+                      <div className="rounded-[18px] bg-[var(--surface-soft)] px-4 py-3">
+                        <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">현재 / 필요 실적</div>
+                        <div className="mt-2 font-medium text-[var(--text-strong)]">
+                          {formatCurrency(voucher.currentAnnualPerformance)} / {formatCurrency(voucher.requiredAnnualPerformance)}
+                        </div>
                       </div>
-                      <div className="flex justify-between gap-4">
-                        <span>사용 가능 시점</span>
-                        <span>{voucher.availableAt ?? "-"}</span>
+                      <div className="rounded-[18px] bg-[var(--surface-soft)] px-4 py-3">
+                        <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">사용 가능 시점</div>
+                        <div className="mt-2 font-medium text-[var(--text-strong)]">{formatDate(voucher.availableAt)}</div>
                       </div>
-                      <div className="flex justify-between gap-4">
-                        <span>잔여 / 전체</span>
-                        <span>{voucher.remainingCount ?? "-"} / {voucher.totalCount ?? "-"}</span>
+                      <div className="rounded-[18px] bg-[var(--surface-soft)] px-4 py-3">
+                        <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">잔여 / 전체</div>
+                        <div className="mt-2 font-medium text-[var(--text-strong)]">
+                          {voucher.remainingCount ?? "-"} / {voucher.totalCount ?? "-"}
+                        </div>
                       </div>
-                      <div className="flex justify-between gap-4">
-                        <span>만료일</span>
-                        <span>{voucher.validUntil ?? "-"}</span>
+                      <div className="rounded-[18px] bg-[var(--surface-soft)] px-4 py-3">
+                        <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-soft)]">만료일</div>
+                        <div className="mt-2 font-medium text-[var(--text-strong)]">{formatDate(voucher.validUntil)}</div>
                       </div>
                     </div>
                   </article>

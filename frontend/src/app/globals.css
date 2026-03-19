@@ -400,6 +400,80 @@ select {
   transform: translateY(-5px) rotateX(2deg) rotateY(-2deg);
 }
 
+.cw-card-thumbnail {
+  position: relative;
+  overflow: hidden;
+  min-height: 220px;
+  border-radius: 28px;
+  padding: 22px;
+  aspect-ratio: 1.586 / 1;
+  background: var(--card-thumb-bg);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    0 24px 44px var(--card-thumb-glow);
+}
+
+.cw-card-thumbnail::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.22), transparent 36%),
+    radial-gradient(circle at bottom right, rgba(255, 255, 255, 0.14), transparent 28%);
+}
+
+.cw-card-thumbnail__noise {
+  position: absolute;
+  inset: -12% -20%;
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.1), transparent 34%, rgba(255, 255, 255, 0.14), transparent 70%),
+    radial-gradient(circle at center, rgba(255, 255, 255, 0.08), transparent 48%);
+  mix-blend-mode: screen;
+  opacity: 0.8;
+  transform: rotate(-8deg);
+}
+
+.cw-card-thumbnail--compact {
+  min-height: 170px;
+  padding: 18px;
+}
+
+.cw-card-thumbnail--compact .cw-card-thumbnail__noise {
+  inset: -18% -24%;
+}
+
+.cw-voucher-flip {
+  position: relative;
+  min-height: 220px;
+  perspective: 1400px;
+}
+
+.cw-voucher-flip__inner {
+  position: relative;
+  min-height: 220px;
+  transform-style: preserve-3d;
+  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.cw-voucher-card:hover .cw-voucher-flip__inner,
+.cw-voucher-card:focus-within .cw-voucher-flip__inner {
+  transform: rotateY(180deg);
+}
+
+.cw-voucher-flip__face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  border-radius: 24px;
+  backface-visibility: hidden;
+}
+
+.cw-voucher-flip__face--back {
+  transform: rotateY(180deg);
+}
+
 .cw-progress-fill-animated {
   transform-origin: left center;
   animation: cardwise-grow-x 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -538,6 +612,32 @@ select {
   }
 
   .cw-interactive-card::after {
+    display: none;
+  }
+
+  .cw-voucher-flip__inner {
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+@media (max-width: 1023px) {
+  .cw-voucher-flip {
+    min-height: auto;
+    perspective: none;
+  }
+
+  .cw-voucher-flip__inner {
+    min-height: auto;
+    transform: none !important;
+  }
+
+  .cw-voucher-flip__face {
+    position: relative;
+    inset: auto;
+  }
+
+  .cw-voucher-flip__face--back {
     display: none;
   }
 }
