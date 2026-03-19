@@ -1,7 +1,7 @@
 {
   "version": 1,
   "project": "CardWise",
-  "updated_at": "2026-03-19T18:55:00+09:00",
+  "updated_at": "2026-03-20T00:35:00+09:00",
   "phases": [
     {
       "phase": "P0",
@@ -37,15 +37,21 @@
       "phase": "P5",
       "title": "대시보드 우선 공개",
       "status": "DONE",
-      "summary": "라이브 대시보드를 먼저 공개하기 위해 레이아웃, 시계, 카운트다운, 바로가기, 스웨거 연결을 병렬 진행 중입니다."
+      "summary": "라이브 대시보드 레이아웃, 시계, 카운트다운, 바로가기, 스웨거 연결과 문서 정합성 보강까지 완료했습니다."
+    },
+    {
+      "phase": "P6",
+      "title": "아키텍처 감사와 정합성 보강",
+      "status": "IN_PROGRESS",
+      "summary": "아키텍처 감사 뒤 F5 혜택 검색, F12 그룹 조회·통계, F7 알림 설정 최소 범위를 맞췄고, 인증과 알림 센터/그룹 거버넌스 후속만 남겼습니다."
     }
   ],
   "agents": [
     {
       "name": "Orchestrator",
       "role": "coordination",
-      "status": "IN_PROGRESS",
-      "progress": 72
+      "status": "DONE",
+      "progress": 100
     },
     {
       "name": "BE-Platform",
@@ -1143,6 +1149,216 @@
         "http://127.0.0.1:8080/swagger-ui.html",
         "http://127.0.0.1:8080/v3/api-docs"
       ]
+    },
+    {
+      "todo_id": "P6-1",
+      "title": "아키텍처·요구사항 감사 체크리스트 작성 및 F8 정합성 보강",
+      "priority": "P1",
+      "owner_agent": "Orchestrator",
+      "status": "DONE",
+      "feature_refs": [
+        "F8",
+        "TAG"
+      ],
+      "requirement_refs": [
+        "R5"
+      ],
+      "api_refs": [
+        "GET /dashboard/monthly",
+        "GET /dashboard/cards",
+        "GET /dashboard/categories",
+        "GET /dashboard/trends",
+        "GET /tags/stats",
+        "GET /tags/stats/cross"
+      ],
+      "db_refs": [
+        "user_monthly_summary",
+        "user_card_summary",
+        "user_category_summary",
+        "user_tag_summary",
+        "payment_item_tag"
+      ],
+      "acceptance": [
+        "감사 체크리스트 문서가 존재한다",
+        "대시보드가 F8 월간/카드/카테고리/태그/추이를 반영한다",
+        "태그 통계와 교차 분석 표면이 존재한다"
+      ],
+      "dependencies": [
+        "P4-3",
+        "P4-4",
+        "P5-4"
+      ],
+      "blocker": null,
+      "evidence": [
+        "docs/audit/architecture-requirements-checklist.md",
+        "frontend/src/app/dashboard/page.tsx",
+        "frontend/src/app/dashboard/tags/page.tsx",
+        "frontend/src/app/dashboard/tags/cross/page.tsx",
+        "backend/src/main/kotlin/com/cardwise/analytics/api/AnalyticsController.kt"
+      ]
+    },
+    {
+      "todo_id": "P6-2",
+      "title": "Supabase 세션 기반 인증/인가와 account_id 경계 강제",
+      "priority": "P1",
+      "owner_agent": "BE-Platform",
+      "status": "TODO",
+      "feature_refs": [
+        "AUTH"
+      ],
+      "requirement_refs": [
+        "R1",
+        "R4"
+      ],
+      "api_refs": [
+        "POST /auth/login",
+        "POST /auth/refresh",
+        "GET /account/profile"
+      ],
+      "db_refs": [
+        "account"
+      ],
+      "acceptance": [
+        "익명 요청이 보호 라우트에 접근할 수 없다",
+        "account_id가 토큰 또는 세션에서만 해석된다",
+        "프론트 미들웨어와 백엔드 보안 설정이 일관된다"
+      ],
+      "dependencies": [
+        "P3-1",
+        "P5-4"
+      ],
+      "blocker": "현재 런타임은 개발용 fallback account_id를 사용 중이다.",
+      "evidence": [
+        "backend/src/main/kotlin/com/cardwise/common/config/SecurityConfig.kt",
+        "backend/src/main/kotlin/com/cardwise/common/web/RequestAccountIdResolver.kt",
+        "docs/architecture/auth-design.md"
+      ]
+    },
+    {
+      "todo_id": "P6-3",
+      "title": "혜택 검색 백엔드와 추천 API 구현",
+      "priority": "P2",
+      "owner_agent": "FE-Features",
+      "status": "DONE",
+      "feature_refs": [
+        "F5"
+      ],
+      "requirement_refs": [
+        "R2"
+      ],
+      "api_refs": [
+        "GET /benefits/search",
+        "GET /benefits/recommend",
+        "GET /cards/{cardId}/benefits",
+        "GET /categories"
+      ],
+      "db_refs": [
+        "card_benefit",
+        "merchant",
+        "category"
+      ],
+      "acceptance": [
+        "benefits 화면이 실제 검색 결과를 렌더링한다",
+        "카테고리/가맹점 조건 검색이 동작한다",
+        "추천 카드 근거가 응답에 포함된다"
+      ],
+      "dependencies": [
+        "P4-6"
+      ],
+      "blocker": null,
+      "evidence": [
+        "backend/src/main/kotlin/com/cardwise/benefit/api/BenefitController.kt",
+        "backend/src/main/kotlin/com/cardwise/benefit/application/BenefitService.kt",
+        "frontend/src/app/benefits/page.tsx",
+        "frontend/src/app/api/benefits/search/route.ts",
+        "frontend/src/app/api/benefits/recommend/route.ts",
+        "frontend/src/app/api/cards/[userCardId]/benefits/route.ts",
+        "frontend/src/app/api/categories/route.ts",
+        "docs/specs/F5-benefit-search.md"
+      ]
+    },
+    {
+      "todo_id": "P6-4",
+      "title": "그룹 가계부와 그룹 대시보드 통계 확장",
+      "priority": "P2",
+      "owner_agent": "BE-Ledger",
+      "status": "DONE",
+      "feature_refs": [
+        "F12",
+        "F8"
+      ],
+      "requirement_refs": [
+        "R3",
+        "R5"
+      ],
+      "api_refs": [
+        "POST /groups",
+        "GET /groups/{groupId}/stats"
+      ],
+      "db_refs": [
+        "ledger_group",
+        "group_member",
+        "payment"
+      ],
+      "acceptance": [
+        "그룹 생성/멤버 구조가 동작한다",
+        "그룹 결제와 그룹 통계를 조회할 수 있다",
+        "대시보드에서 그룹 모드 전환이 가능하다"
+      ],
+      "dependencies": [
+        "P1-1",
+        "P6-1"
+      ],
+      "blocker": null,
+      "evidence": [
+        "backend/src/main/kotlin/com/cardwise/group/api/GroupController.kt",
+        "backend/src/main/kotlin/com/cardwise/group/application/GroupService.kt",
+        "frontend/src/app/groups/page.tsx",
+        "frontend/src/app/groups/[groupId]/stats/page.tsx",
+        "frontend/src/app/dashboard/page.tsx",
+        "docs/specs/F12-group-ledger.md",
+        "docs/specs/F8-dashboard.md"
+      ]
+    },
+    {
+      "todo_id": "P6-5",
+      "title": "만료/실적 알림 경로 구현",
+      "priority": "P3",
+      "owner_agent": "FE-Vouchers",
+      "status": "IN_PROGRESS",
+      "feature_refs": [
+        "F7",
+        "F6",
+        "F4"
+      ],
+      "requirement_refs": [
+        "R2"
+      ],
+      "api_refs": [
+        "GET /notifications/settings",
+        "PATCH /notifications/settings"
+      ],
+      "db_refs": [
+        "user_voucher",
+        "user_performance"
+      ],
+      "acceptance": [
+        "바우처 만료 알림이 준비된다",
+        "실적 리마인더 설정이 존재한다",
+        "앱 설정 화면에서 제어할 수 있다"
+      ],
+      "dependencies": [
+        "P4-5",
+        "P4-6"
+      ],
+      "blocker": "notification 테이블과 이벤트 기반 인앱 알림 생성 경로가 아직 없어 설정 화면만 우선 구현했다.",
+      "evidence": [
+        "docs/specs/F7-notification.md",
+        "backend/src/main/kotlin/com/cardwise/notification/api/NotificationController.kt",
+        "backend/src/main/kotlin/com/cardwise/notification/application/NotificationService.kt",
+        "frontend/src/app/settings/page.tsx",
+        "frontend/src/app/settings/notifications/page.tsx"
+      ]
     }
   ],
   "events": [
@@ -1403,6 +1619,12 @@
       "agent": "FE-Theme",
       "type": "DONE",
       "summary": "390/768/1024/1440 뷰포트에서 주요 앱 라우트의 가로 오버플로가 없음을 확인하고 adjustments 기본 조회를 무해화했다"
+    },
+    {
+      "ts": "2026-03-19T22:20:00+09:00",
+      "agent": "Orchestrator",
+      "type": "DONE",
+      "message": "아키텍처·요구사항 감사 체크리스트를 문서화하고 F8 태그 통계/교차 분석 표면을 추가했으며, 남은 인증·그룹·혜택·알림 갭을 P6 추적 항목으로 등록했습니다."
     }
   ],
   "questions": [

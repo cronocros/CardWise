@@ -1,37 +1,5 @@
-"use client";
-
 import Link from "next/link";
-import { useState } from "react";
 import { AppShell, ActionButton, Chip, MetricCard, Panel } from "@/components/app-shell";
-
-type ToggleState = {
-  label: string;
-  description: string;
-  enabled: boolean;
-};
-
-const initialToggles: ToggleState[] = [
-  {
-    label: "실적 달성 알림",
-    description: "구간 달성 시 축하 배너와 함께 알려줍니다.",
-    enabled: true,
-  },
-  {
-    label: "바우처 만료 알림",
-    description: "D-7, D-3, D-1 시점을 기준으로 노출합니다.",
-    enabled: true,
-  },
-  {
-    label: "월간 요약 리포트",
-    description: "한 달에 한 번 사용 패턴을 정리합니다.",
-    enabled: false,
-  },
-  {
-    label: "민감 작업 확인",
-    description: "조정과 해제 작업에 추가 확인 단계를 둡니다.",
-    enabled: true,
-  },
-];
 
 const themeOptions = [
   {
@@ -55,9 +23,7 @@ const themeOptions = [
 ] as const;
 
 export default function SettingsPage() {
-  const [toggles, setToggles] = useState(initialToggles);
-
-  const enabledCount = toggles.filter((item) => item.enabled).length;
+  const enabledCount = 4;
 
   return (
     <AppShell
@@ -65,7 +31,7 @@ export default function SettingsPage() {
       theme="minimal"
       eyebrow="환경 설정"
       title="앱 환경과 알림을 조용하고 밀도 있게 정리하는 화면"
-      description="설정은 로즈 미니멀 톤으로 정리하되, 앱 전체의 로즈 블로섬 기반과 어긋나지 않게 구조만 더 단단하게 잡았습니다."
+      description="설정은 로즈 미니멀 톤으로 정리하되, 실제 알림 토글은 별도 서버 연동 화면으로 분리했습니다."
       actions={
         <>
           <Link
@@ -128,40 +94,28 @@ export default function SettingsPage() {
           </div>
         </Panel>
 
-        <Panel title="알림 및 작업" subtitle="자주 쓰는 설정은 토글로 즉시 전환할 수 있게 유지합니다.">
+        <Panel title="알림 설정" subtitle="실제 토글은 서버 연동 페이지에서 관리합니다.">
           <div className="grid gap-3">
-            {toggles.map((item) => (
-              <button
-                key={item.label}
-                type="button"
-                onClick={() =>
-                  setToggles((current) =>
-                    current.map((entry) =>
-                      entry.label === item.label ? { ...entry, enabled: !entry.enabled } : entry,
-                    ),
-                  )
-                }
-                className="cw-interactive-card flex items-center justify-between gap-4 rounded-[22px] border border-[var(--surface-border)] bg-white px-4 py-4 text-left transition hover:border-[var(--surface-border-strong)]"
-              >
-                <div className="min-w-0">
+            <Link
+              href="/settings/notifications"
+              className="cw-interactive-card rounded-[22px] border border-[var(--surface-border)] bg-white p-4 transition hover:border-[var(--surface-border-strong)]"
+            >
+              <div className="flex items-center justify-between gap-4">
+                <div>
                   <div className="text-[15px] font-semibold tracking-[-0.03em] text-[var(--text-strong)]">
-                    {item.label}
+                    알림 설정 관리
                   </div>
-                  <div className="mt-1 text-sm leading-6 text-[var(--text-body)]">{item.description}</div>
+                  <div className="mt-1 text-sm leading-6 text-[var(--text-body)]">
+                    바우처 만료, 실적 리마인더, 결제 확인, 이메일, 푸시 알림을 서버와 동기화합니다.
+                  </div>
                 </div>
-                <span
-                  className={`flex h-7 w-12 shrink-0 items-center rounded-full p-1 transition ${
-                    item.enabled ? "bg-[var(--primary-400)]" : "bg-[var(--neutral-200)]"
-                  }`}
-                >
-                  <span
-                    className={`h-5 w-5 rounded-full bg-white shadow-sm transition ${
-                      item.enabled ? "translate-x-5" : "translate-x-0"
-                    }`}
-                  />
-                </span>
-              </button>
-            ))}
+                <Chip tone="rose">열기</Chip>
+              </div>
+            </Link>
+            <div className="rounded-[22px] border border-[var(--surface-border)] bg-[var(--surface-soft)] px-4 py-4">
+              <div className="text-sm font-semibold text-[var(--text-strong)]">알림 저장소</div>
+              <div className="mt-1 text-sm text-[var(--text-body)]">`notification_setting` 단일 테이블을 사용합니다.</div>
+            </div>
           </div>
         </Panel>
       </div>
@@ -197,10 +151,25 @@ export default function SettingsPage() {
         <div className="grid gap-5">
           <Panel title="빠른 링크" subtitle="이동이 잦은 화면을 바로 열 수 있게 묶었습니다.">
             <div className="grid gap-3 sm:grid-cols-2">
-              <ActionButton kind="primary">프로필 편집</ActionButton>
-              <ActionButton kind="secondary">알림 테스트</ActionButton>
-              <ActionButton kind="ghost">혜택 비교</ActionButton>
-              <ActionButton kind="ghost">바우처 관리</ActionButton>
+              <Link
+                href="/settings/notifications"
+                className="inline-flex items-center justify-center rounded-full border border-transparent bg-[linear-gradient(135deg,var(--accent-strong),#fb923c)] px-4 py-2.5 text-sm font-medium text-white shadow-[0_14px_30px_rgba(244,63,94,0.22)] transition hover:translate-y-[-1px]"
+              >
+                알림 설정
+              </Link>
+              <ActionButton kind="secondary">프로필 편집</ActionButton>
+              <Link
+                href="/benefits"
+                className="inline-flex items-center justify-center rounded-full border border-[var(--surface-border)] bg-transparent px-4 py-2.5 text-sm font-medium text-[var(--text-muted)] transition hover:bg-[var(--surface-soft)]"
+              >
+                혜택 비교
+              </Link>
+              <Link
+                href="/vouchers"
+                className="inline-flex items-center justify-center rounded-full border border-[var(--surface-border)] bg-transparent px-4 py-2.5 text-sm font-medium text-[var(--text-muted)] transition hover:bg-[var(--surface-soft)]"
+              >
+                바우처 관리
+              </Link>
             </div>
           </Panel>
 

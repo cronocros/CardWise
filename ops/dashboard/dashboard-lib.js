@@ -8,6 +8,9 @@ const REFRESH_INTERVAL_MS = 10_000;
 const QUICK_LINKS = [
   { label: '라이브 대시보드', href: 'http://127.0.0.1:4173/', note: '운영 컨트롤센터', status: 'live' },
   { label: '프론트 앱', href: 'http://127.0.0.1:3000/', note: '웹 앱', status: 'live' },
+  { label: '대시보드 홈', href: 'http://127.0.0.1:3000/dashboard', note: '사용자 앱 홈', status: 'live' },
+  { label: '태그 통계', href: 'http://127.0.0.1:3000/dashboard/tags', note: 'F8/TAG 화면', status: 'live' },
+  { label: '태그 교차 분석', href: 'http://127.0.0.1:3000/dashboard/tags/cross', note: '태그 분석 확장', status: 'live' },
   { label: '백엔드 헬스', href: 'http://127.0.0.1:8080/actuator/health', note: '런타임 헬스', status: 'live' },
   { label: '백엔드 정보', href: 'http://127.0.0.1:8080/actuator/info', note: '액추에이터 정보', status: 'live' },
   { label: 'API 기본 경로', href: 'http://127.0.0.1:8080/api/v1', note: '백엔드 기본 경로', status: 'live' },

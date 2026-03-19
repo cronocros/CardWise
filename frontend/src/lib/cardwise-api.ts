@@ -179,6 +179,307 @@ export interface SeededCardSummary {
   href: string;
 }
 
+export interface DashboardMonthlySummaryResponse {
+  data: {
+    yearMonth: string;
+    totalSpent: number;
+    totalBenefit: number;
+    paymentCount: number;
+    previousYearMonth: string | null;
+    previousSpent: number;
+    changeAmount: number;
+    changeRate: number | null;
+  };
+}
+
+export interface DashboardCardSummaryResponse {
+  data: Array<{
+    userCardId: number;
+    cardName: string;
+    spentAmount: number;
+    benefitAmount: number;
+    paymentCount: number;
+    annualAccumulated: number | null;
+    currentTierName: string | null;
+  }>;
+}
+
+export interface DashboardCategorySummaryResponse {
+  data: Array<{
+    categoryId: number;
+    categoryName: string;
+    spentAmount: number;
+    benefitAmount: number;
+    paymentCount: number;
+    sharePercent: number;
+  }>;
+}
+
+export interface DashboardTagSummaryResponse {
+  data: Array<{
+    tagId: number;
+    tagName: string;
+    spentAmount: number;
+    paymentCount: number;
+    sharePercent: number;
+  }>;
+}
+
+export interface DashboardTrendResponse {
+  data: Array<{
+    yearMonth: string;
+    totalSpent: number;
+    totalBenefit: number;
+    paymentCount: number;
+  }>;
+}
+
+export interface DashboardTagCrossResponse {
+  data: {
+    crossType: string;
+    selectedTags: Array<{
+      tagId: number;
+      tagName: string;
+    }>;
+    totalSpent: number;
+    paymentCount: number;
+    breakdown: Array<{
+      label: string;
+      amount: number;
+      paymentCount: number;
+    }>;
+  };
+}
+
+export interface NotificationSettingsResponse {
+  data: {
+    notificationSettingId: number;
+    accountId: string;
+    voucherExpiryAlert: boolean;
+    performanceReminder: boolean;
+    paymentConfirmAlert: boolean;
+    emailNotification: boolean;
+    pushNotification: boolean;
+    updatedAt: string;
+  };
+}
+
+export interface NotificationSettingsPatchRequest {
+  voucherExpiryAlert?: boolean;
+  performanceReminder?: boolean;
+  paymentConfirmAlert?: boolean;
+  emailNotification?: boolean;
+  pushNotification?: boolean;
+}
+
+export interface NotificationItem {
+  notificationId: number;
+  notificationType: string;
+  eventCode: string;
+  title: string;
+  body: string;
+  actionUrl: string | null;
+  actionLabel: string | null;
+  referenceTable: string | null;
+  referenceId: number | null;
+  isRead: boolean;
+  readAt: string | null;
+  createdAt: string;
+}
+
+export interface NotificationListEnvelope {
+  data: NotificationItem[];
+}
+
+export interface NotificationUnreadCountEnvelope {
+  data: {
+    unreadCount: number;
+  };
+}
+
+export interface BenefitCategoryEnvelope {
+  data: Array<{
+    categoryId: number;
+    categoryName: string;
+    benefitCount: number;
+  }>;
+}
+
+export interface BenefitSearchEnvelope {
+  data: Array<{
+    cardBenefitId: number;
+    cardId: number;
+    cardName: string;
+    cardCompanyName: string;
+    cardImageUrl: string | null;
+    benefitType: string;
+    benefitTypeLabel: string;
+    discountType: string;
+    discountValue: number;
+    benefitLabel: string;
+    targetLabel: string;
+    categoryId: number | null;
+    categoryName: string | null;
+    merchantId: number | null;
+    merchantName: string | null;
+    description: string | null;
+    monthlyLimitCount: number | null;
+    monthlyLimitAmount: number | null;
+    minPaymentAmount: number | null;
+    performanceTierId: number | null;
+    tierName: string | null;
+    requiredPerformanceAmount: number | null;
+    maxPerformanceAmount: number | null;
+    isMyCard: boolean;
+    userCardId: number | null;
+    cardNickname: string | null;
+    isEligible: boolean;
+    eligibilityLabel: string;
+    currentSpent: number | null;
+    latestPerformanceMonth: string | null;
+    remainingToEligible: number | null;
+    matchScore: number;
+  }>;
+}
+
+export interface BenefitRecommendationEnvelope {
+  data: {
+    scope: string;
+    comparedCount: number;
+    reason: string;
+    recommendation: BenefitSearchEnvelope["data"][number] | null;
+  };
+}
+
+export interface CardBenefitDetailEnvelope {
+  data: {
+    cardId: number;
+    cardName: string;
+    cardCompanyName: string;
+    cardImageUrl: string | null;
+    isMyCard: boolean;
+    userCardId: number | null;
+    cardNickname: string | null;
+    currentSpent: number | null;
+    latestPerformanceMonth: string | null;
+    benefits: BenefitSearchEnvelope["data"];
+  };
+}
+
+export interface GroupSummaryEnvelope {
+  data: Array<{
+    groupId: number;
+    groupName: string;
+    description: string | null;
+    role: string;
+    memberCount: number;
+    currentMonthSpent: number;
+    maxMembers: number;
+  }>;
+}
+
+export interface GroupMemberRecord {
+  accountId: string;
+  displayName: string;
+  email: string;
+  role: string;
+  joinedAt: string;
+}
+
+export interface GroupTagRecord {
+  tagId: number;
+  tagName: string;
+  color: string | null;
+}
+
+export interface GroupDetailEnvelope {
+  data: {
+    groupId: number;
+    groupName: string;
+    description: string | null;
+    role: string;
+    memberCount: number;
+    currentMonthSpent: number;
+    maxMembers: number;
+    ownerAccountId: string;
+    canManageSettings: boolean;
+    pendingInvitationCount: number;
+    members: GroupMemberRecord[];
+  };
+}
+
+export interface GroupActionEnvelope {
+  data: {
+    groupId: number;
+    status: string;
+    message: string;
+  };
+}
+
+export interface GroupTagEnvelope {
+  data: GroupTagRecord[];
+}
+
+export interface GroupPaymentRecord {
+  paymentId: number;
+  accountId: string;
+  userCardId: number;
+  payerName: string;
+  merchantName: string;
+  amount: number;
+  paidAt: string;
+  currency: string;
+  memo: string | null;
+  tagNames: string[];
+  canEdit: boolean;
+}
+
+export interface GroupInvitationEnvelope {
+  data: Array<{
+    invitationId: number;
+    groupId: number;
+    groupName: string;
+    inviterName: string;
+    inviteeEmail: string;
+    invitationStatus: string;
+    expiresAt: string;
+    createdAt: string;
+  }>;
+}
+
+export interface GroupPaymentEnvelope {
+  data: GroupPaymentRecord[];
+}
+
+export interface GroupStatsEnvelope {
+  data: {
+    groupId: number;
+    groupName: string;
+    from: string;
+    to: string;
+    totalSpent: number;
+    paymentCount: number;
+    memberStats: Array<{
+      accountId: string;
+      displayName: string;
+      spentAmount: number;
+      paymentCount: number;
+      sharePercent: number;
+    }>;
+    tagStats: Array<{
+      tagName: string;
+      spentAmount: number;
+      paymentCount: number;
+      sharePercent: number;
+    }>;
+    monthlyTrend: Array<{
+      yearMonth: string;
+      totalSpent: number;
+      paymentCount: number;
+    }>;
+  };
+}
+
 function normalizeBaseUrl(baseUrl: string) {
   return baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
 }
