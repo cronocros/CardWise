@@ -395,35 +395,78 @@ GET    /recommendations/history  추천 이력
 ### 4.7 대시보드 (`/api/v1/dashboard`)
 
 ```
-GET    /dashboard                대시보드 요약 데이터 (캐시 5분)
+GET    /dashboard/monthly        월간 종합 요약
+GET    /dashboard/cards          카드별 월간 지출/혜택/실적 스냅샷
+GET    /dashboard/categories     카테고리별 월간 분포
+GET    /dashboard/trends         주간/월간 추이
 ```
 
-**GET /dashboard 응답**:
+**GET /dashboard/monthly 응답**:
 ```json
 {
   "data": {
-    "greeting": "안녕하세요, 김민지님!",
-    "currentMonth": {
-      "totalExpense": 1234800,
-      "totalBenefit": 45200,
-      "netCost": 1189600,
-      "currency": "KRW"
-    },
-    "topCard": {
-      "cardId": "card_01HX...",
-      "cardName": "신한 딥드림",
-      "currentPerformance": 820000,
-      "nextTierAmount": 1000000,
-      "nextTierRemaining": 180000
-    },
-    "recentTransactions": [ ... ],
-    "expiringVouchers": [ ... ],
-    "achievedTierToday": {
-      "achieved": true,
-      "tierAmount": 500000,
-      "cardName": "신한 딥드림"
-    }
+    "yearMonth": "2026-03",
+    "totalSpent": 1234800,
+    "totalBenefit": 45200,
+    "paymentCount": 38,
+    "previousYearMonth": "2026-02",
+    "previousSpent": 1112300,
+    "changeAmount": 122500,
+    "changeRate": 11.01
   }
+}
+```
+
+**GET /dashboard/cards 응답**:
+```json
+{
+  "data": [
+    {
+      "userCardId": 1,
+      "cardName": "신한 딥드림",
+      "spentAmount": 820000,
+      "benefitAmount": 21400,
+      "paymentCount": 14,
+      "annualAccumulated": 1820000,
+      "currentTierName": "플러스"
+    }
+  ]
+}
+```
+
+**GET /dashboard/categories 응답**:
+```json
+{
+  "data": [
+    {
+      "categoryId": 10,
+      "categoryName": "카페",
+      "spentAmount": 245000,
+      "benefitAmount": 12000,
+      "paymentCount": 8,
+      "sharePercent": 19.84
+    }
+  ]
+}
+```
+
+**GET /dashboard/trends 응답**:
+```json
+{
+  "data": [
+    {
+      "yearMonth": "2026-01",
+      "totalSpent": 980000,
+      "totalBenefit": 30100,
+      "paymentCount": 26
+    },
+    {
+      "yearMonth": "2026-02",
+      "totalSpent": 1112300,
+      "totalBenefit": 38700,
+      "paymentCount": 31
+    }
+  ]
 }
 ```
 

@@ -1,11 +1,24 @@
 import Link from "next/link";
 import { AppShell, Chip, MetricCard, Panel } from "@/components/app-shell";
+import {
+  CategoryDonut,
+  DashboardFilterSummary,
+  TagRanking,
+  TrendBars,
+} from "@/components/dashboard/analytics-panels";
 import { CardThumbnail, TierProgressTrack } from "@/components/preview-primitives";
 import {
   formatCurrency,
   formatDateTime,
+  formatPercent,
+  formatSignedCurrency,
   getPendingCount,
   tryFetchBackendJson,
+  type DashboardCardSummaryResponse,
+  type DashboardCategorySummaryResponse,
+  type DashboardMonthlySummaryResponse,
+  type DashboardTagSummaryResponse,
+  type DashboardTrendResponse,
   type PendingActionCountResponse,
   type PendingActionsResponse,
   type PerformanceResponse,
@@ -61,12 +74,35 @@ function specialPeriodLabel(data: PerformanceResponse["data"]) {
 }
 
 export default async function DashboardPage() {
-  const [pendingCountResponse, pendingResponse, activeVouchersResponse, expiringVouchersResponse, performanceResults] =
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+  const monthStart = `${currentYear}-${String(currentMonth).padStart(2, "0")}-01`;
+  const monthEnd = `${currentYear}-${String(currentMonth).padStart(2, "0")}-31`;
+  const yearMonthLabel = `${currentYear}-${String(currentMonth).padStart(2, "0")}`;
+
+  const [
+    pendingCountResponse,
+    pendingResponse,
+    activeVouchersResponse,
+    expiringVouchersResponse,
+    monthlySummaryResponse,
+    cardSummaryResponse,
+    categorySummaryResponse,
+    tagSummaryResponse,
+    trendResponse,
+    performanceResults,
+  ] =
     await Promise.all([
       tryFetchBackendJson<PendingActionCountResponse>("/pending-actions/count?status=PENDING"),
       tryFetchBackendJson<PendingActionsResponse>("/pending-actions?status=PENDING&limit=4"),
       tryFetchBackendJson<VoucherListResponse>("/vouchers?status=active"),
       tryFetchBackendJson<VoucherListResponse>("/vouchers/expiring?days=7"),
+      tryFetchBackendJson<DashboardMonthlySummaryResponse>(`/dashboard/monthly?year=${currentYear}&month=${currentMonth}`),
+      tryFetchBackendJson<DashboardCardSummaryResponse>(`/dashboard/cards?from=${monthStart}&to=${monthEnd}`),
+      tryFetchBackendJson<DashboardCategorySummaryResponse>(`/dashboard/categories?from=${monthStart}&to=${monthEnd}`),
+      tryFetchBackendJson<DashboardTagSummaryResponse>(`/tags/stats?from=${monthStart}&to=${monthEnd}`),
+      tryFetchBackendJson<DashboardTrendResponse>("/dashboard/trends?period=monthly&limit=6"),
       Promise.all(
         seededUserCardIds.map(async (userCardId) => ({
           userCardId,
@@ -79,6 +115,12 @@ export default async function DashboardPage() {
   const pendingItems = pendingResponse?.data ?? [];
   const activeVouchers = activeVouchersResponse?.data ?? [];
   const expiringVouchers = expiringVouchersResponse?.data ?? [];
+  const monthlySummary = monthlySummaryResponse?.data ?? null;
+  const cardSummaries = cardSummaryResponse?.data ?? [];
+  const categorySummaries = categorySummaryResponse?.data ?? [];
+  const tagSummaries = tagSummaryResponse?.data ?? [];
+  const trendPoints = trendResponse?.data ?? [];
+  const cardSummaryMap = new Map(cardSummaries.map((item) => [item.userCardId, item]));
   const cards = performanceResults
     .map(({ userCardId, result }) => ({ userCardId, data: result?.data }))
     .filter((item): item is { userCardId: number; data: PerformanceResponse["data"] } => Boolean(item.data));
@@ -119,11 +161,33 @@ export default async function DashboardPage() {
         </>
       }
     >
+      <DashboardFilterSummary activeLabel="이번 달 대시보드" rangeLabel={`${yearMonthLabel} 기준 집계 · 개인 가계부`} />
+
       <section className="cw-stagger grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="대기 작업" value={String(pendingCount)} helper="서버 대기 건수" />
-        <MetricCard label="사용 가능 바우처" value={String(activeVouchers.length)} helper="현재 활성 목록" />
-        <MetricCard label="곧 만료" value={String(expiringVouchers.length)} helper="7일 이내 확인" />
-        <MetricCard label="추적 카드" value={String(cards.length)} helper="실적 스냅샷 기준" />
+        <MetricCard
+          label="총 지출"
+          value={formatCurrency(monthlySummary?.totalSpent ?? 0)}
+          helper={`${monthlySummary?.yearMonth ?? yearMonthLabel} 월간 집계`}
+        />
+        <MetricCard
+          label="결제 건수"
+          value={`${monthlySummary?.paymentCount ?? 0}건`}
+          helper="월간 결제 기준"
+        />
+        <MetricCard
+          label="혜택 절약"
+          value={formatCurrency(monthlySummary?.totalBenefit ?? 0)}
+          helper="적용된 혜택 합계"
+        />
+        <MetricCard
+          label="전월 대비"
+          value={formatSignedCurrency(monthlySummary?.changeAmount ?? 0)}
+          helper={
+            monthlySummary?.changeRate !== null && monthlySummary?.changeRate !== undefined
+              ? `${formatPercent(monthlySummary.changeRate)} 변화`
+              : "비교 데이터 없음"
+          }
+        />
       </section>
 
       <div className="grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
@@ -257,6 +321,73 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[1.02fr_0.98fr]">
+        <Panel
+          title="카테고리 분포"
+          subtitle="문서 기준 F8 대시보드의 카테고리 섹션을 맞춰, 이번 달 지출 비중과 혜택 기여를 함께 읽도록 정리했습니다."
+        >
+          <CategoryDonut items={categorySummaries} />
+        </Panel>
+
+        <Panel
+          title="태그 통계"
+          subtitle="상위 태그 지출 랭킹과 태그 통계/교차 분석 진입을 한 번에 제공하도록 정리했습니다."
+        >
+          <TagRanking items={tagSummaries} />
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Link
+              href="/dashboard/tags"
+              className="rounded-full border border-[var(--surface-border)] bg-[var(--surface-elevated)] px-4 py-2 text-sm font-medium text-[var(--text-strong)] transition hover:bg-[var(--surface-soft)]"
+            >
+              태그 통계 더보기
+            </Link>
+            <Link
+              href="/dashboard/tags/cross"
+              className="rounded-full border border-[var(--surface-border)] bg-[var(--accent-soft)] px-4 py-2 text-sm font-medium text-[var(--accent-strong)] transition hover:bg-white"
+            >
+              교차 분석 열기
+            </Link>
+          </div>
+        </Panel>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
+        <Panel
+          title="월간 추이"
+          subtitle="최근 월별 지출 흐름을 막대 차트로 노출해 전월 대비 감각을 홈에서 바로 읽게 했습니다."
+        >
+          <TrendBars items={trendPoints} />
+        </Panel>
+
+        <Panel
+          title="작업 상태"
+          subtitle="문서형 월간 통계와 운영형 작업 지표를 함께 볼 수 있도록 홈 상태를 따로 정리했습니다."
+        >
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-[22px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] px-4 py-4">
+              <div className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--text-soft)]">대기 작업</div>
+              <div className="mt-2 text-[26px] font-semibold tracking-[-0.05em] text-[var(--text-strong)]">{pendingCount}</div>
+              <div className="mt-2 text-sm text-[var(--text-muted)]">확인 필요한 서버 대기 건수</div>
+            </div>
+            <div className="rounded-[22px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] px-4 py-4">
+              <div className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--text-soft)]">사용 가능 바우처</div>
+              <div className="mt-2 text-[26px] font-semibold tracking-[-0.05em] text-[var(--text-strong)]">{activeVouchers.length}</div>
+              <div className="mt-2 text-sm text-[var(--text-muted)]">현재 즉시 사용 가능한 목록</div>
+            </div>
+            <div className="rounded-[22px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] px-4 py-4">
+              <div className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--text-soft)]">곧 만료</div>
+              <div className="mt-2 text-[26px] font-semibold tracking-[-0.05em] text-[var(--text-strong)]">{expiringVouchers.length}</div>
+              <div className="mt-2 text-sm text-[var(--text-muted)]">7일 이내 확인 대상</div>
+            </div>
+            <div className="rounded-[22px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] px-4 py-4">
+              <div className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--text-soft)]">추적 카드</div>
+              <div className="mt-2 text-[26px] font-semibold tracking-[-0.05em] text-[var(--text-strong)]">{cards.length}</div>
+              <div className="mt-2 text-sm text-[var(--text-muted)]">실적 스냅샷 기준</div>
+            </div>
+          </div>
+        </Panel>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-[1.02fr_0.98fr]">
         <Panel title="대기 작업 레인" subtitle="홈을 벗어나지 않고도 미해결 작업을 밀도 있게 훑을 수 있도록 카드형 레인으로 정리했습니다.">
           <div className="grid gap-3">
             {pendingItems.length === 0 ? (
@@ -296,30 +427,42 @@ export default async function DashboardPage() {
                 href={`/performance/${card.userCardId}`}
                 className="cw-interactive-card rounded-[22px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] p-4"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--text-soft)]">
-                      카드 #{card.userCardId}
-                    </div>
-                    <div className="mt-2 text-[17px] font-semibold tracking-[-0.04em] text-[var(--text-strong)]">
-                      {card.data.cardName}
-                    </div>
-                  </div>
-                  <Chip tone={card.data.specialPeriod?.active ? "emerald" : "slate"}>
-                    {specialPeriodLabel(card.data)}
-                  </Chip>
-                </div>
-                <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--primary-100)]">
-                  <div
-                    className="cw-progress-fill-animated h-full rounded-full bg-[linear-gradient(90deg,var(--primary-300),var(--primary-500))]"
-                    style={{ width: `${progressFor(card.data)}%` }}
-                  />
-                </div>
-                <div className="mt-3 grid gap-2 text-sm text-[var(--text-body)] sm:grid-cols-3">
-                  <span>{card.data.annual?.currentTier?.tierName ?? "미등급"}</span>
-                  <span className="text-center">{formatCurrency(card.data.annual?.accumulated)}</span>
-                  <span className="text-right">{formatCurrency(card.data.annual?.nextTier?.remainingAmount)} 남음</span>
-                </div>
+                {(() => {
+                  const summary = cardSummaryMap.get(card.userCardId);
+                  return (
+                    <>
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--text-soft)]">
+                            카드 #{card.userCardId}
+                          </div>
+                          <div className="mt-2 text-[17px] font-semibold tracking-[-0.04em] text-[var(--text-strong)]">
+                            {card.data.cardName}
+                          </div>
+                        </div>
+                        <Chip tone={card.data.specialPeriod?.active ? "emerald" : "slate"}>
+                          {specialPeriodLabel(card.data)}
+                        </Chip>
+                      </div>
+                      <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--primary-100)]">
+                        <div
+                          className="cw-progress-fill-animated h-full rounded-full bg-[linear-gradient(90deg,var(--primary-300),var(--primary-500))]"
+                          style={{ width: `${progressFor(card.data)}%` }}
+                        />
+                      </div>
+                      <div className="mt-3 grid gap-2 text-sm text-[var(--text-body)] sm:grid-cols-3">
+                        <span>{summary?.currentTierName ?? card.data.annual?.currentTier?.tierName ?? "미등급"}</span>
+                        <span className="text-center">{formatCurrency(summary?.spentAmount ?? card.data.currentMonth?.monthlySpent)}</span>
+                        <span className="text-right">{formatCurrency(card.data.annual?.nextTier?.remainingAmount)} 남음</span>
+                      </div>
+                      <div className="mt-3 grid gap-2 text-xs text-[var(--text-soft)] sm:grid-cols-3">
+                        <span>월 결제 {summary?.paymentCount ?? 0}건</span>
+                        <span className="text-center">혜택 {formatCurrency(summary?.benefitAmount ?? 0)}</span>
+                        <span className="text-right">연간 누적 {formatCurrency(summary?.annualAccumulated ?? card.data.annual?.accumulated)}</span>
+                      </div>
+                    </>
+                  );
+                })()}
               </Link>
             ))}
           </div>

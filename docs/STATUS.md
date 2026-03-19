@@ -1,192 +1,88 @@
 # CardWise - Project Status & Handoff
 
-> 이 문서는 LLM/AI 에이전트 또는 새로운 개발자가 프로젝트를 이어받을 때 참조하는 인수인계 문서이다.
-> 최종 갱신 시 반드시 날짜와 변경 내용을 기록한다.
+최종 갱신: 2026-03-19
+갱신자: Codex
 
----
+## 현재 상태
 
-## 최종 갱신
+- 현재 단계: Phase 1 구현 및 정합화
+- 활성 브랜치: `codex/integration-phase1`
+- 라이브 대시보드: `http://127.0.0.1:4173/`
+- 사용자 앱: `http://127.0.0.1:3000/`
+- 백엔드 헬스: `http://127.0.0.1:8080/actuator/health`
+- 원격 Supabase 부트 스모크: 완료
 
-- **날짜**: 2026-03-19
-- **갱신자**: Claude (AI Assistant)
-- **내용**: Phase F~J 반영 (최종 스키마 41 테이블/26 ENUM 정합화), 증분 마이그레이션 추가, F1/F2/F3/F4/F6 + API/요구사항 동기화, MVP Phase 1 수치 32 테이블 현행화, LLM 컨텍스트/프롬프트 정리, MEMORY.md 추가
+## 이번 단계에서 완료된 범위
 
----
+1. 공통 추적판과 라이브 대시보드
+   - `ops/dashboard/work-items.json` 단일 상태 파일 기반으로 터미널/웹 대시보드 동기화
+   - 시계, 마지막 갱신, 다음 갱신 카운트다운, Quick Links, Swagger 링크 반영
+2. 백엔드 MVP 구현
+   - F2/F3: 인박스, 결제 보정, 대기 작업 카운트
+   - F4: 카드별 실적, 구간, 유예, 특별기간, 바우처 해금
+   - F6: 활성/만료 임박 바우처, 이력
+   - F8 일부: 월간/카드/카테고리/태그/추이 집계 API, 태그 교차 분석 API
+3. 프론트 앱 퍼블리싱
+   - 앱 우선 IA: `/dashboard`, `/cards`, `/ledger`, `/benefits`, `/vouchers`, `/settings`
+   - 보조 흐름: `/inbox`, `/adjustments`, `/performance/[userCardId]`
+   - 한국어 표면, Pretendard 중심 타이포, 로즈 블로섬/미니멀/글라스 스킨 구조
+   - 바우처 바텀시트, 실적 마일스톤 모달, 주요 모션, 반응형 정리
+4. F8 대시보드 표면 보강
+   - `/dashboard`에 월간 요약, 카드별 집계, 카테고리 분포, 태그 통계, 월간 추이 반영
+   - `/dashboard/tags`, `/dashboard/tags/cross` 추가
+5. 플랫폼/검증
+   - SpringDoc 활성화: `/swagger-ui.html`, `/v3/api-docs`
+   - 원격 Supabase boot 경로 정리
+   - JPA all-open 정리
 
-## 현재 Phase
+## 감사 결과 문서
 
-**Phase 0: 설계 및 프로젝트 준비** (코드 작성 전)
+- 아키텍처·요구사항 체크리스트: `docs/audit/architecture-requirements-checklist.md`
 
----
+## 현재 구현 기준 PASS/PARTIAL 요약
 
-## 완료된 작업
+- PASS
+  - F2/F3 인박스/보정
+  - F4 실적 추적
+  - F6 바우처 관리
+  - F8 개인 대시보드 핵심 표면
+  - 라이브 대시보드/메타 추적
+- PARTIAL
+  - F1 카드 관리: 조회 중심, 실제 등록/관리 CRUD 미완성
+  - F5 혜택 검색: 화면은 있으나 실제 검색 백엔드 미완성
+  - 시스템 아키텍처: Next.js/Spring/Supabase 구조는 맞지만 Redis/Rate Limit/CORS/관측성 실장 미완성
+  - 프론트 BFF: 일부 라우트는 맞지만 서버 컴포넌트 직접 호출 혼재
+- FAIL 또는 미구현
+  - 인증/인가 실구현
+  - F7 알림
+  - F12 그룹 가계부
+  - F8 그룹 대시보드/멤버 비교
 
-| # | 작업 | 완료일 | 산출물 |
-|---|------|--------|--------|
-| 1 | 핵심 요구사항 정의 | 2026-03-17 | requirements/functional-requirements.md |
-| 2 | 기술 스택 확정 | 2026-03-17 | overview/tech-stack.md |
-| 3 | DB 스키마 설계 (41 tables, 26 ENUMs) | 2026-03-17 | database/schema-design.md, data-dictionary.md |
-| 4 | 아키텍처 설계 (시스템 + 어플리케이션) | 2026-03-17 | architecture/*.md |
-| 5 | 프론트엔드 아키텍처 설계 | 2026-03-17 | architecture/frontend-architecture.md |
-| 6 | 프로세스 흐름 도식화 (F1~F8, F12) | 2026-03-17 | requirements/functional-requirements.md |
-| 7 | 해외결제/다중통화 DB 설계 | 2026-03-17 | database/schema-design.md |
-| 8 | EDA/Kafka 설계 아카이빙 | 2026-03-17 | archive/eda-kafka-design.md |
-| 9 | 스킬 9개 생성 | 2026-03-17 | .claude/commands/cardwise-*.md |
-| 10 | 프로젝트 개요 문서 | 2026-03-17 | README.md |
-| 11 | 디자인 시스템 문서 | 2026-03-18 | design/design-system.md |
-| 12 | /cardwise-handoff 스킬 추가 | 2026-03-17 | .claude/commands/cardwise-handoff.md |
-| 13 | 디자인 시안 2개 — Rose Glass / Rose Blossom | 2026-03-18 | design-preview/*.html |
-| 14 | UI 디자인 프롬프트 문서 | 2026-03-18 | docs/prompts/ui-design-prompts.md |
-| 15 | Redis 로컬 Docker 설계 반영 | 2026-03-18 | docker-compose.yml, system-architecture.md |
-| 16 | 테스트 전략 문서 | 2026-03-18 | docs/testing/test-strategy.md |
-| 17 | 리스크 등록부 | 2026-03-18 | docs/risk/risk-register.md |
-| 18 | API 설계 문서 | 2026-03-18 | docs/api/api-design.md |
-| 19 | 배포 가이드 | 2026-03-18 | docs/deployment/deployment-guide.md |
-| 20 | 모니터링/관측성 문서 | 2026-03-18 | docs/monitoring/observability.md |
-| 21 | LLM 범용 컨텍스트 프롬프트 | 2026-03-18 | docs/prompts/llm-context-prompt.md |
-| 22 | 보안/운영 핵심 결정 반영 | 2026-03-18 | 다수 문서 |
-| 23 | MVP 범위 & 구현 우선순위 분석 | 2026-03-18 | docs/planning/mvp-scope.md |
-| 24 | 다중통화 MVP 승격 | 2026-03-18 | planning/mvp-scope.md, schema-design.md |
-| 25 | 가족/그룹 공유 가계부 도메인 신설 | 2026-03-18 | schema-design.md, data-dictionary.md, application-architecture.md |
-| 26 | 태그 교차 분석 설계 | 2026-03-18 | functional-requirements.md, api-design.md |
-| 27 | Auth/OAuth 전용 설계 문서 | 2026-03-18 | docs/architecture/auth-design.md |
-| 28 | 기능별 상세 기획서 10개 | 2026-03-18 | docs/specs/*.md |
-| 29 | API 테스팅 전략 (Swagger/SpringDoc) | 2026-03-18 | docs/api/api-design.md |
-| 30 | 문서 구조 정리 & 일관성 확보 | 2026-03-18 | CLAUDE.md, STATUS.md, README.md |
-| 31 | Git 초기화 & 첫 커밋 | 2026-03-18 | .gitignore, git init |
-| 32 | Phase F~J 문서·스키마 정합화 | 2026-03-19 | MEMORY.md, supabase/migrations/20260319010000_phase_fj_schema_upgrade.sql, docs 전반 |
+## 가장 큰 남은 갭
 
----
+1. 인증/인가
+   - 현재 `SecurityConfig`는 모든 요청을 허용한다.
+   - `RequestAccountIdResolver`는 개발용 기본 account_id fallback을 사용한다.
+   - 설계 문서 기준으로는 가장 큰 미정합 항목이다.
+2. 그룹 가계부/그룹 통계
+   - F12와 F8 그룹 모드가 아직 없다.
+3. 혜택 검색 백엔드
+   - 프론트 표면만 존재한다.
+4. 알림
+   - 만료/실적 리마인더 흐름이 없다.
 
-## 진행 중인 작업
+## 즉시 확인할 주소
 
-없음 (설계 정리 완료, 구현 대기)
+- 앱 홈: `http://127.0.0.1:3000/dashboard`
+- 태그 통계: `http://127.0.0.1:3000/dashboard/tags`
+- 태그 교차 분석: `http://127.0.0.1:3000/dashboard/tags/cross`
+- 라이브 대시보드: `http://127.0.0.1:4173/`
+- Swagger UI: `http://127.0.0.1:8080/swagger-ui.html`
+- OpenAPI JSON: `http://127.0.0.1:8080/v3/api-docs`
 
----
+## 다음 우선순위
 
-## 다음 단계 (사용자 결정 대기)
-
-| 우선순위 | 작업 | 전제 조건 |
-|---------|------|----------|
-| 1 | Supabase 프로젝트 초기화 + Phase 1 32개 테이블 마이그레이션 | 사용자 구현 지시 |
-| 2 | Spring Boot 프로젝트 초기화 (Gradle + 9모듈 패키지) | 사용자 구현 지시 |
-| 3 | Next.js 프로젝트 초기화 (App Router + shadcn/ui) | 사용자 구현 지시 |
-| 4 | GitHub Actions CI/CD 파이프라인 구성 | 구현 지시 후 |
-| 5 | Sprint 1 시작: Auth + 카드 등록 (F1) | 위 3개 완료 후 |
-
-> **MVP 구현 범위**: `docs/planning/mvp-scope.md` 참조 (Phase 1 = 32 테이블 + F1/F2/F3/F4/F5/F6/F8/F12 + Auth + 다중통화 + 엑셀 업로드)
-
----
-
-## 핵심 설계 결정 (Key Decisions)
-
-| # | 결정 | 이유 | 대안 (기각) |
-|---|------|------|-----------|
-| D1 | Spring Boot (Kotlin) 백엔드 분리 | MSA 전환 준비, 타입 안전성 | Next.js API Routes 단독 |
-| D2 | Hexagonal Architecture | 모듈 독립성, 테스트 용이성 | Layered Architecture |
-| D3 | Modular Monolith (MSA-ready) | MVP 속도 + 확장성 | 처음부터 MSA |
-| D4 | Supabase PostgreSQL | 관리형, Auth 통합, RLS | 자체 PostgreSQL |
-| D5 | Redis (Upstash) | 캐시 + Rate Limit, 서버리스 | In-memory cache |
-| D6 | Spring @EventListener (MVP) | 인프라 비용 0, 모듈 분리 | Kafka (과도한 복잡도) |
-| D7 | Benefit/Voucher 분리 | 행동 패턴 상이, 컬럼 세트 상이 | 단일 테이블 |
-| D8 | KRW 기준 통합 + 원본 통화 보존 | 실적 계산 단순화, 원본 추적 | 다중 통화 병렬 |
-| D9 | 카드 발급일 기준 연간 실적 | 한국 카드사 실제 정책 반영 | 달력 연도 기준 |
-| D10 | Payment(1) -> PaymentItem(N) 구조 | 쿠팡 등 복수 품목 대응 | 단일 결제 테이블 |
-| D11 | 가족/그룹 공유 가계부 (Group BC) | 가족 공동 가계부는 핵심 사용 시나리오 | 개인 가계부만 |
-| D12 | 다중통화 MVP 포함 | Amazon/AliExpress/해외여행 빈번 | Phase 1.5 연기 |
-
----
-
-## 파일 구조
-
-```
-E:\Dev_ai\CardWise\
-+-- CLAUDE.md                           프로젝트 지침
-+-- docker-compose.yml                  Redis 로컬 개발
-+-- docs/
-|   +-- README.md                       프로젝트 개요 (개념도 포함)
-|   +-- STATUS.md                       <<< 이 파일 (인수인계)
-|   +-- overview/
-|   |   +-- tech-stack.md               기술 스택 상세
-|   +-- architecture/
-|   |   +-- system-architecture.md      인프라/배포
-|   |   +-- application-architecture.md DDD/모듈/이벤트 (9 BC)
-|   |   +-- frontend-architecture.md    프론트엔드
-|   |   +-- auth-design.md              인증/OAuth/계정 관리
-|   +-- planning/
-|   |   +-- mvp-scope.md                MVP 범위 + 구현 우선순위
-|   +-- requirements/
-|   |   +-- functional-requirements.md  기능 요구사항 + 프로세스 (F1~F12)
-|   |   +-- non-functional-requirements.md
-|   +-- database/
-|   |   +-- schema-design.md            ERD + 도메인 스키마 (41 tables, 26 ENUMs)
-|   |   +-- data-dictionary.md          컬럼 상세 명세
-|   +-- specs/                          기능별 상세 기획서
-|   |   +-- AUTH-signup-login.md
-|   |   +-- F1-card-management.md
-|   |   +-- F2-ledger-manual.md
-|   |   +-- F4-performance-tracking.md
-|   |   +-- F5-benefit-search.md
-|   |   +-- F6-voucher-management.md
-|   |   +-- F7-notification.md
-|   |   +-- F8-dashboard.md
-|   |   +-- F12-group-ledger.md
-|   |   +-- TAG-system.md
-|   +-- design/
-|   |   +-- design-system.md            디자인 시스템
-|   +-- testing/
-|   |   +-- test-strategy.md            테스트 전략
-|   +-- risk/
-|   |   +-- risk-register.md            리스크 등록부
-|   +-- api/
-|   |   +-- api-design.md               REST API + Swagger/SpringDoc
-|   +-- deployment/
-|   |   +-- deployment-guide.md         CI/CD + 배포 절차
-|   +-- monitoring/
-|   |   +-- observability.md            로깅/메트릭/알림
-|   +-- prompts/
-|   |   +-- ui-design-prompts.md        AI UI 디자인 프롬프트
-|   |   +-- design-quick-prompts.md     AI 디자인 프롬프트 간략 버전
-|   |   +-- llm-context-prompt.md       범용 LLM 인수인계 프롬프트
-|   +-- archive/
-|   |   +-- eda-kafka-design.md         EDA/Kafka (Phase 2용)
-|   +-- _legacy/                        이전 버전 문서 (참고용)
-+-- .claude/
-|   +-- commands/                       Claude Code 스킬 (9개)
-```
-
----
-
-## 사용 가능한 스킬
-
-| 스킬 | 용도 | 사용 시점 |
-|------|------|----------|
-| /cardwise-spec | 기능 명세 작성 | 새 기능 구현 전 |
-| /cardwise-feature-team | 서브에이전트 팀 구현 | 기능 구현 시 |
-| /cardwise-review-team | 코드 리뷰 (3관점) | 구현 완료 후 |
-| /cardwise-seed | 시드 데이터 SQL | 테스트 데이터 필요 시 |
-| /cardwise-migration | DB 마이그레이션 + RLS | 스키마 변경 시 |
-| /cardwise-prompt | AI 프롬프트 설계 | AI 기능 구현 시 |
-| /cardwise-component | UI 컴포넌트 생성 | 프론트엔드 구현 시 |
-| /cardwise-security | 보안 검토 | PR 생성 전 |
-| /cardwise-handoff | 상태 기록/인수인계 | 세션 종료 시 |
-
----
-
-## LLM 인수인계 가이드
-
-### 이 프로젝트를 처음 접하는 AI/LLM에게
-
-1. **먼저 읽을 것**: `CLAUDE.md` -> `docs/README.md` -> 이 파일 (`STATUS.md`)
-2. **설계 이해**: `docs/architecture/` 4개 문서 순서대로
-3. **DB 이해**: `docs/database/schema-design.md` -> `data-dictionary.md`
-4. **기능 이해**: `docs/requirements/functional-requirements.md` -> `docs/specs/`
-5. **MVP 범위**: `docs/planning/mvp-scope.md`
-6. **구현 금지**: 사용자가 명시적으로 요청하기 전까지 코드 작성 금지
-
-### 주의사항
-
-- 설계 변경 시 관련 문서 모두 동기화 필요
-- DB 변경 시 schema-design.md + data-dictionary.md 모두 업데이트
-- 새 기능 추가 시 `/cardwise-spec`으로 명세 먼저 작성
-- 보안 체크리스트는 `/cardwise-security`로 반드시 실행
+1. 인증/인가를 Supabase 세션 기준으로 실제 연결
+2. F5 혜택 검색 백엔드와 추천 로직 구현
+3. F12 그룹 가계부와 F8 그룹 통계 확장
+4. F7 알림 경로 구현

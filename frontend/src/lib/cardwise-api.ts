@@ -179,6 +179,78 @@ export interface SeededCardSummary {
   href: string;
 }
 
+export interface DashboardMonthlySummaryResponse {
+  data: {
+    yearMonth: string;
+    totalSpent: number;
+    totalBenefit: number;
+    paymentCount: number;
+    previousYearMonth: string | null;
+    previousSpent: number;
+    changeAmount: number;
+    changeRate: number | null;
+  };
+}
+
+export interface DashboardCardSummaryResponse {
+  data: Array<{
+    userCardId: number;
+    cardName: string;
+    spentAmount: number;
+    benefitAmount: number;
+    paymentCount: number;
+    annualAccumulated: number | null;
+    currentTierName: string | null;
+  }>;
+}
+
+export interface DashboardCategorySummaryResponse {
+  data: Array<{
+    categoryId: number;
+    categoryName: string;
+    spentAmount: number;
+    benefitAmount: number;
+    paymentCount: number;
+    sharePercent: number;
+  }>;
+}
+
+export interface DashboardTagSummaryResponse {
+  data: Array<{
+    tagId: number;
+    tagName: string;
+    spentAmount: number;
+    paymentCount: number;
+    sharePercent: number;
+  }>;
+}
+
+export interface DashboardTrendResponse {
+  data: Array<{
+    yearMonth: string;
+    totalSpent: number;
+    totalBenefit: number;
+    paymentCount: number;
+  }>;
+}
+
+export interface DashboardTagCrossResponse {
+  data: {
+    crossType: string;
+    selectedTags: Array<{
+      tagId: number;
+      tagName: string;
+    }>;
+    totalSpent: number;
+    paymentCount: number;
+    breakdown: Array<{
+      label: string;
+      amount: number;
+      paymentCount: number;
+    }>;
+  };
+}
+
 function normalizeBaseUrl(baseUrl: string) {
   return baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
 }
