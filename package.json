@@ -1,0 +1,12 @@
+{
+  "name": "cardwise-monorepo",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend",
+    "ops/dashboard"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

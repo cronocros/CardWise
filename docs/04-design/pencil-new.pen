@@ -1,0 +1,33 @@
+{
+  "version": "2.9",
+  "children": [
+    {
+      "type": "frame",
+      "id": "bi8Au",
+      "x": 0,
+      "y": 0,
+      "name": "Frame",
+      "clip": true,
+      "width": 800,
+      "height": 600,
+      "fill": "#FFFFFF",
+      "layout": "none",
+      "children": [
+        {
+          "type": "rectangle",
+          "id": "VgExW",
+          "x": -2,
+          "y": 77,
+          "fill": {
+            "type": "image",
+            "enabled": true,
+            "url": "images\\image.png",
+            "mode": "fill"
+          },
+          "width": 802,
+          "height": 445
+        }
+      ]
+    }
+  ]
+}

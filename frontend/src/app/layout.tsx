@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
+import { SessionWarden } from "@/components/auth/SessionWarden";
 
 export const metadata: Metadata = {
   title: "CardWise",
@@ -20,8 +21,16 @@ export default function RootLayout({
           rel="stylesheet"
           href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
         />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="theme-color" content="#fb7185" />
       </head>
-      <body className="theme-blossom">{children}</body>
+      <body className="theme-blossom">
+        <SessionWarden>
+          {children}
+        </SessionWarden>
+      </body>
     </html>
   );
 }

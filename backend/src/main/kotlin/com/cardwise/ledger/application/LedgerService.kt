@@ -27,6 +27,7 @@ import com.cardwise.notification.infrastructure.NotificationInsertCommand
 import java.time.Clock
 import java.time.OffsetDateTime
 import java.util.UUID
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -37,6 +38,7 @@ class LedgerService(
     private val paymentAdjustmentRepository: PaymentAdjustmentRepository,
     private val pendingActionRepository: PendingActionRepository,
     private val notificationService: NotificationService,
+    private val eventPublisher: ApplicationEventPublisher,
     private val clock: Clock,
 ) {
     @Transactional
@@ -68,6 +70,51 @@ class LedgerService(
                 body = "[${request.merchantName}] ${request.krwAmount}원 결제 내역이 수동으로 추가되었습니다.",
                 referenceTable = "payment",
                 referenceId = saved.paymentId,
+            )
+        )
+
+        eventPublisher.publishEvent(
+            com.cardwise.ledger.domain.event.PaymentCreatedEvent(
+                paymentId = saved.paymentId!!,
+                accountId = accountId,
+                userCardId = request.userCardId,
+                krwAmount = request.krwAmount,
+                finalKrwAmount = saved.finalKrwAmount,
+                paidAt = request.paidAt
+            )
+        )
+
+        return ApiResponse(data = toPaymentResponse(saved))
+    }
+
+    @Transactional
+    fun updatePayment(
+        paymentId: Long,
+        accountId: UUID,
+        request: com.cardwise.ledger.dto.UpdatePaymentRequest,
+    ): ApiResponse<com.cardwise.ledger.dto.PaymentResponse> {
+        val payment = paymentRepository.findEntityByPaymentIdAndAccountIdAndDeletedAtIsNull(paymentId, accountId)
+            ?: throw NotFoundException("Payment not found or already deleted")
+
+        payment.userCardId = request.userCardId
+        payment.merchantNameRaw = request.merchantName
+        payment.krwAmount = request.krwAmount
+        // 수정 시 수동 보정이 풀렸다고 가정하거나, 기존과 동일하게 finalAmount도 맞춤
+        payment.finalKrwAmount = request.krwAmount
+        payment.isAdjusted = false
+        payment.paidAt = request.paidAt
+        payment.updatedAt = OffsetDateTime.now(clock)
+
+        val saved = paymentRepository.save(payment)
+
+        eventPublisher.publishEvent(
+            com.cardwise.ledger.domain.event.PaymentUpdatedEvent(
+                paymentId = saved.paymentId!!,
+                accountId = accountId,
+                userCardId = request.userCardId,
+                krwAmount = request.krwAmount,
+                finalKrwAmount = saved.finalKrwAmount,
+                paidAt = request.paidAt
             )
         )
 

@@ -80,7 +80,10 @@ open class UserPerformanceEntity(
     var monthlySpent: Long = 0,
 
     @Column(name = "annual_accumulated")
-    var annualAccumulated: Long = 0
+    var annualAccumulated: Long = 0,
+
+    @Column(name = "performance_tier_id")
+    var performanceTierId: Long? = null
 )
 
 @Entity

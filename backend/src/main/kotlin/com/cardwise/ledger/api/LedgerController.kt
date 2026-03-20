@@ -9,7 +9,9 @@ import com.cardwise.ledger.dto.CreatePaymentAdjustmentRequest
 import com.cardwise.ledger.dto.PendingActionResponse
 import com.cardwise.ledger.dto.PendingActionStatus
 import com.cardwise.ledger.dto.Priority
+import com.cardwise.ledger.dto.PendingActionListResponse
 import com.cardwise.ledger.dto.ResolvePendingActionRequest
+import com.cardwise.performance.application.PerformanceService
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -28,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api/v1")
 class LedgerController(
     private val ledgerService: LedgerService,
+    private val performanceService: PerformanceService,
     private val requestAccountIdResolver: RequestAccountIdResolver,
 ) {
     @GetMapping("/payments/{paymentId}/adjustments")
@@ -66,10 +69,44 @@ class LedgerController(
         @RequestHeader(name = "X-Account-Id", required = false) accountIdHeader: String?,
         @Valid @RequestBody request: com.cardwise.ledger.dto.CreatePaymentRequest,
     ): ApiResponse<com.cardwise.ledger.dto.PaymentResponse> {
-        return ledgerService.createPayment(
-            accountId = requestAccountIdResolver.resolve(accountIdHeader),
-            request = request
-        )
+        val accountId = requestAccountIdResolver.resolve(accountIdHeader)
+        val oldTier = try {
+            performanceService.getPerformance(request.userCardId, accountId).data.annual.currentTier?.tierName
+        } catch (e: Exception) { null }
+
+        val res = ledgerService.createPayment(accountId, request)
+
+        val newTier = try {
+            performanceService.getPerformance(request.userCardId, accountId).data.annual.currentTier?.tierName
+        } catch (e: Exception) { null }
+
+        val changed = oldTier != newTier && newTier != null
+        val finalData = if (changed) res.data.copy(tierChanged = true, newTierName = newTier) else res.data
+
+        return ApiResponse(data = finalData)
+    }
+
+    @PatchMapping("/payments/{paymentId}")
+    fun updatePayment(
+        @PathVariable paymentId: Long,
+        @RequestHeader(name = "X-Account-Id", required = false) accountIdHeader: String?,
+        @Valid @RequestBody request: com.cardwise.ledger.dto.UpdatePaymentRequest,
+    ): ApiResponse<com.cardwise.ledger.dto.PaymentResponse> {
+        val accountId = requestAccountIdResolver.resolve(accountIdHeader)
+        val oldTier = try {
+            performanceService.getPerformance(request.userCardId, accountId).data.annual.currentTier?.tierName
+        } catch (e: Exception) { null }
+
+        val res = ledgerService.updatePayment(paymentId, accountId, request)
+
+        val newTier = try {
+            performanceService.getPerformance(request.userCardId, accountId).data.annual.currentTier?.tierName
+        } catch (e: Exception) { null }
+
+        val changed = oldTier != newTier && newTier != null
+        val finalData = if (changed) res.data.copy(tierChanged = true, newTierName = newTier) else res.data
+
+        return ApiResponse(data = finalData)
     }
 
     @PostMapping("/payments/{paymentId}/adjustments")

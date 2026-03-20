@@ -1,158 +1,75 @@
-# CardWise - Project Status
+# CardWise - 프로젝트 현황 (Project Status)
 
-> 최종 갱신: 2026-03-20  
-> 활성 브랜치: `codex/integration-phase1`
-
----
-
-## 1. 시스템 현황 (현재 기준)
-
-| 구성요소 | 방식 | 상태 |
-|---------|------|------|
-| Frontend | Next.js 16 (App Router) + TypeScript + Tailwind + shadcn/ui | ✅ 로컬 실행 중 (:3000) |
-| Backend | Spring Boot 3.x (Kotlin), Hexagonal Architecture | ✅ 로컬 실행 중 (:8080) |
-| Database | Supabase PostgreSQL (원격, 서비스 롤 키 기반) | ✅ 연결됨 |
-| Auth | Supabase Auth (JWT) | ✅ 로그인/가입/미들웨어 연동 완료 |
-| Cache | Docker Redis (로컬) / Upstash (운영 예정) | 🔶 로컬 only |
-| 마이그레이션 | `supabase/migrations/` 파일 기반 | ✅ 원격 적용 완료 (4개 파일 모두 적용) |
-| 배포 | Vercel (FE 예정) + Cloud Run (BE 예정) | ❌ 미배포 (로컬 수준) |
+> **최종 갱신**: 2026-03-21  
+> **현재 버전**: v3.4 (프리미엄 UI & 인터랙션 고도화)  
+> **활성 브랜치**: `main`
 
 ---
 
-## 2. 기능 구현 현황 요약
+## 1. 시스템 현황 (System Health)
 
-> 전체 기능 대조표: [`docs/specs/feature-matrix.md`](specs/feature-matrix.md)
-
-| 기능 | 완료율 | 핵심 갭 |
-|------|--------|---------|
-| AUTH | 95% | 로그인/가입/JWT 연동 완성, 소셜 로그인 미구현 |
-| F1 카드 관리 | 90% | CRUD API + 등록 화면 완성 |
-| F2 가계부 수동입력 | 70% | 기본 저장 완성, card_benefit 자동매칭 미완 |
-| F3 인박스 | 95% | 거의 완성 |
-| F4 실적 관리 | 90% | 거의 완성 |
-| F5 혜택 검색 | 95% | 거의 완성 |
-| F6 바우처 관리 | 95% | 만료 알림 스케줄러 완성 |
-| F7 알림 | 95% | 그룹 기능 연동 완성 |
-| F8 대시보드 | 95% | 사용자 소비 대시보드로 교체 완료 |
-| F12 그룹 가계부 | 95% | 거의 완성 |
+| 구성요소 | 방식 | 상태 | 비고 |
+| :--- | :--- | :--- | :--- |
+| **Frontend** | Next.js 16 (Turbopack) | ✅ Running | Port: 3000 |
+| **Backend** | Spring Boot 3 / Kotlin | ✅ Running | Port: 8080 |
+| **Database** | Supabase PostgreSQL | ✅ Connected |  |
+| **OPS Dashboard** | Custom Node.js Dashboard | ✅ Running | Port: 4173 |
 
 ---
 
-## 3. 라우팅 구조 (현재 기준)
+## 2. 기능 구현 요약 (Feature Highlights)
 
-### 사용자 기능 라우트 (CardWise 제품)
-
-| 경로 | 기능 | 상태 |
-|------|------|------|
-| `/login` | 로그인/가입 | ✅ |
-| `/dashboard` | F8 소비 대시보드 (월간 요약, 카드별, 카테고리) | ✅ |
-| `/cards` | F1 카드 관리 | ✅ |
-| `/cards/register` | 카드 등록 | ✅ |
-| `/ledger` | F2/F3 가계부 허브 | ✅ |
-| `/inbox` | F3 인박스 | ✅ |
-| `/adjustments` | F3 결제 보정 | ✅ |
-| `/performance/[id]` | F4 실적 관리 | ✅ |
-| `/benefits` | F5 혜택 검색 | ✅ |
-| `/benefits/cards/[id]` | 카드별 혜택 상세 | ✅ |
-| `/vouchers` | F6 바우처 관리 | ✅ |
-| `/notifications` | F7 알림 | ✅ |
-| `/settings` | 사용자 설정 | ✅ |
-| `/settings/notifications` | 알림 설정 | ✅ |
-| `/groups` | F12 그룹 가계부 | ✅ |
-| `/groups/[id]` | 그룹 상세 | ✅ |
-| `/dashboard/tags` | 태그 통계 | ✅ |
-| `/dashboard/tags/cross` | 태그 교차분석 | ✅ |
-
-### 개발자 전용 라우트 (CardWise 제품 기능이 아님)
-
-> ⚠️ 아래 경로는 **CardWise 제품 기능이 아닙니다.**  
-> 개발자가 AI 에이전트 상태와 Human-in-the-Loop 대기 큐를 모니터링하는 **내부 OPS 도구**입니다.
-
-| 경로 | 용도 |
-|------|------|
-| `/ops/live` | AI 에이전트 모니터링 + Human-in-the-Loop 대기 큐 뷰어 |
+| 기능 코드 | 기능명 | 완성도 | 핵심 성과 |
+| :--- | :--- | :--- | :--- |
+| **F1** | 카드 관리 | 95% | 플립 애니메이션 및 브랜드별 테마 적용 |
+| **F2** | 가계부 | 90% | **멀티 컬러 도트 캘린더** (수입/지출 구분) 구현 |
+| **F5** | 혜택 검색 | 95% | AI 기반 혜택 추천 및 퀵 메뉴(Card Finder) 연동 |
+| **F8** | 대시보드 | 100% | 종합 지출 통계 및 태그 기반 분석 완료 |
+| **EXT** | 데일리 운세 | 100% | 모바일 전용 운세 페이지 (`/mobile/fortune`) 연동 |
 
 ---
 
-## 4. 아키텍처 준수 현황
+## 3. 라우팅 구조 (Routing Structure)
 
-### Backend (Spring Boot - Hexagonal)
+### 📲 모바일 전용 (Mobile Native-like UI)
+- `/mobile`: 홈 탭 (지출 요약, 퀵 메뉴)
+- `/mobile/ledger`: 가계부 탭 (달력 기반 수입/지출 관리)
+- `/mobile/cards`: 카드 탭 (보유 카드 관리, 플립 상세 보기)
+- `/mobile/benefits`: 혜택 탭 (AI 추천, 혜택 검색, 오늘의 운세)
+- `/mobile/community`: 커뮤니티 탭 (게시물 추천, 상세 보기 모달)
+- `/mobile/profile`: 마이페이지 (배지 시스템, 설정 모달)
+- `/mobile/fortune`: 오늘의 운세 상세 페이지
 
-| 원칙 | 상태 | 비고 |
-|------|------|------|
-| 모듈 분리 (Bounded Context) | ✅ OK | card, benefit, ledger, group, notification, performance, voucher, analytics |
-| Port/Adapter 구조 | ✅ OK | api / application / infrastructure 3-layer 준수 |
-| NamedParameterJdbcTemplate (Supabase) | ✅ OK | JPA ORM 없이 직접 SQL 사용 |
-| @Transactional 범위 | ✅ OK | 서비스 레이어에서 적절히 적용 |
-| 인증/인가 (JWT) | ✅ OK | SecurityConfig + 프론트 프록시 JWT 전달 연동 |
-| Redis 캐시 무효화 | 🔶 PARTIAL | 설계는 있으나 실구현 검증 필요 |
-
-### Frontend (Next.js - BFF Pattern)
-
-| 원칙 | 상태 | 비고 |
-|------|------|------|
-| Supabase Auth 미들웨어 | ✅ OK | 비로그인 시 `/login` 리디렉션 |
-| 백엔드 JWT 전달 | ✅ OK | `backend-proxy.ts`에서 Authorization + X-Account-Id 자동 주입 |
-| `NEXT_PUBLIC_` 접두사 금지 | ✅ OK | `.env.local` 기준 준수 |
-| Supabase 클라이언트 서버사이드 | ✅ OK | `createClient` 서버 전용 |
-| Zod 입력 검증 | 🔶 PARTIAL | 일부 폼에만 적용됨 |
+### 🖥️ 웹 대시보드 (Web Admin/Insight)
+- `/web/dashboard`: 종합 자산 분석 및 인사이트
+- `/web/cards`: 카드 발급 및 법인 카드 관리
 
 ---
 
-## 5. 소스코드 진단 (리팩토링 필요 항목)
+## 4. 아키텍처 및 설정 준수 사항
 
-### 즉시 수정 필요
-
-1. **`NotificationService.createNotificationIfAccountExists`** — 내부에서 accountId를 email처럼 찾는 로직 오사용 가능성 존재
-
-### 구조 개선 권고
-
-2. **`GroupService`** — NotificationService를 직접 호출하는 방식 → 이벤트 기반(`@ApplicationEventPublisher`)으로 전환 권고
-3. **에러 핸들링 일관성** — 일부 API Route에서 try-catch 누락 또는 불일치 응답 포맷
-4. **F2 가계부** — card_benefit 자동매칭 미완성
+- **Workspace Root**: `E:\Dev_ai\CardWise` 기준으로 `npm workspaces`를 적용하여 프론트엔드 의존성 해결.
+- **Hydration Stability**: `sampleData.ts`에 결정론적(Deterministic) 시드 난수 생성을 적용하여 SSR-Client 불일치 해결.
+- **OPS Separation**: 내부 관리용 대시보드를 제품 코드와 엄격하게 분리 (`/ops/dashboard`).
 
 ---
 
-## 6. 빠른 접속 URL (로컬 개발 기준)
+## 5. 전체 문서 지도 (SDLC 분류)
 
-### 사용자 기능
+상세 내용은 **[docs/README.md](README.md)**를 참조하세요.
 
-| 서비스 | URL |
-|--------|-----|
-| 로그인 | http://localhost:3000/login |
-| 소비 대시보드 | http://localhost:3000/dashboard |
-| 혜택 검색 | http://localhost:3000/benefits |
-| 그룹 허브 | http://localhost:3000/groups |
-| 알림 센터 | http://localhost:3000/notifications |
-| Swagger UI | http://localhost:8080/swagger-ui.html |
-
-### 개발자 도구 (OPS - 제품 기능 아님)
-
-| 서비스 | URL | 비고 |
-|--------|-----|------|
-| **라이브 대시보드** | http://localhost:3000/ops/live | AI 에이전트 모니터링, 개발자 전용 |
+1.  **[01-analysis/](01-analysis/)**: 요구사항 정의, 기능 대조표
+2.  **[02-planning/](02-planning/)**: v3.4 구현 계획, TASKS 목록
+3.  **[03-architecture/](03-architecture/)**: 시스템, DB, 인증/보안 설계
+4.  **[04-design/](04-design/)**: 디자인 시스템, Pencil 원본 파일
+5.  **[05-implementation/](05-implementation/)**: 배포 가이드, 운영 전략
+6.  **[06-testing/](06-testing/)**: 테스트 전략 및 결과
+7.  **[07-other/](07-other/)**: 링크 모음, 아카이브, 과거 기록
 
 ---
 
-## 7. 다음 우선순위
+## 🚀 다음 우선순위 (Next Steps)
 
-1. **AUTH 소셜 로그인** — Google/Kakao OAuth 연동
-2. **Vercel + Cloud Run 배포** — 환경 변수 세팅 및 CI/CD 파이프라인 구성
-3. **Redis 기능 검증** — Rate Limiting, 캐시 무효화 로직 운영환경 테스트
-4. **F2 가계부 card_benefit 자동매칭** — 결제 입력 시 혜택 자동 연결
-
----
-
-## 8. 관련 문서
-
-| 문서 | 경로 |
-|------|------|
-| 기능 명세 | `docs/requirements/functional-requirements.md` |
-| **기능 대조표 (Feature Matrix)** | `docs/specs/feature-matrix.md` |
-| 시스템 아키텍처 | `docs/architecture/system-architecture.md` |
-| 애플리케이션 아키텍처 | `docs/architecture/application-architecture.md` |
-| 프론트엔드 아키텍처 | `docs/architecture/frontend-architecture.md` |
-| 인증 설계 | `docs/architecture/auth-design.md` |
-| DB 스키마 | `docs/database/schema-design.md` |
-| 디자인 시스템 | `docs/design/design-system.md` |
-| 아카이브 (이전 이슈) | `docs/archive/` |
+1.  **데이터 영속성**: `localStorage` 또는 `IndexedDB`를 통한 오프라인 데이터 유지.
+2.  **PWA 전환**: 서비스 워커(Service Worker) 설정을 통한 홈 화면 추가 지원.
+3.  **백엔드 API 실연동**: 현재 목업(Mock)으로 처리된 커뮤니티 좋아요/댓글 로직을 Spring Boot API와 최종 바인딩.
