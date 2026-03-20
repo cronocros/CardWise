@@ -42,35 +42,38 @@
 
 ### 사용자 기능 라우트 (CardWise 제품)
 
-| 경로 | 기능 | 상태 |
-|------|------|------|
-| `/login` | 로그인/가입 | ✅ |
-| `/dashboard` | F8 소비 대시보드 (월간 요약, 카드별, 카테고리) | ✅ |
-| `/cards` | F1 카드 관리 | ✅ |
-| `/cards/register` | 카드 등록 | ✅ |
-| `/ledger` | F2/F3 가계부 허브 | ✅ |
-| `/inbox` | F3 인박스 | ✅ |
-| `/adjustments` | F3 결제 보정 | ✅ |
-| `/performance/[id]` | F4 실적 관리 | ✅ |
-| `/benefits` | F5 혜택 검색 | ✅ |
-| `/benefits/cards/[id]` | 카드별 혜택 상세 | ✅ |
-| `/vouchers` | F6 바우처 관리 | ✅ |
-| `/notifications` | F7 알림 | ✅ |
-| `/settings` | 사용자 설정 | ✅ |
-| `/settings/notifications` | 알림 설정 | ✅ |
-| `/groups` | F12 그룹 가계부 | ✅ |
-| `/groups/[id]` | 그룹 상세 | ✅ |
-| `/dashboard/tags` | 태그 통계 | ✅ |
-| `/dashboard/tags/cross` | 태그 교차분석 | ✅ |
+| 기능 코드 | 경로 | 설명 | 상태 |
+|-----------|------|------|------|
+| `AUTH` | `/login` | 로그인 / 가입 | ✅ |
+| `F8` | `/dashboard` | 소비 대시보드 (월간 요약, 카드별, 카테고리, 추이) | ✅ |
+| `TAG` | `/dashboard/tags` | 태그별 소비 분석 | ✅ |
+| `TAG` | `/dashboard/tags/cross` | 멀티 태그 교차 분석 | ✅ |
+| `F1` | `/cards` | 카드 관리 (내 카드 목록) | ✅ |
+| `F1` | `/cards/register` | 카드 등록 | ✅ |
+| `F2·F3` | `/ledger` | 가계부 허브 (결제 내역 조회/입력) | ✅ |
+| `F3` | `/inbox` | 인박스 (AI 처리 대기 항목 확인) | ✅ |
+| `F3` | `/adjustments` | 결제 보정 (FX·할인) | ✅ |
+| `F4` | `/performance/[userCardId]` | 카드별 연간/월간 실적 관리 | ✅ |
+| `F5` | `/benefits` | 혜택 검색 (가맹점·카테고리 최적 추천) | ✅ |
+| `F5` | `/benefits/cards/[cardId]` | 카드별 전체 혜택 상세 | ✅ |
+| `F6` | `/vouchers` | 바우처 관리 (잔여 횟수 추적) | ✅ |
+| `F7` | `/notifications` | 알림 센터 (목록 + 읽음 처리) | ✅ |
+| `F7` | `/settings/notifications` | 알림 설정 (on/off 개별 제어) | ✅ |
+| `F12` | `/groups` | 그룹 가계부 허브 (내 그룹 목록) | ✅ |
+| `F12` | `/groups/[groupId]` | 그룹 상세 (결제/멤버/통계) | ✅ |
+| `F12` | `/groups/[groupId]/invite` | 멤버 초대 | ✅ |
+| `F12` | `/groups/invitations` | 받은 초대 수락/거절 | ✅ |
+| `MY` | `/settings` | 사용자 설정 (프로필, 계정, 테마) | ✅ |
 
 ### 개발자 전용 라우트 (CardWise 제품 기능이 아님)
 
 > ⚠️ 아래 경로는 **CardWise 제품 기능이 아닙니다.**  
 > 개발자가 AI 에이전트 상태와 Human-in-the-Loop 대기 큐를 모니터링하는 **내부 OPS 도구**입니다.
 
-| 경로 | 용도 |
-|------|------|
-| `/ops/live` | AI 에이전트 모니터링 + Human-in-the-Loop 대기 큐 뷰어 |
+| 기능 코드 | 경로 | 용도 |
+|-----------|------|------|
+| `OPS-01·02` | `/ops/live` | AI 에이전트 모니터링 + Human-in-the-Loop 대기 큐 뷰어 |
+
 
 ---
 
