@@ -115,22 +115,34 @@
 
 ## 6. 빠른 접속 URL (로컬 개발 기준)
 
-### 사용자 기능
+> 전체 링크 모음 → **[docs/LINKS.md](LINKS.md)** ← AI 에이전트는 이 파일을 먼저 참조하세요
 
-| 서비스 | URL |
-|--------|-----|
-| 로그인 | http://localhost:3000/login |
-| 소비 대시보드 | http://localhost:3000/dashboard |
-| 혜택 검색 | http://localhost:3000/benefits |
-| 그룹 허브 | http://localhost:3000/groups |
-| 알림 센터 | http://localhost:3000/notifications |
+### 사용자 기능 (CardWise 제품)
+
+| 화면 | URL |
+|------|-----|
+| 로그인 / 가입 | http://localhost:3000/login |
+| 소비 대시보드 (F8) | http://localhost:3000/dashboard |
+| 카드 관리 (F1) | http://localhost:3000/cards |
+| 가계부 (F2/F3) | http://localhost:3000/ledger |
+| 혜택 검색 (F5) | http://localhost:3000/benefits |
+| 바우처 관리 (F6) | http://localhost:3000/vouchers |
+| 알림 센터 (F7) | http://localhost:3000/notifications |
+| 그룹 가계부 (F12) | http://localhost:3000/groups |
 | Swagger UI | http://localhost:8080/swagger-ui.html |
 
 ### 개발자 도구 (OPS - 제품 기능 아님)
 
 | 서비스 | URL | 비고 |
 |--------|-----|------|
-| **라이브 대시보드** | http://localhost:3000/ops/live | AI 에이전트 모니터링, 개발자 전용 |
+| **OPS 라이브 대시보드** | http://localhost:3000/ops/live | AI 에이전트 모니터링, 개발자 전용 |
+
+### 외부 서비스
+
+| 서비스 | URL |
+|--------|-----|
+| Supabase 대시보드 | https://supabase.com/dashboard/project/spzeyjwkefsfpahhrvov |
+| GitHub 레포 | https://github.com/cronocros/CardWise |
 
 ---
 
