@@ -3,6 +3,7 @@ import { login, signup } from './actions'
 
 type SearchParams = {
   error?: string
+  message?: string
 }
 
 export default async function LoginPage({
@@ -41,6 +42,12 @@ export default async function LoginPage({
         {resolvedParams.error && (
           <div className="mb-4 rounded-[14px] bg-[var(--danger-soft)] p-3 text-center text-sm font-semibold text-[var(--error)] animate-in fade-in slide-in-from-top-2">
             {resolvedParams.error}
+          </div>
+        )}
+
+        {resolvedParams.message && (
+          <div className="mb-4 rounded-[14px] bg-[var(--success-soft)] p-3 text-center text-sm font-semibold text-[var(--success)] animate-in fade-in slide-in-from-top-2">
+            {resolvedParams.message}
           </div>
         )}
 

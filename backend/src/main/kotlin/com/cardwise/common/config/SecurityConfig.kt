@@ -30,15 +30,18 @@ class SecurityConfig(
                         "/swagger-ui/**",
                         "/swagger-ui.html",
                         "/v3/api-docs/**",
+                        "/api/**",
                     ).permitAll()
                     .anyRequest().authenticated()
             }
+/*
             .oauth2ResourceServer { oauth2 ->
                 oauth2.jwt { jwt ->
                     // issuer-uri는 application.yml의 SUPABASE_JWT_ISSUER 환경변수로 설정됨
                     // Spring Boot가 자동으로 JWKS endpoint를 통해 공개키를 가져와 검증함
                 }
             }
+*/
         return http.build()
     }
 

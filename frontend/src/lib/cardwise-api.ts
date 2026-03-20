@@ -56,6 +56,30 @@ export interface PaymentAdjustmentsResponse {
   data: PaymentAdjustment[];
 }
 
+export interface PaymentRecord {
+  paymentId: number;
+  userCardId: number;
+  merchantName: string;
+  krwAmount: number;
+  finalKrwAmount: number | null;
+  paidAt: string;
+  isAdjusted: boolean;
+}
+
+export interface CreatePaymentRequest {
+  userCardId: number;
+  merchantName: string;
+  krwAmount: number;
+  paidAt: string;
+}
+
+export interface PaymentListResponse {
+  data: PaymentRecord[];
+  meta?: {
+    pagination?: PaginationMeta;
+  };
+}
+
 export interface PerformanceResponse {
   data: {
     userCardId: number;
@@ -355,6 +379,16 @@ export interface BenefitRecommendationEnvelope {
   };
 }
 
+export interface UpdateCardRequest {
+  cardNickname?: string;
+  issuedAt?: string;
+}
+
+export interface DeleteCardResponse {
+  userCardId: number;
+  message: string;
+}
+
 export interface CardBenefitDetailEnvelope {
   data: {
     cardId: number;
@@ -368,6 +402,38 @@ export interface CardBenefitDetailEnvelope {
     latestPerformanceMonth: string | null;
     benefits: BenefitSearchEnvelope["data"];
   };
+}
+
+export interface UserCardSummaryResponse {
+  userCardId: number;
+  cardId: number;
+  cardName: string;
+  cardNickname: string | null;
+  issuedAt: string;
+  isActive: boolean;
+}
+
+export interface UserCardsResponse {
+  data: UserCardSummaryResponse[];
+}
+
+export interface NotificationItemResponse {
+  notificationId: number;
+  notificationType: string;
+  eventCode: string;
+  title: string;
+  body: string;
+  actionUrl: string | null;
+  actionLabel: string | null;
+  referenceTable: string | null;
+  referenceId: number | null;
+  isRead: boolean;
+  readAt: string | null;
+  createdAt: string;
+}
+
+export interface NotificationUnreadCountResponse {
+  unreadCount: number;
 }
 
 export interface GroupSummaryEnvelope {

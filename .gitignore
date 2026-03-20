@@ -36,6 +36,10 @@ backend/.gradle/
 backend/.kotlin/
 backend/bin/
 backend/out/
+backend/*.txt
+backend/*.ps1
+backend/bootstrap_migrations.py
+backend/tmp_migrate.ps1
 
 # Supabase local
 supabase/.branches/
@@ -50,3 +54,6 @@ supabase/.temp/
 
 # Ops dashboard runtime
 ops/dashboard/runtime/
+
+# Design preview (개발 참고용 HTML - 프로젝트 산출물 아님)
+design-preview/

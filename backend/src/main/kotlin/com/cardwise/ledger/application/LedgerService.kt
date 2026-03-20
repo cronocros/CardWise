@@ -22,6 +22,8 @@ import com.cardwise.ledger.repository.PaymentProjection
 import com.cardwise.ledger.repository.PaymentRepository
 import com.cardwise.ledger.repository.PendingActionProjection
 import com.cardwise.ledger.repository.PendingActionRepository
+import com.cardwise.notification.application.NotificationService
+import com.cardwise.notification.infrastructure.NotificationInsertCommand
 import java.time.Clock
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -34,8 +36,43 @@ class LedgerService(
     private val paymentRepository: PaymentRepository,
     private val paymentAdjustmentRepository: PaymentAdjustmentRepository,
     private val pendingActionRepository: PendingActionRepository,
+    private val notificationService: NotificationService,
     private val clock: Clock,
 ) {
+    @Transactional
+    fun createPayment(
+        accountId: UUID,
+        request: com.cardwise.ledger.dto.CreatePaymentRequest,
+    ): ApiResponse<com.cardwise.ledger.dto.PaymentResponse> {
+        val now = OffsetDateTime.now(clock)
+        val payment = com.cardwise.ledger.entity.PaymentEntity().apply {
+            this.accountId = accountId
+            userCardId = request.userCardId
+            merchantNameRaw = request.merchantName
+            krwAmount = request.krwAmount
+            finalKrwAmount = request.krwAmount
+            paidAt = request.paidAt
+            isAdjusted = false
+            updatedAt = now
+        }
+
+        val saved = paymentRepository.save(payment)
+
+        // 알림 생성 연동
+        notificationService.createNotification(
+            NotificationInsertCommand(
+                accountId = accountId,
+                notificationType = "SYSTEM",
+                eventCode = "PAYMENT_CREATED",
+                title = "가계부 내역 추가",
+                body = "[${request.merchantName}] ${request.krwAmount}원 결제 내역이 수동으로 추가되었습니다.",
+                referenceTable = "payment",
+                referenceId = saved.paymentId,
+            )
+        )
+
+        return ApiResponse(data = toPaymentResponse(saved))
+    }
     fun listPaymentAdjustments(
         paymentId: Long,
         accountId: UUID,
@@ -45,6 +82,37 @@ class LedgerService(
             .findAllByPaymentIdOrderByCreatedAtDesc(paymentId)
             .map(::toAdjustmentResponse)
         return ApiResponse(data = items)
+    }
+
+    fun listPayments(
+        accountId: UUID,
+        limit: Int,
+    ): ApiResponse<List<com.cardwise.ledger.dto.PaymentResponse>> {
+        val normalizedLimit = limit.coerceIn(1, 100)
+        val rows = paymentRepository.findAllByAccountIdAndDeletedAtIsNull(
+            accountId = accountId,
+            limit = normalizedLimit + 1,
+        )
+        val hasMore = rows.size > normalizedLimit
+        val visible = rows.take(normalizedLimit).map(::toPaymentResponse)
+        val nextCursor = if (hasMore) visible.lastOrNull()?.paymentId?.toString() else null
+
+        return ApiResponse(
+            data = visible,
+            meta = mapOf("pagination" to com.cardwise.common.api.PaginationMeta(nextCursor = nextCursor, hasMore = hasMore, limit = normalizedLimit)),
+        )
+    }
+
+    @Transactional
+    fun deletePayment(
+        paymentId: Long,
+        accountId: UUID,
+    ): ApiResponse<Unit> {
+        val updated = paymentRepository.softDelete(paymentId, accountId)
+        if (updated != 1) {
+            throw NotFoundException("Payment not found or already deleted")
+        }
+        return ApiResponse(data = Unit)
     }
 
     @Transactional
@@ -261,6 +329,29 @@ class LedgerService(
             reason = entity.reason,
             billedAt = entity.billedAt,
             createdAt = entity.createdAt ?: OffsetDateTime.now(clock),
+        )
+    }
+
+    private fun toPaymentResponse(projection: PaymentProjection): com.cardwise.ledger.dto.PaymentResponse {
+        return com.cardwise.ledger.dto.PaymentResponse(
+            paymentId = projection.paymentId,
+            userCardId = projection.userCardId,
+            merchantName = projection.merchantNameRaw,
+            krwAmount = projection.krwAmount,
+            finalKrwAmount = projection.finalKrwAmount,
+            paidAt = projection.paidAt,
+            isAdjusted = projection.isAdjusted,
+        )
+    }
+    private fun toPaymentResponse(entity: com.cardwise.ledger.entity.PaymentEntity): com.cardwise.ledger.dto.PaymentResponse {
+        return com.cardwise.ledger.dto.PaymentResponse(
+            paymentId = entity.paymentId ?: 0L,
+            userCardId = entity.userCardId ?: 0L,
+            merchantName = entity.merchantNameRaw ?: "",
+            krwAmount = entity.krwAmount ?: 0L,
+            finalKrwAmount = entity.finalKrwAmount ?: (entity.krwAmount ?: 0L),
+            paidAt = entity.paidAt ?: OffsetDateTime.now(clock),
+            isAdjusted = entity.isAdjusted,
         )
     }
 

@@ -60,6 +60,17 @@ data class CreatePaymentAdjustmentRequest(
     val billedAt: LocalDate? = null,
 )
 
+data class CreatePaymentRequest(
+    @field:NotNull
+    val userCardId: Long,
+    @field:NotBlank
+    val merchantName: String,
+    @field:Positive
+    val krwAmount: Long,
+    @field:NotNull
+    val paidAt: OffsetDateTime,
+)
+
 data class AdjustmentResponse(
     val adjustmentId: Long,
     val paymentId: Long,
@@ -109,6 +120,22 @@ data class PaginationEnvelope(
 
 data class PendingActionCountResponse(
     val count: Long,
+)
+
+data class PaymentResponse(
+    val paymentId: Long,
+    val userCardId: Long,
+    val merchantName: String,
+    val krwAmount: Long,
+    val finalKrwAmount: Long?,
+    val paidAt: OffsetDateTime,
+    val isAdjusted: Boolean,
+    val createdAt: OffsetDateTime? = null,
+)
+
+data class PaymentListResponse(
+    val data: List<PaymentResponse>,
+    val pagination: PaginationEnvelope,
 )
 
 fun AdjustmentResponse.toSeedLikeMap(): Map<String, Any?> {

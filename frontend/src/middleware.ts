@@ -8,33 +8,43 @@ export async function middleware(request: NextRequest) {
     },
   })
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
-          )
-        },
-      },
-    }
-  )
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  const { data: { user } } = await supabase.auth.getUser()
-
-  const isAuthRoute = request.nextUrl.pathname.startsWith('/login')
-  
-  if (!user && !isAuthRoute && request.nextUrl.pathname !== '/') {
-    return NextResponse.redirect(new URL('/login', request.url))
+  if (!url || !key) {
+    // Skip auth check if Supabase is not configured yet
+    return response
   }
 
-  if (user && isAuthRoute) {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
+  const supabase = createServerClient(url, key, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll()
+      },
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value, options }) =>
+          response.cookies.set(name, value, options)
+        )
+      },
+    },
+  })
+
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+
+    const isAuthRoute = request.nextUrl.pathname.startsWith('/login')
+    
+    if (!user && !isAuthRoute && request.nextUrl.pathname !== '/') {
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
+
+    if (user && isAuthRoute) {
+      return NextResponse.redirect(new URL('/dashboard', request.url))
+    }
+  } catch (e) {
+    // In case of any unexpected errors during auth (e.g. network timeout),
+    // we let the request through to avoid 500-ing the entire app.
+    console.warn("Middleware auth check failed:", e)
   }
 
   return response

@@ -4,9 +4,19 @@ import { cookies } from 'next/headers'
 export async function createClient() {
   const cookieStore = await cookies()
 
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!supabaseUrl || !supabaseKey) {
+    // If environment variables are missing, we return a mock-like client or handle appropriately
+    // To prevent 500 on assets, it's better to log a clear error and return something that doesn't crash middleware
+    console.error("CRITICAL: NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY is missing!")
+    // For local dev, we could throw a custom error or return null, but middleware might expect a client
+  }
+
   return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl || "https://placeholder.supabase.co",
+    supabaseKey || "placeholder-key",
     {
       cookies: {
         getAll() {

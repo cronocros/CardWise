@@ -1,285 +1,201 @@
 import Link from "next/link";
-import Image from "next/image";
 import { AppShell } from "@/components/app-shell";
-import { formatDateTime, getPendingCount, tryFetchBackendJson, type PendingActionCountResponse, type PendingActionsResponse } from "@/lib/cardwise-api";
+import {
+  formatCurrency,
+  formatSignedCurrency,
+  formatPercent,
+  tryFetchBackendJson,
+  type DashboardMonthlySummaryResponse,
+  type DashboardCardSummaryResponse,
+  type DashboardCategorySummaryResponse,
+  type DashboardTrendResponse,
+} from "@/lib/cardwise-api";
 
+// F8 - 사용자 소비 대시보드 (월간 요약, 카드별, 카테고리별)
 export const dynamic = "force-dynamic";
 
-function priorityLabel(priority: string) {
-  if (priority === "HIGH") return "높음";
-  if (priority === "MEDIUM") return "보통";
-  if (priority === "LOW") return "낮음";
-  return priority;
-}
-
-function pendingStatusLabel(status: string) {
-  if (status === "PENDING") return "대기 중";
-  if (status === "RESOLVED") return "해결됨";
-  if (status === "DISMISSED") return "제외됨";
-  return status;
-}
-
-function actionTypeLabel(actionType: string) {
-  const labels: Record<string, string> = {
-    FX_CORRECTION_NEEDED: "환율 보정",
-    BILLING_DISCOUNT_FOUND: "할인 탐지",
-    PAYMENT_CONFIRMATION: "결제 확인",
-    DUPLICATE_DETECTED: "중복 탐지",
-    CATEGORY_UNMAPPED: "분류 필요",
-    EXCEL_REVIEW: "검토",
-    PERFORMANCE_EXCLUSION_CHECK: "실적 제외",
-  };
-  return labels[actionType] ?? actionType;
-}
-
 export default async function DashboardPage() {
-  const [pendingCountResponse, pendingResponse] = await Promise.all([
-    tryFetchBackendJson<PendingActionCountResponse>("/pending-actions/count?status=PENDING"),
-    tryFetchBackendJson<PendingActionsResponse>("/pending-actions?status=PENDING&limit=6"),
+  const now = new Date();
+  const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+
+  const [monthlySummary, cardSummary, categorySummary, trend] = await Promise.all([
+    tryFetchBackendJson<DashboardMonthlySummaryResponse>(`/dashboard/monthly-summary?yearMonth=${yearMonth}`),
+    tryFetchBackendJson<DashboardCardSummaryResponse>(`/dashboard/card-summary?yearMonth=${yearMonth}`),
+    tryFetchBackendJson<DashboardCategorySummaryResponse>(`/dashboard/category-summary?yearMonth=${yearMonth}`),
+    tryFetchBackendJson<DashboardTrendResponse>(`/dashboard/trend?months=6`),
   ]);
 
-  const pendingCount = getPendingCount(pendingCountResponse);
-  const pendingItems = pendingResponse?.data ?? [];
-
-  // MOCK DATA for AI Operation Center
-  const activeAgents = [
-    {
-      id: "agent-1",
-      name: "Receipt Parser",
-      llm: "Gemini 1.5 Pro",
-      status: "processing",
-      currentTask: "영수증 이미지에서 내역 추출 중...",
-      successRate: 98.4,
-    },
-    {
-      id: "agent-2",
-      name: "Categorizer",
-      llm: "Claude 3.5 Sonnet",
-      status: "idle",
-      currentTask: "대기 중",
-      successRate: 99.1,
-    },
-    {
-      id: "agent-3",
-      name: "Benefit Matcher",
-      llm: "GPT-4o",
-      status: "processing",
-      currentTask: "결제 건과 최적 바우처 매칭 분석 중...",
-      successRate: 95.7,
-    },
-  ];
-
-  const recentActivities = [
-    {
-      id: 1,
-      time: "방금 전",
-      agent: "Receipt Parser",
-      action: "스타벅스 리저브 결제건 (M13401) 파싱 완료",
-      llm: "Gemini 1.5 Pro",
-      conf: 99,
-    },
-    {
-      id: 2,
-      time: "2분 전",
-      agent: "Categorizer",
-      action: "네이버페이 포인트 결제 (M13400) '쇼핑/디지털'로 자동 분류",
-      llm: "Claude 3.5 Sonnet",
-      conf: 94,
-    },
-    {
-      id: 3,
-      time: "5분 전",
-      agent: "Benefit Matcher",
-      action: "항공권 결제건에 마일리지 특별 적립 규칙(Rule-X9) 적용 발견",
-      llm: "GPT-4o",
-      conf: 88,
-    },
-  ];
+  const summary = monthlySummary?.data;
+  const cards = cardSummary?.data ?? [];
+  const categories = categorySummary?.data ?? [];
+  const trendData = trend?.data ?? [];
 
   return (
     <AppShell
       active="dashboard"
-      eyebrow="Intelligence Hub"
-      title="운영 대시보드"
-      description="CardWise 내부의 AI 에이전트 동작 상태와 인간 개입(Human-in-the-loop)이 필요한 작업을 모니터링합니다."
+      eyebrow="F8 · 소비 대시보드"
+      title="이번 달 소비 현황"
+      description="카드별·카테고리별 소비 패턴과 혜택 수령 현황을 한눈에 확인합니다."
       actions={
         <Link
-          href="/inbox"
+          href="/ledger"
           className="rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-[var(--accent-soft)] transition hover:bg-[var(--accent-strong)] transform hover:scale-105"
         >
-          인박스 일괄 처리
+          결제 입력
         </Link>
       }
     >
-      {/* Top System Metrics */}
+      {/* 월간 요약 지표 */}
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 mb-6">
         <div className="relative overflow-hidden rounded-[24px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] p-5 backdrop-blur-xl">
-          <div className="text-[11px] font-bold uppercase tracking-widest text-[var(--accent)] flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[var(--accent)] animate-pulse"></span>
-            System Status
+          <div className="text-[11px] font-bold uppercase tracking-widest text-[var(--text-soft)]">이번 달 총 지출</div>
+          <div className="mt-3 text-[28px] font-semibold tracking-tight text-[var(--text-strong)]">
+            {summary ? formatCurrency(summary.totalSpent) : "—"}
           </div>
-          <div className="mt-3 text-[28px] font-semibold tracking-tight text-[var(--text-strong)] flex items-center justify-between">
-            Optimal
-            <Image
-              src="/mascot.png"
-              alt="CardWise Mascot"
-              width={64}
-              height={64}
-              className="absolute right-4 top-1/2 -translate-y-1/2 opacity-90 animate-[bounce_3s_infinite]"
-              priority
-            />
-          </div>
-          <div className="mt-1 text-sm text-[var(--text-muted)] relative z-10">모든 에이전트 정상 동작 중</div>
+          <div className="mt-1 text-sm text-[var(--text-muted)]">{yearMonth} 기준</div>
         </div>
 
         <div className="relative overflow-hidden rounded-[24px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] p-5 backdrop-blur-xl">
-          <div className="text-[11px] font-bold uppercase tracking-widest text-[var(--text-soft)]">
-            Active Agents
+          <div className="text-[11px] font-bold uppercase tracking-widest text-[var(--text-soft)]">혜택 수령</div>
+          <div className="mt-3 text-[28px] font-semibold tracking-tight text-[var(--success)]">
+            {summary ? formatCurrency(summary.totalBenefit) : "—"}
           </div>
-          <div className="mt-3 text-[28px] font-semibold tracking-tight text-[var(--text-strong)]">
-            {activeAgents.length}
-          </div>
-          <div className="mt-1 text-sm text-[var(--success)]">활성 상태의 특화 AI</div>
+          <div className="mt-1 text-sm text-[var(--text-muted)]">이번 달 혜택 합계</div>
         </div>
 
         <div className="relative overflow-hidden rounded-[24px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] p-5 backdrop-blur-xl">
-          <div className="text-[11px] font-bold uppercase tracking-widest text-[var(--text-soft)]">
-            Tokens Processed
-          </div>
+          <div className="text-[11px] font-bold uppercase tracking-widest text-[var(--text-soft)]">결제 건수</div>
           <div className="mt-3 text-[28px] font-semibold tracking-tight text-[var(--text-strong)]">
-            1.2M
+            {summary ? `${summary.paymentCount}건` : "—"}
           </div>
-          <div className="mt-1 text-sm text-[var(--text-muted)]">이번 달 사용량 (비용 최적화)</div>
+          <div className="mt-1 text-sm text-[var(--text-muted)]">이번 달 총 결제</div>
         </div>
 
-        <div className="relative overflow-hidden rounded-[24px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] p-5 backdrop-blur-xl ring-2 ring-[var(--warning-soft)]">
-          <div className="text-[11px] font-bold uppercase tracking-widest text-[var(--warning)] flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[var(--warning)]"></span>
-            Human Review
+        <div className={`relative overflow-hidden rounded-[24px] border bg-[var(--surface-elevated)] p-5 backdrop-blur-xl ${summary && summary.changeAmount < 0 ? "border-[var(--success-soft)]" : "border-[var(--surface-border)]"}`}>
+          <div className="text-[11px] font-bold uppercase tracking-widest text-[var(--text-soft)]">전월 대비</div>
+          <div className={`mt-3 text-[28px] font-semibold tracking-tight ${summary && summary.changeAmount < 0 ? "text-[var(--success)]" : "text-[var(--error)]"}`}>
+            {summary ? formatSignedCurrency(summary.changeAmount) : "—"}
           </div>
-          <div className="mt-3 text-[28px] font-semibold tracking-tight text-[var(--text-strong)]">
-            {pendingCount}
+          <div className="mt-1 text-sm text-[var(--text-muted)]">
+            {summary?.changeRate != null ? `${formatPercent(summary.changeRate)} 변동` : "비교 데이터 없음"}
           </div>
-          <div className="mt-1 text-sm text-[var(--text-muted)]">사용자 승인 대기 건</div>
         </div>
       </section>
 
-      <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        
-        {/* Left Column: Active Agents & Recent Activity */}
+      <div className="grid gap-6 xl:grid-cols-[1.3fr_0.7fr]">
+        {/* 왼쪽: 카드별 사용 현황 + 추이 */}
         <div className="flex flex-col gap-6">
+          {/* 카드별 현황 */}
           <div className="rounded-[32px] border border-[var(--surface-border-strong)] bg-white/70 backdrop-blur-2xl p-6 shadow-xl shadow-[var(--surface-shadow)]">
             <div className="mb-5 flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-bold text-[var(--text-strong)] tracking-tight">AI 에이전트 모니터링</h2>
-                <p className="mt-1 text-sm text-[var(--text-body)]">현재 백그라운드에서 동작 중인 LLM 에이전트 상태입니다.</p>
+                <h2 className="text-xl font-bold text-[var(--text-strong)] tracking-tight">카드별 사용 현황</h2>
+                <p className="mt-1 text-sm text-[var(--text-body)]">이번 달 카드별 지출과 혜택 현황입니다.</p>
               </div>
+              <Link href="/cards" className="text-sm font-semibold text-[var(--accent-strong)] hover:underline">카드 관리 →</Link>
             </div>
 
-            <div className="grid gap-4">
-              {activeAgents.map((agent) => (
-                <div key={agent.id} className="group relative overflow-hidden rounded-[20px] border border-[var(--surface-border)] bg-gradient-to-br from-white to-[var(--surface-soft)] p-5 transition-all hover:shadow-md hover:-translate-y-0.5">
-                  <div className="flex justify-between items-start">
-                    <div className="flex gap-4">
-                      <div className={`mt-1 h-3 w-3 rounded-full flex-shrink-0 ${agent.status === "processing" ? "bg-[var(--accent)] animate-pulse" : "bg-[var(--neutral-300)]"}`} />
-                      <div>
-                        <div className="flex items-center gap-3">
-                          <h3 className="font-semibold text-lg text-[var(--text-strong)]">{agent.name}</h3>
-                          <span className="inline-flex rounded-full bg-[var(--accent-soft)] px-2.5 py-0.5 text-xs font-semibold text-[var(--accent-strong)]">
-                            {agent.llm}
-                          </span>
-                        </div>
-                        <p className="mt-1.5 text-sm text-[var(--text-body)] font-medium">
-                          {agent.currentTask}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-[10px] uppercase font-bold text-[var(--text-soft)] tracking-widest">정확도</div>
-                      <div className="mt-1 text-base font-bold text-[var(--success)]">{agent.successRate}%</div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="rounded-[32px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] p-6">
-            <h2 className="text-lg font-bold text-[var(--text-strong)] tracking-tight mb-5">실시간 결정 로그</h2>
-            <div className="border-l-2 border-[var(--surface-border-strong)] ml-3 pl-5 space-y-6">
-              {recentActivities.map((act) => (
-                <div key={act.id} className="relative">
-                  <div className="absolute -left-[27px] top-1.5 h-3 w-3 rounded-full border-2 border-[var(--accent)] bg-white"></div>
-                  <div className="flex items-center gap-3 mb-1">
-                    <span className="text-xs font-bold text-[var(--accent-strong)]">{act.agent}</span>
-                    <span className="text-xs text-[var(--text-muted)]">{act.time}</span>
-                  </div>
-                  <p className="text-sm font-medium text-[var(--text-strong)] leading-relaxed">{act.action}</p>
-                  <div className="mt-2 flex gap-2">
-                    <span className="inline-block rounded-md bg-[var(--surface-soft)] px-2 py-1 text-[11px] text-[var(--text-body)] border border-[var(--surface-border)]">⚙ {act.llm}</span>
-                    <span className="inline-block rounded-md bg-[var(--success-soft)] px-2 py-1 text-[11px] text-[var(--success)] border border-[var(--success-soft)]">신뢰도 {act.conf}%</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column: Human-in-the-loop */}
-        <div>
-          <div className="sticky top-[100px] rounded-[32px] border border-[var(--warning-soft)] bg-gradient-to-b from-[#fffaf0] to-white p-6 shadow-2xl shadow-[var(--warning-soft)]">
-            <div className="mb-5 flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-bold text-[var(--warning)] tracking-tight flex items-center gap-2">
-                  Human-in-the-Loop
-                </h2>
-                <p className="mt-1 text-sm text-[var(--text-body)]">AI가 인간의 확정을 기다리고 있는 항목</p>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              {pendingItems.length === 0 ? (
-                <div className="rounded-[20px] border border-dashed border-[var(--warning-soft)] bg-white/50 px-5 py-10 text-center text-sm text-[var(--text-muted)]">
-                  현재 AI가 요청한 검토 대기열이 비어 있습니다.
-                </div>
-              ) : (
-                pendingItems.map((item) => (
-                  <article key={item.pendingActionId} className="group relative overflow-hidden rounded-[20px] border border-[var(--warning-soft)] bg-white p-4 transition-all hover:border-[var(--warning)] hover:shadow-lg">
-                    <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-                      <div className="flex gap-2">
-                        <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase ${item.priority === "HIGH" ? "bg-rose-100 text-rose-700" : "bg-amber-100 text-amber-700"}`}>
-                          {priorityLabel(item.priority)}
-                        </span>
-                        <span className="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-700">
-                          {actionTypeLabel(item.actionType)}
-                        </span>
-                      </div>
-                    </div>
-                    <h3 className="text-sm font-bold text-[var(--text-strong)] leading-snug">{item.title}</h3>
-                    <p className="mt-1.5 text-xs leading-5 text-[var(--text-body)]">{item.description}</p>
-                    <div className="mt-4 flex gap-2">
-                      <Link href="/inbox" className="flex-1 rounded-[12px] bg-[var(--text-strong)] py-2 text-center text-xs font-bold text-white transition hover:bg-black">
-                        결정하기
-                      </Link>
-                      <button className="flex-1 rounded-[12px] border border-[var(--surface-border-strong)] bg-white py-2 text-center text-xs font-bold text-[var(--text-strong)] transition hover:bg-[var(--surface-soft)]">
-                        자세히
-                      </button>
-                    </div>
-                  </article>
-                ))
-              )}
-            </div>
-
-            {pendingCount > 6 && (
-              <div className="mt-5 text-center">
-                <Link href="/inbox" className="text-sm font-bold text-[var(--accent-strong)] hover:underline">
-                  +{pendingCount - 6}개의 대기 항목 전체 보기
+            {cards.length === 0 ? (
+              <div className="rounded-[20px] border border-dashed border-[var(--surface-border)] bg-[var(--surface-soft)] px-5 py-12 text-center">
+                <p className="text-sm text-[var(--text-muted)]">등록된 카드가 없습니다.</p>
+                <Link href="/cards/register" className="mt-3 inline-block rounded-full bg-[var(--accent)] px-4 py-2 text-xs font-bold text-white">
+                  + 카드 등록하기
                 </Link>
+              </div>
+            ) : (
+              <div className="grid gap-3">
+                {cards.map((card) => (
+                  <div key={card.userCardId} className="group relative overflow-hidden rounded-[20px] border border-[var(--surface-border)] bg-gradient-to-br from-white to-[var(--surface-soft)] p-5 transition-all hover:shadow-md hover:-translate-y-0.5">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-semibold text-base text-[var(--text-strong)]">{card.cardName}</h3>
+                        <div className="mt-2 flex items-center gap-4 text-sm text-[var(--text-body)]">
+                          <span>지출 {formatCurrency(card.spentAmount)}</span>
+                          <span className="text-[var(--success)] font-medium">혜택 {formatCurrency(card.benefitAmount)}</span>
+                        </div>
+                        {card.currentTierName && (
+                          <span className="mt-2 inline-block rounded-full bg-[var(--accent-soft)] px-2.5 py-0.5 text-xs font-semibold text-[var(--accent-strong)]">
+                            {card.currentTierName} 달성
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <div className="text-[10px] uppercase font-bold text-[var(--text-soft)] tracking-widest">결제</div>
+                        <div className="mt-1 text-base font-bold text-[var(--text-strong)]">{card.paymentCount}건</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
+
+          {/* 월별 추이 */}
+          {trendData.length > 0 && (
+            <div className="rounded-[32px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] p-6">
+              <h2 className="text-lg font-bold text-[var(--text-strong)] tracking-tight mb-5">최근 6개월 추이</h2>
+              <div className="flex gap-2 items-end h-32">
+                {trendData.map((t) => {
+                  const maxSpent = Math.max(...trendData.map((x) => x.totalSpent), 1);
+                  const height = Math.max((t.totalSpent / maxSpent) * 100, 4);
+                  return (
+                    <div key={t.yearMonth} className="flex-1 flex flex-col items-center gap-1">
+                      <div
+                        className="w-full rounded-t-[8px] bg-[var(--accent-soft)] hover:bg-[var(--accent)] transition-colors cursor-default"
+                        style={{ height: `${height}%` }}
+                        title={`${t.yearMonth}: ${formatCurrency(t.totalSpent)}`}
+                      />
+                      <span className="text-[10px] text-[var(--text-muted)]">{t.yearMonth.slice(5)}월</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
+        {/* 오른쪽: 카테고리별 분포 */}
+        <div>
+          <div className="sticky top-[100px] rounded-[32px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] p-6">
+            <div className="mb-5">
+              <h2 className="text-xl font-bold text-[var(--text-strong)] tracking-tight">카테고리별 분포</h2>
+              <p className="mt-1 text-sm text-[var(--text-body)]">이번 달 소비 카테고리 분석</p>
+            </div>
+
+            {categories.length === 0 ? (
+              <div className="rounded-[20px] border border-dashed border-[var(--surface-border)] bg-white/50 px-5 py-10 text-center text-sm text-[var(--text-muted)]">
+                아직 분류된 결제 내역이 없습니다.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {categories.slice(0, 6).map((cat) => (
+                  <div key={cat.categoryId} className="group">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-sm font-semibold text-[var(--text-strong)]">{cat.categoryName}</span>
+                      <span className="text-sm font-bold text-[var(--text-body)]">{formatCurrency(cat.spentAmount)}</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-[var(--surface-soft)] overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-[var(--accent)] transition-all"
+                        style={{ width: `${cat.sharePercent}%` }}
+                      />
+                    </div>
+                    <div className="mt-0.5 text-[11px] text-[var(--text-muted)]">{cat.sharePercent.toFixed(1)}%</div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="mt-5 flex gap-2">
+              <Link href="/ledger" className="flex-1 rounded-[16px] bg-[var(--text-strong)] py-2.5 text-center text-xs font-bold text-white transition hover:bg-black">
+                결제 내역 보기
+              </Link>
+              <Link href="/benefits" className="flex-1 rounded-[16px] border border-[var(--accent)] py-2.5 text-center text-xs font-bold text-[var(--accent-strong)] transition hover:bg-[var(--accent-soft)]">
+                혜택 탐색
+              </Link>
+            </div>
+          </div>
+        </div>
       </div>
     </AppShell>
   );

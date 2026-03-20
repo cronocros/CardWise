@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AppShell, Chip, MetricCard, Panel } from "@/components/app-shell";
 import { CardThumbnail, TierProgressTrack } from "@/components/preview-primitives";
+import { CardActionsMenu } from "@/components/card-actions-menu";
 import {
   formatCurrency,
   formatPercent,
@@ -252,6 +253,8 @@ export default async function CardsPage() {
                   <Chip tone="slate">{card.data.benefitQualification?.periodLagLabel ?? "시차 없음"}</Chip>
                   <Chip tone="amber">{card.data.benefitQualification?.gracePeriod?.active ? "유예 적용" : "유예 없음"}</Chip>
                 </div>
+
+                <CardActionsMenu userCardId={card.userCardId} currentAlias={card.data.cardName} />
               </Link>
             ))}
           </div>

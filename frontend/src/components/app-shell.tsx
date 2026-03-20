@@ -282,12 +282,14 @@ export function Panel({
   title,
   subtitle,
   children,
+  actions,
   className = "",
   tone = "default",
 }: {
   title: string;
   subtitle?: string;
   children: ReactNode;
+  actions?: ReactNode;
   className?: string;
   tone?: "default" | "soft" | "minimal" | "glass";
 }) {
@@ -304,15 +306,18 @@ export function Panel({
     <section
       className={`cw-glass cw-panel-pop overflow-hidden rounded-[26px] border border-[var(--surface-border)] p-5 shadow-[var(--surface-shadow)] sm:p-6 ${toneClass} ${className}`}
     >
-      <div className="mb-5 flex flex-col gap-2">
-        <h2 className="text-[18px] font-semibold tracking-[-0.04em] text-[var(--text-strong)]">
-          {title}
-        </h2>
-        {subtitle ? (
-          <p className="text-[13px] leading-6 text-[var(--text-body)] sm:text-[14px]">
-            {subtitle}
-          </p>
-        ) : null}
+      <div className="mb-5 flex items-start justify-between gap-4">
+        <div className="flex flex-col gap-2">
+          <h2 className="text-[18px] font-semibold tracking-[-0.04em] text-[var(--text-strong)]">
+            {title}
+          </h2>
+          {subtitle ? (
+            <p className="text-[13px] leading-6 text-[var(--text-body)] sm:text-[14px]">
+              {subtitle}
+            </p>
+          ) : null}
+        </div>
+        {actions ? <div className="shrink-0">{actions}</div> : null}
       </div>
       {children}
     </section>
