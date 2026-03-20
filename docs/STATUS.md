@@ -164,6 +164,8 @@
 |------|------|
 | 기능 명세 | `docs/requirements/functional-requirements.md` |
 | **기능 대조표 (Feature Matrix)** | `docs/specs/feature-matrix.md` |
+| **구현 태스크 목록** | `docs/TASKS.md` ← F2/F4/F8 남은 태스크 체크리스트 |
+| **실행 링크 모음** | `docs/LINKS.md` |
 | 시스템 아키텍처 | `docs/architecture/system-architecture.md` |
 | 애플리케이션 아키텍처 | `docs/architecture/application-architecture.md` |
 | 프론트엔드 아키텍처 | `docs/architecture/frontend-architecture.md` |
