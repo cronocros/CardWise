@@ -30,6 +30,8 @@ class NotificationService(
             request.voucherExpiryAlert != null ||
                 request.performanceReminder != null ||
                 request.paymentConfirmAlert != null ||
+                request.groupInviteAlert != null ||
+                request.groupActivityAlert != null ||
                 request.emailNotification != null ||
                 request.pushNotification != null
 
@@ -44,6 +46,8 @@ class NotificationService(
                 voucherExpiryAlert = request.voucherExpiryAlert ?: current.voucherExpiryAlert,
                 performanceReminder = request.performanceReminder ?: current.performanceReminder,
                 paymentConfirmAlert = request.paymentConfirmAlert ?: current.paymentConfirmAlert,
+                groupInviteAlert = request.groupInviteAlert ?: current.groupInviteAlert,
+                groupActivityAlert = request.groupActivityAlert ?: current.groupActivityAlert,
                 emailNotification = request.emailNotification ?: current.emailNotification,
                 pushNotification = request.pushNotification ?: current.pushNotification,
             ),
@@ -133,6 +137,8 @@ class NotificationService(
             voucherExpiryAlert = voucherExpiryAlert,
             performanceReminder = performanceReminder,
             paymentConfirmAlert = paymentConfirmAlert,
+            groupInviteAlert = groupInviteAlert,
+            groupActivityAlert = groupActivityAlert,
             emailNotification = emailNotification,
             pushNotification = pushNotification,
             updatedAt = updatedAt,

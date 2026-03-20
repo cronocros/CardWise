@@ -11,6 +11,8 @@ import com.cardwise.ledger.dto.PendingActionStatus
 import com.cardwise.ledger.dto.Priority
 import com.cardwise.ledger.dto.ResolvePendingActionRequest
 import jakarta.validation.Valid
+import org.springframework.http.HttpStatus
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
@@ -33,6 +36,40 @@ class LedgerController(
         @RequestHeader(name = "X-Account-Id", required = false) accountIdHeader: String?,
     ): ApiResponse<List<AdjustmentResponse>> {
         return ledgerService.listPaymentAdjustments(paymentId, requestAccountIdResolver.resolve(accountIdHeader))
+    }
+
+    @GetMapping("/payments")
+    fun listPayments(
+        @RequestHeader(name = "X-Account-Id", required = false) accountIdHeader: String?,
+        @RequestParam(defaultValue = "20") limit: Int,
+    ): ApiResponse<List<com.cardwise.ledger.dto.PaymentResponse>> {
+        return ledgerService.listPayments(
+            accountId = requestAccountIdResolver.resolve(accountIdHeader),
+            limit = limit
+        )
+    }
+
+    @DeleteMapping("/payments/{paymentId}")
+    fun deletePayment(
+        @PathVariable paymentId: Long,
+        @RequestHeader(name = "X-Account-Id", required = false) accountIdHeader: String?,
+    ): ApiResponse<Unit> {
+        return ledgerService.deletePayment(
+            paymentId = paymentId,
+            accountId = requestAccountIdResolver.resolve(accountIdHeader)
+        )
+    }
+
+    @PostMapping("/payments")
+    @ResponseStatus(HttpStatus.CREATED)
+    fun createPayment(
+        @RequestHeader(name = "X-Account-Id", required = false) accountIdHeader: String?,
+        @Valid @RequestBody request: com.cardwise.ledger.dto.CreatePaymentRequest,
+    ): ApiResponse<com.cardwise.ledger.dto.PaymentResponse> {
+        return ledgerService.createPayment(
+            accountId = requestAccountIdResolver.resolve(accountIdHeader),
+            request = request
+        )
     }
 
     @PostMapping("/payments/{paymentId}/adjustments")

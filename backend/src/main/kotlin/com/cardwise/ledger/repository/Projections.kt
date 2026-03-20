@@ -7,6 +7,8 @@ import java.util.UUID
 interface PaymentProjection {
     val paymentId: Long
     val accountId: UUID
+    val userCardId: Long
+    val merchantNameRaw: String
     val krwAmount: Long
     val finalKrwAmount: Long?
     val paidAt: OffsetDateTime

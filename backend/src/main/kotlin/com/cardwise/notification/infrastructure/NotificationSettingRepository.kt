@@ -14,6 +14,8 @@ data class NotificationSettingRow(
     val voucherExpiryAlert: Boolean,
     val performanceReminder: Boolean,
     val paymentConfirmAlert: Boolean,
+    val groupInviteAlert: Boolean,
+    val groupActivityAlert: Boolean,
     val emailNotification: Boolean,
     val pushNotification: Boolean,
     val updatedAt: OffsetDateTime,
@@ -36,6 +38,8 @@ class NotificationSettingRepository(
                 voucher_expiry_alert,
                 performance_reminder,
                 payment_confirm_alert,
+                group_invite_alert,
+                group_activity_alert,
                 email_notification,
                 push_notification,
                 updated_at
@@ -58,6 +62,8 @@ class NotificationSettingRepository(
                 voucher_expiry_alert,
                 performance_reminder,
                 payment_confirm_alert,
+                group_invite_alert,
+                group_activity_alert,
                 email_notification,
                 push_notification,
                 updated_at
@@ -66,6 +72,8 @@ class NotificationSettingRepository(
                 :voucherExpiryAlert,
                 :performanceReminder,
                 :paymentConfirmAlert,
+                :groupInviteAlert,
+                :groupActivityAlert,
                 :emailNotification,
                 :pushNotification,
                 now()
@@ -74,6 +82,8 @@ class NotificationSettingRepository(
             set voucher_expiry_alert = excluded.voucher_expiry_alert,
                 performance_reminder = excluded.performance_reminder,
                 payment_confirm_alert = excluded.payment_confirm_alert,
+                group_invite_alert = excluded.group_invite_alert,
+                group_activity_alert = excluded.group_activity_alert,
                 email_notification = excluded.email_notification,
                 push_notification = excluded.push_notification,
                 updated_at = now()
@@ -83,6 +93,8 @@ class NotificationSettingRepository(
                 voucher_expiry_alert,
                 performance_reminder,
                 payment_confirm_alert,
+                group_invite_alert,
+                group_activity_alert,
                 email_notification,
                 push_notification,
                 updated_at
@@ -102,10 +114,14 @@ class NotificationSettingRepository(
                 voucher_expiry_alert,
                 performance_reminder,
                 payment_confirm_alert,
+                group_invite_alert,
+                group_activity_alert,
                 email_notification,
                 push_notification
             ) values (
                 :accountId,
+                true,
+                true,
                 true,
                 true,
                 true,
@@ -124,6 +140,8 @@ class NotificationSettingRepository(
             .addValue("voucherExpiryAlert", settings.voucherExpiryAlert)
             .addValue("performanceReminder", settings.performanceReminder)
             .addValue("paymentConfirmAlert", settings.paymentConfirmAlert)
+            .addValue("groupInviteAlert", settings.groupInviteAlert)
+            .addValue("groupActivityAlert", settings.groupActivityAlert)
             .addValue("emailNotification", settings.emailNotification)
             .addValue("pushNotification", settings.pushNotification)
     }
@@ -135,6 +153,8 @@ class NotificationSettingRepository(
             voucherExpiryAlert = resultSet.getBoolean("voucher_expiry_alert"),
             performanceReminder = resultSet.getBoolean("performance_reminder"),
             paymentConfirmAlert = resultSet.getBoolean("payment_confirm_alert"),
+            groupInviteAlert = resultSet.getBoolean("group_invite_alert"),
+            groupActivityAlert = resultSet.getBoolean("group_activity_alert"),
             emailNotification = resultSet.getBoolean("email_notification"),
             pushNotification = resultSet.getBoolean("push_notification"),
             updatedAt = resultSet.getObject("updated_at", OffsetDateTime::class.java),

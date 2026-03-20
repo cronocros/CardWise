@@ -1,5 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { createServerClient } from "@supabase/ssr";
 import { backendUrl } from "./cardwise-api";
+
+const DEV_FALLBACK_ACCOUNT_ID = "00000000-0000-0000-0000-000000000001";
 
 function copyHeaders(source: Headers) {
   const headers = new Headers();
@@ -17,6 +20,33 @@ function copyHeaders(source: Headers) {
   return headers;
 }
 
+async function getSupabaseSession(request: NextRequest) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    return null;
+  }
+
+  try {
+    const supabase = createServerClient(supabaseUrl, supabaseKey, {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll() {
+          // read-only in proxy context
+        },
+      },
+    });
+
+    const { data: { session } } = await supabase.auth.getSession();
+    return session;
+  } catch {
+    return null;
+  }
+}
+
 export async function proxyToBackend(
   request: NextRequest,
   backendPath: string,
@@ -32,6 +62,23 @@ export async function proxyToBackend(
     }
     headers.set(key, value);
   });
+
+  // Inject Supabase JWT and accountId from session
+  const session = await getSupabaseSession(request);
+
+  if (session?.access_token) {
+    // Pass JWT to backend for verification
+    headers.set("Authorization", `Bearer ${session.access_token}`);
+    // Extract accountId (sub) from JWT and inject as X-Account-Id
+    const accountId = session.user?.id;
+    if (accountId) {
+      headers.set("X-Account-Id", accountId);
+    }
+  } else if (!headers.has("X-Account-Id")) {
+    // Fallback for local dev without login
+    console.warn("[proxy] No session found, using dev fallback account ID");
+    headers.set("X-Account-Id", DEV_FALLBACK_ACCOUNT_ID);
+  }
 
   const response = await fetch(backendUrl(backendPath), {
     method,

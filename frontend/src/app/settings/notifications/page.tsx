@@ -10,7 +10,7 @@ type NotificationSettings = NotificationSettingsResponse["data"];
 const toggleMeta: Array<{
   key: keyof Pick<
     NotificationSettings,
-    "voucherExpiryAlert" | "performanceReminder" | "paymentConfirmAlert" | "emailNotification" | "pushNotification"
+    "voucherExpiryAlert" | "performanceReminder" | "paymentConfirmAlert" | "groupInviteAlert" | "groupActivityAlert" | "emailNotification" | "pushNotification"
   >;
   label: string;
   description: string;
@@ -31,6 +31,16 @@ const toggleMeta: Array<{
     description: "확인 필요 결제나 보정 작업이 생기면 알려줍니다.",
   },
   {
+    key: "groupInviteAlert",
+    label: "그룹 초대 알림",
+    description: "새로운 그룹 초대를 받을 시 알려줍니다.",
+  },
+  {
+    key: "groupActivityAlert",
+    label: "그룹 활동 알림",
+    description: "그룹 결제 내역 등록 및 멤버 상태 변경을 알려줍니다.",
+  },
+  {
     key: "emailNotification",
     label: "이메일 알림",
     description: "중요 공지와 주간 요약을 이메일로 받습니다.",
@@ -48,6 +58,8 @@ const defaultSettings: NotificationSettings = {
   voucherExpiryAlert: true,
   performanceReminder: true,
   paymentConfirmAlert: true,
+  groupInviteAlert: true,
+  groupActivityAlert: true,
   emailNotification: false,
   pushNotification: true,
   updatedAt: "",
@@ -122,6 +134,8 @@ export default function NotificationSettingsPage() {
           voucherExpiryAlert: settings.voucherExpiryAlert,
           performanceReminder: settings.performanceReminder,
           paymentConfirmAlert: settings.paymentConfirmAlert,
+          groupInviteAlert: settings.groupInviteAlert,
+          groupActivityAlert: settings.groupActivityAlert,
           emailNotification: settings.emailNotification,
           pushNotification: settings.pushNotification,
         }),

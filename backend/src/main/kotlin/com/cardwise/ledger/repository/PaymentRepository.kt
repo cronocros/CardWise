@@ -13,6 +13,8 @@ interface PaymentRepository : JpaRepository<PaymentEntity, Long> {
             select
               p.payment_id as paymentId,
               p.account_id as accountId,
+              p.user_card_id as userCardId,
+              p.merchant_name_raw as merchantNameRaw,
               p.krw_amount as krwAmount,
               p.final_krw_amount as finalKrwAmount,
               p.paid_at as paidAt,
@@ -90,4 +92,41 @@ interface PaymentRepository : JpaRepository<PaymentEntity, Long> {
         @Param("accountId") accountId: UUID,
         @Param("excluded") excluded: Boolean,
     ): Int
+
+    @Query(
+        value = """
+            select 
+              p.payment_id as paymentId,
+              p.account_id as accountId,
+              p.user_card_id as userCardId,
+              p.merchant_name_raw as merchantNameRaw,
+              p.krw_amount as krwAmount,
+              p.final_krw_amount as finalKrwAmount,
+              p.paid_at as paidAt,
+              p.is_adjusted as isAdjusted
+            from payment p
+            where p.account_id = :accountId
+              and p.deleted_at is null
+            order by p.paid_at desc
+            limit :limit
+        """,
+        nativeQuery = true,
+    )
+    fun findAllByAccountIdAndDeletedAtIsNull(
+        @Param("accountId") accountId: UUID,
+        @Param("limit") limit: Int,
+    ): List<PaymentProjection>
+
+    @Modifying
+    @Query(
+        value = """
+            update payment
+            set deleted_at = now(),
+                updated_at = now()
+            where payment_id = :paymentId
+              and account_id = :accountId
+        """,
+        nativeQuery = true,
+    )
+    fun softDelete(@Param("paymentId") paymentId: Long, @Param("accountId") accountId: UUID): Int
 }

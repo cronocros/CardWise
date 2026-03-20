@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AppShell, Chip, MetricCard, Panel } from "@/components/app-shell";
 import { CardThumbnail, TierProgressTrack } from "@/components/preview-primitives";
+import { CardActionsMenu } from "@/components/card-actions-menu";
 import {
   formatCurrency,
   formatPercent,
@@ -63,6 +64,12 @@ export default async function CardsPage() {
       actions={
         <>
           <Link
+            href="/cards/register"
+            className="rounded-full border border-[var(--accent)] bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white transition hover:bg-[var(--accent-strong)]"
+          >
+            + 카드 등록
+          </Link>
+          <Link
             href="/dashboard"
             className="rounded-full border border-[var(--surface-border)] bg-[var(--surface-elevated)] px-4 py-2 text-sm font-medium text-[var(--text-strong)] transition hover:bg-[var(--surface-soft)]"
           >
@@ -70,12 +77,13 @@ export default async function CardsPage() {
           </Link>
           <Link
             href={bestCard ? `/performance/${bestCard.userCardId}` : "/performance/1"}
-            className="rounded-full border border-[var(--surface-border)] bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white transition hover:bg-[var(--accent-strong)]"
+            className="rounded-full border border-[var(--surface-border)] bg-[var(--surface-soft)] px-4 py-2 text-sm font-medium text-[var(--text-strong)] transition hover:bg-[var(--surface-elevated)]"
           >
             선두 카드 열기
           </Link>
         </>
       }
+
     >
       <section className="cw-stagger grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <MetricCard label="추적 카드" value={String(cards.length)} helper="실적 스냅샷 기준" />
@@ -245,6 +253,8 @@ export default async function CardsPage() {
                   <Chip tone="slate">{card.data.benefitQualification?.periodLagLabel ?? "시차 없음"}</Chip>
                   <Chip tone="amber">{card.data.benefitQualification?.gracePeriod?.active ? "유예 적용" : "유예 없음"}</Chip>
                 </div>
+
+                <CardActionsMenu userCardId={card.userCardId} currentAlias={card.data.cardName} />
               </Link>
             ))}
           </div>
