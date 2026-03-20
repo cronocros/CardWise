@@ -1,26 +1,88 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Search, MessageSquare, Heart, Bookmark, Share2, 
-  ChevronRight, Flame, Trophy, Award, Filter
+  Flame
 } from 'lucide-react';
-import { COMMUNITY_POSTS } from '@/lib/sampleData';
 import { CommunityPost } from '@/types/mobile';
 import { CommunityDetailModal } from './modals';
+import { getCommunityPosts, togglePostLike, togglePostBookmark, unwrapArray } from '@/lib/cardwise-api';
 
-const CATEGORIES = ['전체', '꿀팁', '카드수다', '질문', '자랑하기', '나눔'];
+const CATEGORIES = ['전체', 'CARD_HACKS', 'SAVING_TIPS', 'QNA', 'FREE'];
+const CATEGORY_LABELS: Record<string, string> = {
+  '전체': '🪐 전체',
+  'CARD_HACKS': '💡 꿀팁',
+  'SAVING_TIPS': '💰 절약',
+  'QNA': '❓ 질문',
+  'FREE': '💬 자유'
+};
+
+const getAuthorInfo = (accountId: string) => {
+  // Simple deterministic author generation for MVP
+  const avatars = ['🦊', '🐻', '🐯', '🦁', '🐼', '🐹'];
+  const names = ['카드고수', '절약왕', '혜택요정', '소비요정', '금융똑똑'];
+  const badges = ['GOLD', 'SILVER', 'BRONZE'];
+  
+  const hash = accountId.split('-')[0].split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  
+  return {
+    name: names[hash % names.length] + ' ' + accountId.slice(0, 4),
+    avatar: avatars[hash % avatars.length],
+    badge: badges[hash % badges.length]
+  };
+};
 
 export function CommunityView() {
   const [selectedCategory, setSelectedCategory] = useState('전체');
-  const [likedPosts, setLikedPosts] = useState<string[]>([]);
+  const [posts, setPosts] = useState<CommunityPost[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedPost, setSelectedPost] = useState<CommunityPost | null>(null);
 
-  const toggleLike = (id: string, e: React.MouseEvent) => {
+  const loadPosts = useCallback(async () => {
+    setLoading(true);
+    const category = selectedCategory === '전체' ? undefined : selectedCategory;
+    const res = await getCommunityPosts(category);
+    const rawPosts = unwrapArray<CommunityPost>(res);
+    
+    const mapped = rawPosts.map(p => ({
+      ...p,
+      author: getAuthorInfo(p.accountId)
+    }));
+    
+    setPosts(mapped);
+    setLoading(false);
+  }, [selectedCategory]);
+
+  useEffect(() => {
+    loadPosts();
+  }, [loadPosts]);
+
+  const toggleLike = async (postId: number, e: React.MouseEvent) => {
     e.stopPropagation();
-    setLikedPosts(prev => 
-      prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
-    );
+    const res = await togglePostLike(postId);
+    if (res?.data) {
+       setPosts(prev => prev.map(p => 
+          p.postId === postId ? { 
+            ...p, 
+            isLiked: res.data.isActive, 
+            likeCount: res.data.count 
+          } : p
+       ));
+    }
+  };
+
+  const toggleBookmark = async (postId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const res = await togglePostBookmark(postId);
+    if (res?.data) {
+       setPosts(prev => prev.map(p => 
+          p.postId === postId ? { 
+            ...p, 
+            isBookmarked: res.data.isActive 
+          } : p
+       ));
+    }
   };
 
   const handlePostClick = (post: CommunityPost) => {
@@ -51,7 +113,7 @@ export function CommunityView() {
                 : 'bg-white text-gray-400 border border-gray-100 hover:bg-gray-50'
             }`}
           >
-            {cat === '전체' ? '🪐 전체' : cat}
+            {CATEGORY_LABELS[cat]}
           </button>
         ))}
       </div>
@@ -62,7 +124,7 @@ export function CommunityView() {
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-4">
              <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-rose-500">Editor's Pick</span>
+             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-rose-500">Editor&apos;s Pick</span>
           </div>
           <h3 className="text-[20px] font-black mb-3 tracking-tighter">이번 달 신용카드 혜택 <br/>순위 대공개! 🏆</h3>
           <p className="text-[12px] font-bold text-gray-400 mb-6 drop-shadow-sm opacity-80">가장 인기가 많았던 카드 3종을 분석해봤어요.</p>
@@ -75,54 +137,68 @@ export function CommunityView() {
 
       {/* Post Feed */}
       <section className="space-y-6">
-        {COMMUNITY_POSTS.map((post, idx) => (
-          <div 
-            key={post.id} 
-            onClick={() => handlePostClick(post)}
-            className="p-7 rounded-[40px] bg-white border border-gray-50 shadow-lg active:scale-[0.98] transition-all group cursor-pointer"
-          >
-            <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center text-xl shadow-inner border border-gray-100 group-hover:scale-110 transition-transform">
-                  {post.author.avatar}
-                </div>
-                <div>
-                   <p className="text-[14px] font-black text-slate-800">{post.author.name}</p>
-                   <div className="flex items-center gap-1.5">
-                      <span className="text-[9px] font-black text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded-md uppercase tracking-tighter">{post.author.badge}</span>
-                      <span className="text-[10px] font-bold text-gray-300">· {new Date(post.createdAt).toLocaleDateString()}</span>
-                   </div>
-                </div>
-              </div>
-              <button className="text-gray-300 active:text-rose-500 transition-colors" onClick={(e) => e.stopPropagation()}>
-                <Bookmark size={20} />
-              </button>
-            </div>
-
-            <h4 className="text-[18px] font-black text-slate-800 mb-2 tracking-tight line-clamp-1">{post.title}</h4>
-            <p className="text-[14px] text-gray-500 leading-relaxed font-medium mb-6 line-clamp-2">{post.content}</p>
-
-            <div className="flex items-center gap-6 mt-6 pt-6 border-t border-gray-50">
-                <button 
-                  onClick={(e) => toggleLike(post.id, e)}
-                  className={`flex items-center gap-1.5 transition-colors ${likedPosts.includes(post.id) ? 'text-rose-500' : 'text-gray-400'}`}
-                >
-                  <Heart size={16} fill={likedPosts.includes(post.id) ? "currentColor" : "none"} />
-                  <span className="text-[12px] font-black">{post.likes + (likedPosts.includes(post.id) ? 1 : 0)}</span>
-                </button>
-                <button 
-                  onClick={(e) => { e.stopPropagation(); handlePostClick(post); }}
-                  className="flex items-center gap-1.5 text-gray-400 active:text-rose-500 transition-colors"
-                >
-                  <MessageSquare size={16} />
-                  <span className="text-[12px] font-black">{post.comments}</span>
-                </button>
-                <button className="ml-auto text-gray-300 active:text-slate-900 transition-colors" onClick={(e) => e.stopPropagation()}>
-                  <Share2 size={16} />
-                </button>
-            </div>
+        {loading ? (
+          <div className="flex flex-col items-center py-20 opacity-40">
+            <div className="w-10 h-10 rounded-full border-4 border-rose-500 border-t-transparent animate-spin mb-4" />
+            <p className="font-black text-xs uppercase tracking-widest text-rose-500">Loading Feed...</p>
           </div>
-        ))}
+        ) : posts.length === 0 ? (
+          <div className="text-center py-20">
+            <p className="text-gray-400 font-bold">작성된 게시글이 없습니다. 🌸</p>
+          </div>
+        ) : (
+          posts.map((post) => (
+            <div 
+              key={post.postId} 
+              onClick={() => handlePostClick(post)}
+              className="p-7 rounded-[40px] bg-white border border-gray-50 shadow-lg active:scale-[0.98] transition-all group cursor-pointer"
+            >
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center text-xl shadow-inner border border-gray-100 group-hover:scale-110 transition-transform">
+                    {post.author?.avatar}
+                  </div>
+                  <div>
+                     <p className="text-[14px] font-black text-slate-800">{post.author?.name}</p>
+                     <div className="flex items-center gap-1.5">
+                        <span className="text-[9px] font-black text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded-md uppercase tracking-tighter">{post.author?.badge}</span>
+                        <span className="text-[10px] font-bold text-gray-300">· {new Date(post.createdAt).toLocaleDateString()}</span>
+                     </div>
+                  </div>
+                </div>
+                <button 
+                  className={`transition-colors ${post.isBookmarked ? 'text-rose-500' : 'text-gray-300'}`} 
+                  onClick={(e) => toggleBookmark(post.postId, e)}
+                >
+                  <Bookmark size={20} fill={post.isBookmarked ? "currentColor" : "none"} />
+                </button>
+              </div>
+
+              <h4 className="text-[18px] font-black text-slate-800 mb-2 tracking-tight line-clamp-1">{post.title}</h4>
+              <p className="text-[14px] text-gray-500 leading-relaxed font-medium mb-6 line-clamp-2">{post.content}</p>
+
+              <div className="flex items-center gap-6 mt-6 pt-6 border-t border-gray-50">
+                  <button 
+                    onClick={(e) => toggleLike(post.postId, e)}
+                    className={`flex items-center gap-1.5 transition-colors ${post.isLiked ? 'text-rose-500' : 'text-gray-400'}`}
+                  >
+                    <Heart size={16} fill={post.isLiked ? "currentColor" : "none"} />
+                    <span className="text-[12px] font-black">{post.likeCount}</span>
+                  </button>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); handlePostClick(post); }}
+                    className="flex items-center gap-1.5 text-gray-400 active:text-rose-500 transition-colors"
+                  >
+                    <MessageSquare size={16} />
+                    <span className="text-[12px] font-black">{post.commentCount}</span>
+                  </button>
+                  <button className="ml-auto text-gray-300 active:text-slate-900 transition-colors" onClick={(e) => e.stopPropagation()}>
+                    <Share2 size={16} />
+                  </button>
+              </div>
+            </div>
+          ))
+        )}
       </section>
 
       <CommunityDetailModal 

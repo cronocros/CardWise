@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { X, Home, CreditCard, Gift, LineChart, Users, Settings, User, Sparkles } from 'lucide-react';
 import { Mascot } from './mascot';
-import { Transaction, Card, CommunityPost } from '@/types/mobile';
+import { Transaction, Card, CommunityPost, CommunityComment } from '@/types/mobile';
 
 
 // ─────────────────────────────────────────────────────────────
@@ -552,15 +552,101 @@ interface CardSettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   cards: Card[];
+  onUpdate?: (cards: Card[]) => void;
 }
 
-export function CardSettingsModal({ isOpen, onClose, cards }: CardSettingsModalProps) {
+export function CardSettingsModal({ isOpen, onClose, cards, onUpdate }: CardSettingsModalProps) {
   const [visible, setVisible] = useState(false);
+  const [localCards, setLocalCards] = useState<Card[]>(cards);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [confirmingDelete, setConfirmingDelete] = useState<Card | null>(null);
+  
+  // Swipe state
+  const [swipeId, setSwipeId] = useState<string | null>(null);
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const [startX, setStartX] = useState(0);
+  const [isSwiping, setIsSwiping] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setVisible(isOpen), 30);
-    return () => clearTimeout(timer);
-  }, [isOpen]);
+    setVisible(isOpen);
+    if (isOpen) {
+       setLocalCards(cards);
+       setConfirmingDelete(null);
+    }
+  }, [isOpen, cards]);
+
+  const handleDelete = () => {
+    if (!confirmingDelete) return;
+    const updated = localCards.filter(c => c.id !== confirmingDelete.id);
+    setLocalCards(updated);
+    setConfirmingDelete(null);
+    setSwipeId(null);
+    setSwipeOffset(0);
+  };
+
+  const handleDragStart = (idx: number) => {
+    setDragIndex(idx);
+    setSwipeId(null);
+    setSwipeOffset(0);
+  };
+
+  const handleDragEnter = (idx: number) => {
+    if (dragIndex === null || dragIndex === idx) return;
+    const updated = [...localCards];
+    const dragItem = updated[dragIndex];
+    updated.splice(dragIndex, 1);
+    updated.splice(idx, 0, dragItem);
+    setDragIndex(idx);
+    setLocalCards(updated);
+  };
+
+  const handleDragEnd = () => {
+    setDragIndex(null);
+  };
+
+  // Unified Swipe Handlers
+  const startSwipe = (id: string, x: number) => {
+    setStartX(x);
+    setIsSwiping(true);
+    if (swipeId && swipeId !== id) {
+       setSwipeId(null);
+       setSwipeOffset(0);
+    }
+  };
+
+  const moveSwipe = (id: string, x: number) => {
+    if (!isSwiping) return;
+    const diff = x - startX;
+    if (diff < -10) { 
+       setSwipeOffset(Math.max(diff, -100));
+       setSwipeId(id);
+    } else if (diff > 10 && swipeId === id) { 
+       setSwipeOffset(Math.min(0, -100 + diff));
+    }
+  };
+
+  const endSwipe = (id: string) => {
+    setIsSwiping(false);
+    if (swipeOffset < -50) {
+       setSwipeOffset(-100);
+       setSwipeId(id);
+    } else {
+       setSwipeOffset(0);
+       setSwipeId(null);
+    }
+  };
+
+  const handleItemClick = (id: string) => {
+    if (swipeId === id) {
+       setSwipeOffset(0);
+       setSwipeId(null);
+    }
+  };
+
+  const handleSave = () => {
+    onUpdate?.(localCards);
+    onClose();
+  };
 
   if (!isOpen) return null;
 
@@ -569,30 +655,95 @@ export function CardSettingsModal({ isOpen, onClose, cards }: CardSettingsModalP
        <div className="absolute inset-0 bg-[#0a0005]/70 backdrop-blur-xl" onClick={onClose} />
        <div className={`relative w-full max-w-[430px] bg-gray-50 rounded-t-[50px] p-9 pb-12 shadow-2xl transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${visible ? 'translate-y-0' : 'translate-y-full'}`}>
           <div className="w-14 h-1.5 bg-gray-200/60 rounded-full mx-auto mb-10" />
+          
           <div className="flex justify-between items-center mb-8">
-             <h2 className="text-[24px] font-black text-slate-800 tracking-tighter">카드 목록 관리</h2>
-             <button onClick={onClose} className="w-11 h-11 rounded-2xl bg-white border border-gray-100 flex items-center justify-center text-gray-400 active:scale-75 shadow-sm"><X size={20} /></button>
+             <div className="flex flex-col gap-1">
+                <h2 className="text-[24px] font-black text-slate-800 tracking-tighter">카드 목록 관리</h2>
+                <p className="text-[11px] text-gray-400 font-bold uppercase tracking-widest">설정된 모든 카드를 관리합니다.</p>
+             </div>
+             <div className="flex items-center gap-3">
+               <button 
+                 onClick={handleSave}
+                 className="px-6 py-2.5 rounded-2xl bg-slate-900 text-white font-black text-[13px] active:scale-95 transition-all shadow-lg"
+               >
+                 저장
+               </button>
+               <button onClick={onClose} className="w-10 h-10 rounded-2xl bg-white border border-gray-100 flex items-center justify-center text-gray-400 active:scale-75 shadow-sm"><X size={18} /></button>
+             </div>
           </div>
 
-          <div className="space-y-3 mb-10">
-             {cards.map((card) => (
-               <div key={card.id} className="p-4 rounded-[28px] bg-white border border-gray-100 flex items-center gap-4 shadow-sm group">
-                  <div className="w-12 h-8 rounded-lg shadow-sm flex-shrink-0" style={{ background: card.gradient || card.color }} />
-                  <div className="flex-1">
-                     <p className="text-[14px] font-black text-slate-800 truncate">{card.name}</p>
-                     <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{card.brand} · {card.tier}</p>
-                  </div>
-                  <div className="flex gap-2">
-                     <button className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 active:text-rose-500 transition-colors">
-                        <X size={16} />
+          <div className="space-y-3 mb-6 max-h-[50vh] overflow-y-auto no-scrollbar py-2">
+             {localCards.map((card, idx) => (
+               <div key={card.id} className="relative group overflow-hidden rounded-[28px]">
+                  {/* Swipe Delete Action Layer */}
+                  <div className="absolute inset-0 bg-rose-500 flex items-center justify-end px-6">
+                     <button 
+                       onMouseDown={(e) => e.stopPropagation()} 
+                       onClick={(e) => { e.stopPropagation(); setConfirmingDelete(card); }} 
+                       className="text-white font-black text-[13px] uppercase tracking-widest flex items-center gap-2 active:scale-110 transition-transform"
+                     >
+                        <X size={18} strokeWidth={3} />
+                        삭제
                      </button>
+                  </div>
+                  
+                  {/* Main Card Item Layer */}
+                  <div 
+                    draggable={!swipeId}
+                    onDragStart={() => handleDragStart(idx)}
+                    onDragEnter={() => handleDragEnter(idx)}
+                    onDragEnd={handleDragEnd}
+                    onDragOver={(e) => e.preventDefault()}
+                    
+                    onTouchStart={(e) => startSwipe(card.id, e.touches[0].clientX)}
+                    onTouchMove={(e) => moveSwipe(card.id, e.touches[0].clientX)}
+                    onTouchEnd={() => endSwipe(card.id)}
+                    
+                    onMouseDown={(e) => startSwipe(card.id, e.clientX)}
+                    onMouseMove={(e) => moveSwipe(card.id, e.clientX)}
+                    onMouseUp={() => endSwipe(card.id)}
+                    onMouseLeave={() => isSwiping && endSwipe(card.id)}
+                    
+                    onClick={() => handleItemClick(card.id)}
+                    
+                    style={{ 
+                       transform: `translateX(${swipeId === card.id ? swipeOffset : 0}px)`,
+                       transition: isSwiping ? 'none' : 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                    }}
+                    className={`p-4 rounded-[28px] bg-white border border-gray-100 flex items-center gap-4 shadow-sm relative z-10 cursor-grab active:cursor-grabbing hover:scale-[1.01] ${dragIndex === idx ? 'opacity-30 scale-95 border-rose-200 bg-rose-50/10' : 'opacity-100'}`}
+                  >
+                     <div className="flex flex-col gap-1 pr-2 opacity-20 pointer-events-none">
+                        <span className="text-[14px]">⣿</span>
+                     </div>
+                     <div className="w-12 h-8 rounded-lg shadow-sm flex-shrink-0 pointer-events-none" style={{ background: card.gradient || card.color }} />
+                     <div className="flex-1 min-w-0 pointer-events-none">
+                        <p className="text-[14px] font-black text-slate-800 truncate">{card.name}</p>
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{card.brand} · {card.tier}</p>
+                     </div>
                   </div>
                </div>
              ))}
           </div>
-          <button className="w-full py-6 rounded-[28px] bg-slate-900 text-white font-black text-[16px] shadow-2xl active:scale-95 transition-all text-center tracking-widest uppercase">
-             순서 변경 저장
-          </button>
+
+          <div className="flex items-center justify-center gap-2 py-4 bg-gray-100/50 rounded-3xl border border-dashed border-gray-200 mb-4 cursor-pointer active:scale-95 transition-all">
+             <p className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em]">+ 새 카드 직접 등록</p>
+          </div>
+          
+          {/* Internal Confirmation Layer */}
+          {confirmingDelete && (
+            <div className="absolute inset-0 z-[100] flex items-center justify-center p-8 active:scale-100">
+               <div className="absolute inset-0 bg-white/40 backdrop-blur-xl rounded-t-[50px]" onClick={() => setConfirmingDelete(null)} />
+               <div className="relative w-full bg-white rounded-[40px] p-8 shadow-2xl border border-gray-100 animate-spring">
+                  <div className="w-16 h-16 rounded-[24px] bg-rose-50 flex items-center justify-center text-3xl mb-6 mx-auto">⚠️</div>
+                  <h3 className="text-[18px] font-black text-slate-800 text-center mb-2 tracking-tight">정말 이 카드를 삭제할까요?</h3>
+                  <p className="text-[12px] text-slate-400 text-center font-bold mb-8 leading-relaxed">삭제된 카드는 목록에서 사라지며,<br/>필요시 다시 등록해야 합니다.</p>
+                  <div className="grid grid-cols-2 gap-3">
+                     <button onClick={() => setConfirmingDelete(null)} className="h-16 rounded-3xl bg-gray-50 text-slate-400 font-black text-[14px] active:scale-95 transition-all">취소</button>
+                     <button onClick={handleDelete} className="h-16 rounded-3xl bg-rose-500 text-white font-black text-[14px] shadow-lg shadow-rose-200 active:scale-95 transition-all">카드 삭제</button>
+                  </div>
+               </div>
+            </div>
+          )}
        </div>
     </div>
   );
@@ -651,6 +802,8 @@ export function SettingsDetailModal({ isOpen, onClose, title }: SettingsDetailMo
 // ─────────────────────────────────────────────────────────────
 // Community Post Detail Modal
 // ─────────────────────────────────────────────────────────────
+import { getPostComments, createPostComment, unwrapArray } from '@/lib/cardwise-api';
+
 interface CommunityDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -659,11 +812,33 @@ interface CommunityDetailModalProps {
 
 export function CommunityDetailModal({ isOpen, onClose, post }: CommunityDetailModalProps) {
   const [visible, setVisible] = useState(false);
+  const [comments, setComments] = useState<CommunityComment[]>([]);
+  const [newComment, setNewComment] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const loadComments = useCallback(async () => {
+    if (!post) return;
+    const res = await getPostComments(post.postId);
+    setComments(unwrapArray(res));
+  }, [post]);
 
   useEffect(() => {
-    const timer = setTimeout(() => setVisible(isOpen), 30);
-    return () => clearTimeout(timer);
-  }, [isOpen]);
+    setVisible(isOpen);
+    if (isOpen && post) {
+      loadComments();
+    }
+  }, [isOpen, post, loadComments]);
+
+  const handleCreateComment = async () => {
+    if (!post || !newComment.trim()) return;
+    setLoading(true);
+    const res = await createPostComment(post.postId, newComment);
+    if (res?.data) {
+      setNewComment('');
+      loadComments();
+    }
+    setLoading(false);
+  };
 
   if (!isOpen || !post) return null;
 
@@ -682,19 +857,142 @@ export function CommunityDetailModal({ isOpen, onClose, post }: CommunityDetailM
           </div>
           <h2 className="text-[22px] font-black text-slate-800 tracking-tight leading-tight mb-4">{post?.title}</h2>
           <p className="text-[14px] text-slate-500 leading-relaxed font-medium mb-10">{post?.content}</p>
-          <div className="p-5 rounded-3xl bg-gray-50 border border-gray-100 mb-8">
-             <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest mb-4">Comments</p>
+          <div className="p-5 rounded-3xl bg-gray-50 border border-gray-100 mb-8 max-h-[250px] overflow-y-auto no-scrollbar">
+             <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest mb-4">Comments ({comments.length})</p>
              <div className="space-y-4">
-                <div className="flex gap-3">
-                   <div className="w-8 h-8 rounded-full bg-rose-50 flex items-center justify-center text-xs">🤖</div>
-                   <div className="flex-1">
-                      <p className="text-[12px] font-black text-slate-700">CardWise AI</p>
-                      <p className="text-[12px] text-slate-500 line-clamp-2">데이터를 분석한 결과, taptap O 카드 혜택이 가장 적합해요!</p>
-                   </div>
+                {comments.length === 0 ? (
+                  <p className="text-[11px] text-gray-400 font-bold text-center py-4">첫 댓글을 남겨보세요! 💬</p>
+                ) : (
+                  comments.map(c => (
+                    <div key={c.commentId} className="flex gap-3">
+                       <div className="w-8 h-8 rounded-full bg-rose-50 flex items-center justify-center text-xs">👤</div>
+                       <div className="flex-1">
+                          <p className="text-[11px] font-black text-slate-700">{c.accountId.slice(0, 8)}</p>
+                          <p className="text-[12px] text-slate-500">{c.content}</p>
+                       </div>
+                    </div>
+                  ))
+                )}
+             </div>
+          </div>
+
+          <div className="flex gap-2 mb-8">
+             <input 
+               type="text" 
+               value={newComment}
+               onChange={(e) => setNewComment(e.target.value)}
+               placeholder="댓글을 입력하세요"
+               className="flex-1 px-4 py-3 rounded-2xl bg-gray-50 border border-gray-100 text-[13px] outline-none focus:bg-white focus:border-rose-200 transition-all font-medium"
+               onKeyPress={(e) => e.key === 'Enter' && handleCreateComment()}
+             />
+             <button 
+               onClick={handleCreateComment}
+               disabled={loading || !newComment.trim()}
+               className="px-4 rounded-2xl bg-slate-900 text-white font-black text-[12px] active:scale-95 disabled:opacity-30 transition-all"
+             >
+               등록
+             </button>
+          </div>
+          <button onClick={onClose} className="w-full h-18 rounded-[24px] bg-slate-900 shadow-xl shadow-gray-200 text-white font-black text-[15px] active:scale-95 transition-all">닫기</button>
+       </div>
+    </div>
+  );
+}
+
+interface SitemapModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onNavigate: (tab: string) => void;
+}
+
+export function SitemapModal({ isOpen, onClose, onNavigate }: SitemapModalProps) {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    setVisible(isOpen);
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  const sections = [
+    {
+      title: 'Wallet & Benefits',
+      items: [
+        { id: 'home', label: '자산 홈', icon: Home, color: 'bg-blue-500', desc: '내 자격 및 자산 현황' },
+        { id: 'cards', label: '카드 지갑', icon: CreditCard, color: 'bg-slate-800', desc: '보유 카드 관리 및 순서 변경' },
+        { id: 'benefits', label: '혜택 센터', icon: Gift, color: 'bg-rose-500', desc: '맞춤 혜택 및 바우처 확인' },
+      ]
+    },
+    {
+      title: 'Analysis & Report',
+      items: [
+        { id: 'ledger', label: '가계부', icon: LineChart, color: 'bg-emerald-500', desc: '상세 소비 내역 및 통계' },
+        { id: 'insights', label: 'AI 인사이트', icon: Sparkles, color: 'bg-violet-500', desc: '지능형 소비 분석 리포트' },
+      ]
+    },
+    {
+      title: 'Social & Account',
+      items: [
+        { id: 'community', label: '커뮤니티', icon: Users, color: 'bg-amber-500', desc: '사용자간 정보 공유 및 팁' },
+        { id: 'mypage', label: '내 정보', icon: User, color: 'bg-slate-400', desc: '프로필 설정 및 업적 관리' },
+        { id: 'settings', label: '환경 설정', icon: Settings, color: 'bg-slate-200', desc: '앱 설정 및 알림 관리' },
+      ]
+    }
+  ];
+
+  return (
+    <div className={`fixed inset-0 z-[2000] flex items-center justify-center transition-all duration-500 ${visible ? 'opacity-100' : 'opacity-0'}`}>
+       <div className="absolute inset-0 bg-white/60 backdrop-blur-3xl" onClick={onClose} />
+       
+       <div className={`relative w-full h-full max-w-[430px] bg-transparent p-8 flex flex-col transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] ${visible ? 'scale-100 translate-y-0' : 'scale-95 translate-y-10'}`}>
+          <div className="flex justify-between items-center mb-12">
+             <div className="flex flex-col gap-1">
+                <h2 className="text-[28px] font-black text-slate-800 tracking-tighter">Sitemap</h2>
+                <p className="text-[12px] text-slate-400 font-bold uppercase tracking-[0.2em]">Navigation Hub</p>
+             </div>
+             <button onClick={onClose} className="w-12 h-12 rounded-2xl bg-white border border-gray-100 flex items-center justify-center text-slate-800 shadow-xl active:scale-75 transition-all">
+                <X size={24} />
+             </button>
+          </div>
+
+          <div className="flex-1 space-y-10 overflow-y-auto no-scrollbar pb-12">
+             {sections.map((section, sidx) => (
+               <div key={sidx} className="space-y-4">
+                  <h3 className="text-[11px] font-black text-slate-300 uppercase tracking-widest pl-2">{section.title}</h3>
+                  <div className="grid grid-cols-1 gap-3">
+                     {section.items.map((item, iidx) => (
+                       <button 
+                         key={item.id}
+                         onClick={() => onNavigate(item.id)}
+                         className="group p-5 rounded-[32px] bg-white/50 border border-white hover:bg-white hover:shadow-2xl hover:shadow-slate-200/50 transition-all flex items-center gap-5 text-left active:scale-[0.98]"
+                         style={{ transitionDelay: `${(sidx * 3 + iidx) * 50}ms` }}
+                       >
+                          <div className={`w-14 h-14 rounded-2xl ${item.color} flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform`}>
+                             <item.icon size={24} strokeWidth={2.5} />
+                          </div>
+                          <div className="flex-1">
+                             <p className="text-[16px] font-black text-slate-800 tracking-tight leading-tight mb-1">{item.label}</p>
+                             <p className="text-[12px] text-slate-400 font-medium">{item.desc}</p>
+                          </div>
+                          <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-slate-900 group-hover:text-white transition-all">
+                            →
+                          </div>
+                       </button>
+                     ))}
+                  </div>
+               </div>
+             ))}
+          </div>
+
+          <div className="pt-8 border-t border-slate-100 mt-auto">
+             <div className="flex items-center gap-3 p-6 rounded-[32px] bg-slate-900 text-white shadow-2xl">
+                <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-xl">ℹ️</div>
+                <div>
+                   <p className="text-[13px] font-black tracking-tight whitespace-nowrap">빠른 메뉴를 이용해 보세요</p>
+                   <p className="text-[11px] text-slate-400 font-bold opacity-80 uppercase tracking-widest">v2.4.0 Updated</p>
                 </div>
              </div>
           </div>
-          <button onClick={onClose} className="w-full h-18 rounded-[24px] bg-slate-900 shadow-xl shadow-gray-200 text-white font-black text-[15px] active:scale-95 transition-all">닫기</button>
        </div>
     </div>
   );

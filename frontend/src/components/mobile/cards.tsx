@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Eye, EyeOff, Plus } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { RadialGauge } from './charts';
 import { Transaction, Card, Tier } from '@/types/mobile';
 
@@ -19,6 +19,46 @@ const formatKRWFull = (amount: number) => {
   if (man > 0) return `${man}만원`;
   if (rest > 0) return `${rest}천원`;
   return `${amount.toLocaleString()}원`;
+};
+
+const BrandLogo = ({ brand }: { brand: string }) => {
+  switch (brand.toLowerCase()) {
+    case 'visa':
+      return <span className="text-[15px] font-black italic text-white tracking-tighter drop-shadow-sm">VISA</span>;
+    case 'mastercard':
+      return (
+        <div className="flex items-center -space-x-2.5 translate-x-1">
+          <div className="w-5 h-5 rounded-full bg-[#EB001B]" />
+          <div className="w-5 h-5 rounded-full bg-[#F79E1B]/90" />
+        </div>
+      );
+    case 'amex':
+      return (
+        <div className="w-7 h-5 bg-[#016FD0] rounded-[2px] flex items-center justify-center border border-white/20">
+          <span className="text-[7px] font-black text-white italic">AMEX</span>
+        </div>
+      );
+    case 'unionpay':
+      return (
+        <div className="flex flex-col gap-[1px]">
+           <div className="w-6 h-1 bg-[#004A99] rounded-t-[1px]" />
+           <div className="w-6 h-1 bg-[#EE1C25]" />
+           <div className="w-6 h-1 bg-[#009245] rounded-b-[1px]" />
+        </div>
+      );
+    case 'jcb':
+      return (
+        <div className="flex gap-[1.5px]">
+           <div className="w-2.5 h-4.5 bg-[#004289] rounded-sm" />
+           <div className="w-2.5 h-4.5 bg-[#E50012] rounded-sm" />
+           <div className="w-2.5 h-4.5 bg-[#009036] rounded-sm" />
+        </div>
+      );
+    case 'local':
+      return <span className="text-[12px] font-black text-rose-500 drop-shadow-sm">BC</span>;
+    default:
+      return <span className="text-[10px] font-black text-white italic tracking-tighter uppercase">{brand}</span>;
+  }
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -218,41 +258,56 @@ export function TransactionItem({ tx, onClick, delay = 0 }: { tx: Transaction; o
   return (
     <div 
       onClick={onClick}
-      className="flex items-center gap-5 py-5 border-b border-gray-50 last:border-0 group cursor-pointer active:bg-gray-50/50 transition-all rounded-[24px] px-3 -mx-3 animate-fade-in"
+      className="flex items-center gap-4 py-5 border-b border-gray-50 last:border-0 group cursor-pointer active:bg-gray-50/50 transition-all rounded-[24px] px-2 -mx-1 animate-fade-in"
       style={{ animationDelay: `${delay}s` }}
     >
       <div 
-        className={`w-13 h-13 rounded-[22px] flex items-center justify-center text-2xl flex-shrink-0 transition-all group-hover:scale-110 shadow-sm border ${bgMap[tx.category] || 'bg-gray-100 border-gray-200'}`} 
+        className={`w-12 h-12 rounded-[20px] flex items-center justify-center text-xl flex-shrink-0 transition-all group-hover:scale-110 shadow-sm border ${bgMap[tx.category] || 'bg-gray-100 border-gray-200'}`} 
       >
         {tx.icon}
       </div>
       <div className="flex-1 min-w-0">
-        <div className="text-[16px] font-black text-var(--text-strong) tracking-tighter mb-1 truncate">{tx.name}</div>
-        <div className="flex items-center gap-2">
-          <span className="text-[11px] text-var(--text-soft) font-black tracking-tight font-mono opacity-60">
-            {(() => {
-              const date = new Date(tx.date);
-              if (isNaN(date.getTime())) return tx.date;
-              return date.toLocaleTimeString('ko-KR', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            })()}
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-[15px] font-black text-var(--text-strong) tracking-tighter truncate leading-none">
+            {tx.name || '가맹점 정보 없음'}
           </span>
-          <span className="w-0.5 h-0.5 rounded-full bg-gray-300" />
-          <span className="text-[10px] text-rose-500 font-black truncate max-w-[120px]">
-            {tx.benefitInfo || (isIncome ? '입금 완료' : '결제 완료')}
+          <span className="text-[10px] font-bold text-gray-300 opacity-60">
+            {tx.category}
           </span>
         </div>
-      </div>
-      <div className="text-right">
-        <div className={`text-[17px] font-display font-black tracking-tight ${isIncome ? 'text-emerald-500' : 'text-var(--text-strong)'}`}>
-          {isIncome ? '+' : '-'}{tx.currency === 'USD' ? '$' : ''}{tx.amount.toLocaleString()}<span className="text-[13px] ml-0.5 font-bold">{tx.currency === 'KRW' ? '원' : ''}</span>
-        </div>
-        <div className="flex flex-wrap justify-end gap-1 mt-2">
+        <div className="flex flex-wrap gap-1 mb-1.5 focus-within:opacity-100 transition-opacity">
            {tx.tags?.map((tag, i) => (
-             <span key={i} className="text-[9px] font-black px-1.5 py-0.5 rounded-md border bg-gray-50 text-gray-400 border-gray-100">
+             <span key={i} className="text-[9px] font-black text-rose-400 capitalize bg-rose-50/50 px-1.5 py-0.5 rounded-lg border border-rose-100/50">
                #{tag}
              </span>
            ))}
         </div>
+        <div className="flex items-center gap-1.5 opacity-40">
+          <span className="text-[9px] text-var(--text-soft) font-black tracking-tight font-mono">
+            {(() => {
+              const date = new Date(tx.date);
+              if (isNaN(date.getTime())) return tx.date;
+              return date.toLocaleTimeString('ko-KR', { hour12: false, hour: '2-digit', minute: '2-digit' });
+            })()}
+          </span>
+          <span className="w-0.5 h-0.5 rounded-full bg-gray-400" />
+          <span className="text-[9px] text-var(--text-soft) font-bold truncate">
+            {tx.card}
+          </span>
+        </div>
+      </div>
+      <div className="text-right pl-2">
+        <div className={`text-[17px] font-display font-black tracking-tight ${isIncome ? 'text-emerald-500' : 'text-var(--text-strong)'}`}>
+          {isIncome ? '+' : '-'}{tx.currency === 'USD' ? '$' : ''}{tx.amount.toLocaleString()}<span className="text-[12px] ml-0.5 font-bold">{tx.currency === 'KRW' ? '원' : ''}</span>
+        </div>
+        {tx.benefitInfo && (
+          <div className="text-[9px] text-rose-500 font-black mt-1 bg-rose-50 px-2 py-0.5 rounded-full inline-block border border-rose-100 animate-pulse">
+            {tx.benefitInfo}
+            {tx.discount && (
+              <span className="text-[8px] ml-1 opacity-70">(-{tx.discount.toLocaleString()}원)</span>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -263,15 +318,14 @@ export function TransactionItem({ tx, onClick, delay = 0 }: { tx: Transaction; o
 // ─────────────────────────────────────────────────────────────
 export function CreditCardComponent({ card, onPerformanceClick }: { card: Card; onPerformanceClick?: () => void }) {
   const [isFlipped, setIsFlipped] = useState(false);
+  const [backView, setBackView] = useState<'benefits' | 'vouchers'>('benefits');
 
-  const brandIcons: Record<string, string> = {
-    visa: 'VISA',
-    mastercard: 'MasterCard',
-    amex: 'AMEX',
-    unionpay: '银联',
-    jcb: 'JCB',
-    local: 'BC'
-  };
+  const SAMPLE_VOUCHERS = [
+    { title: '더 라운지 멤버십', info: '전 세계 라운지 연 2회권', date: '2024.12.31' },
+    { title: '부티크 호텔 숙박권', info: '국내 지정 호텔 1박권', date: '2024.11.15' },
+    { title: '프리미엄 기프트 15만', info: '신세계/롯데 상품권 교환', date: '2024.10.20' },
+    { title: '공항 발렛파킹 무료', info: '인천/김포공항 월 3회', date: '2024.09.30' }
+  ];
 
   const tierColors: Record<string, string> = {
     classic: 'text-gray-400',
@@ -285,10 +339,13 @@ export function CreditCardComponent({ card, onPerformanceClick }: { card: Card; 
 
   return (
     <div className="mb-6 px-1">
-      {/* 3D Card Wrapper */}
+      {/* 3D Dynamic Expanding Card Wrapper */}
       <div 
-        className="relative w-full h-44 cursor-pointer group"
-        style={{ perspective: '1200px' }}
+        className={`relative w-full transition-all duration-500 ease-[cubic-bezier(0.175,0.885,0.32,1.275)] cursor-pointer group z-10`}
+        style={{ 
+          perspective: '1200px',
+          height: isFlipped ? '280px' : '176px'
+        }}
         onClick={(e) => {
           e.stopPropagation();
           setIsFlipped(!isFlipped);
@@ -310,26 +367,20 @@ export function CreditCardComponent({ card, onPerformanceClick }: { card: Card; 
               WebkitBackfaceVisibility: 'hidden'
             }}
           >
-            {/* Glossy Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent pointer-events-none opacity-40 mix-blend-overlay" />
             
-            <div className="flex justify-between items-start z-10 relative">
-               <div className="flex flex-col">
-                  <span className="text-[9px] font-black text-white/60 tracking-[0.2em] uppercase drop-shadow-sm">{card.issuer}</span>
-                  <span className={`text-[10px] font-black mt-0.5 uppercase tracking-tighter shadow-sm ${tierColors[card.tier] || 'text-white'}`}>{card.tier}</span>
-               </div>
-               <div className="px-3 h-7 bg-white/10 backdrop-blur-xl rounded-lg flex items-center justify-center border border-white/20 shadow-inner">
-                  <span className="text-[9px] font-black text-white italic tracking-tighter">{brandIcons[card.brand]}</span>
-               </div>
-            </div>
-            
-            <div className="relative z-10">
-               <h4 className="text-[13px] font-black text-white tracking-tight opacity-90 drop-shadow-sm">{card.name}</h4>
-               <div className="text-[16px] mt-1 tracking-[4px] font-display font-black text-white/60 drop-shadow-md flex gap-4">
-                 <span>{card.firstFour}</span>
-                 <span>••••</span>
-                 <span>••••</span>
-                 <span>{card.lastFour}</span>
+            <div className="flex justify-between items-start relative z-10">
+               <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="px-2 py-0.5 rounded-full bg-black/20 backdrop-blur-md border border-white/10 shadow-sm flex items-center justify-center">
+                      <span className={`text-[8px] font-black uppercase tracking-widest ${tierColors[card.tier] || 'text-white/60'} drop-shadow-md`}>
+                        {card.tier.replace('_', ' ')}
+                      </span>
+                    </div>
+                    <div className="w-1 h-1 rounded-full bg-white/30" />
+                    <BrandLogo brand={card.brand} />
+                  </div>
+                  <h4 className="text-[13px] font-black text-white tracking-tight drop-shadow-md">{card.name}</h4>
                </div>
             </div>
 
@@ -337,69 +388,135 @@ export function CreditCardComponent({ card, onPerformanceClick }: { card: Card; 
                <div className="w-7 h-7 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center">
                   <div className="w-4 h-3 bg-amber-400/80 rounded-[2px]" />
                </div>
-               <p className="text-[9px] text-white/30 font-black tracking-widest uppercase">Premium Identity</p>
+               <div className="text-[9px] text-white/40 font-black tracking-widest uppercase flex items-center gap-1.5">
+                  <div className="w-1 h-1 rounded-full bg-white/20 animate-pulse" />
+                  컨택리스 결제
+               </div>
             </div>
           </div>
 
-          {/* Back Side */}
+          {/* Back Side (Expanded Content) */}
           <div 
-            className="absolute inset-0 w-full h-full rounded-[32px] p-7 shadow-2xl flex flex-col justify-between border border-white/5"
+            className="absolute inset-0 w-full h-full rounded-[32px] p-5 shadow-2xl transition-all duration-300 border border-white/10"
             style={{ 
-              background: 'linear-gradient(135deg, #1e1e1e 0%, #121212 100%)', 
+              background: 'linear-gradient(135deg, #121212 0%, #000000 100%)', 
               transform: 'rotateY(180deg)',
               backfaceVisibility: 'hidden',
               WebkitBackfaceVisibility: 'hidden'
             }}
           >
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white/5 via-transparent to-transparent opacity-50" />
+            <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#fff 0.5px, transparent 0.5px)', backgroundSize: '10px 10px' }} />
             
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-4">
-                <h5 className="text-[12px] font-black text-rose-500 uppercase tracking-widest">Main Benefits</h5>
-                <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
-                  <span className="text-[10px] text-white font-bold">★</span>
+            <div className="relative z-10 flex flex-col h-full">
+              {/* Back Header with Modern Toggle */}
+              <div className="flex items-center justify-between mb-4 flex-shrink-0">
+                <div className="flex flex-col">
+                  <h5 className="text-[10px] font-black text-rose-500 uppercase tracking-widest leading-none">
+                    {backView === 'benefits' ? '카드 주요 혜택' : '주요 바우처 정보'}
+                  </h5>
+                  <div className={`h-0.5 w-6 mt-1.5 rounded-full shadow-lg transition-all ${backView === 'benefits' ? 'bg-rose-500' : 'bg-emerald-500'}`} />
                 </div>
+                                <button 
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    setBackView(backView === 'benefits' ? 'vouchers' : 'benefits'); 
+                  }}
+                  className={`border px-3 py-1.5 rounded-xl active:scale-90 transition-all flex items-center gap-2 group shadow-xl ${
+                    backView === 'benefits' ? 'bg-white/10 border-white/10' : 'bg-emerald-500/20 border-emerald-500/20'
+                  }`}
+                >
+                  <div className={`w-1.5 h-1.5 rounded-full animate-pulse transition-colors ${backView === 'benefits' ? 'bg-rose-500' : 'bg-emerald-500'}`} />
+                  <span className="text-[9px] font-black text-white uppercase tracking-tighter">
+                    {backView === 'benefits' ? '바우처 보기' : '혜택 보기'}
+                  </span>
+                </button>
               </div>
-              <div className="space-y-2.5">
-                {card.tags?.slice(0, 3).map((tag, i) => (
-                  <div key={i} className="flex items-center gap-3 group/item">
-                    <div className="w-1 h-1 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)] group-hover/item:scale-150 transition-transform" />
-                    <span className="text-white/90 text-[12px] font-black tracking-tight">{tag} 맞춤형 리워드</span>
+
+              {/* Toggleable List Content */}
+              <div className="flex-1 overflow-y-auto scrollbar-hide select-none touch-pan-y" onMouseDown={(e) => e.stopPropagation()}>
+                {backView === 'benefits' ? (
+                  <div className="grid grid-cols-2 gap-2.5 animate-in fade-in slide-in-from-right-4 duration-300 pb-2">
+                    {[
+                      { cat: '카페', val: '50% 결제 할인', ico: '☕' },
+                      { cat: '쇼핑', val: '10% 무제한 적립', ico: '🛍️' },
+                      { cat: '교통', val: '2,000원 캐시백', ico: '🚌' },
+                      { cat: '푸드', val: '5,000원 즉시할인', ico: '🍔' },
+                      { cat: '공항', val: '라운지 연 2회', ico: '✈️' },
+                      { cat: '영화', val: '1만원 현장할인', ico: '🎬' },
+                      { cat: '숙박', val: '상시 7% 할인', ico: '🏨' },
+                      { cat: '주유', val: '리터당 120원', ico: '⛽' }
+                    ].map((item, i) => (
+                      <div key={i} className="flex items-center gap-2.5 p-2.5 rounded-2xl bg-white/5 border border-white/5 hover:border-white/20 transition-all group/item shadow-inner relative overflow-hidden">
+                        <div className="shrink-0 w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-[18px] grayscale group-hover/item:grayscale-0 transition-all shadow-lg border border-white/5">
+                           {item.ico}
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                           <span className="text-white/30 font-black text-[7px] uppercase tracking-widest leading-none mb-1 group-hover/item:text-rose-400/50 transition-colors">{item.cat}</span>
+                           <span className="text-white font-black text-[10px] tracking-tighter leading-tight uppercase truncate">{item.val}</span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                ) : (
+                  <div className="grid grid-cols-2 gap-2.5 animate-in fade-in slide-in-from-left-4 duration-300">
+                    {SAMPLE_VOUCHERS.map((v, i) => (
+                      <div key={i} className="flex items-center gap-2 p-2.5 rounded-2xl bg-emerald-500/5 border border-dashed border-emerald-500/20 hover:bg-emerald-500/10 transition-all shadow-inner">
+                        <div className="shrink-0 w-7 h-7 rounded-lg bg-emerald-500/20 flex items-center justify-center text-[14px]">
+                           🎟
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                           <span className="text-white font-black text-[9px] tracking-tighter leading-tight truncate">{v.title}</span>
+                           <span className="text-[7px] text-emerald-400/40 font-black uppercase tracking-tight truncate">{v.info}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-            </div>
-            
-            <div className="flex justify-between items-center bg-white/5 p-4 rounded-[22px] border border-white/10 relative z-10">
-              <div>
-                <span className="text-[10px] font-black text-white/30 uppercase block mb-0.5 tracking-tighter">Voucher Status</span>
-                <span className="text-[11px] font-black text-emerald-400">3 Coupons Available</span>
-              </div>
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-                <Plus size={16} className="text-emerald-400" />
+              <div className="mt-auto pt-3 flex items-center justify-between border-t border-white/5 opacity-50">
+                <p className="text-[8px] font-black text-white/20 uppercase tracking-[0.2em]">CardWise Protocol</p>
+                <div className="flex gap-1 items-center">
+                   <div className={`h-1 rounded-full transition-all ${backView === 'benefits' ? 'w-4 bg-rose-500' : 'w-1 bg-white/10'}`} />
+                   <div className={`h-1 rounded-full transition-all ${backView === 'vouchers' ? 'w-4 bg-emerald-500' : 'w-1 bg-white/10'}`} />
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Performance Section (Clickable for Detail) */}
+      {/* Performance Summary Section */}
       <div 
         onClick={onPerformanceClick}
-        className="mx-4 p-5 -mt-6 bg-white border border-gray-100 shadow-xl rounded-b-[32px] relative z-0 cursor-pointer active:bg-gray-50 transition-all hover:translate-y-0.5"
+        className="mx-5 p-5 -mt-3 bg-white border border-gray-100 shadow-xl rounded-b-[40px] relative z-0 cursor-pointer active:bg-gray-50 transition-all hover:translate-y-0.5"
       >
-        <div className="flex items-center gap-6">
-          <RadialGauge percent={Math.round((card.current / card.target) * 100)} id={card.id} size={68} />
-          <div className="flex-1">
-            <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-widest opacity-60">Monthly Performance</h4>
-            <div className="flex items-baseline gap-1 mt-1 text-rose-500">
-               <span className="text-[24px] font-display font-black leading-none">{Math.round((card.current / card.target) * 100)}</span>
-               <span className="text-[11px] font-black opacity-80">%</span>
+        <div className="flex items-center gap-4">
+          <div className="shrink-0 flex items-center justify-center">
+             <RadialGauge percent={Math.round((card.current / card.target) * 100)} id={card.id} size={64} />
+          </div>
+          
+          <div className="flex-1 grid grid-cols-2">
+            {/* Monthly Column */}
+            <div className="flex flex-col items-center border-r border-gray-100 px-2 space-y-1">
+              <span className="text-[9px] font-black text-rose-500 uppercase tracking-widest opacity-80">월간 실적</span>
+              <div className="flex items-baseline gap-0.5 text-rose-600">
+                 <span className="text-[22px] font-display font-black leading-none">{Math.round((card.current / card.target) * 100)}</span>
+                 <span className="text-[10px] font-black opacity-60">%</span>
+              </div>
+              <p className="text-[12px] font-black text-gray-800 leading-none">{card.current.toLocaleString()}원</p>
+              <p className="text-[8px] text-gray-400 font-bold uppercase tracking-tighter">목표: {formatKRWFull(card.target)}</p>
             </div>
-            <p className="text-[11px] text-gray-800 font-black mt-1.5 flex justify-between items-center">
-               <span>{card.currency === 'USD' ? '$' : ''}{card.current.toLocaleString()}{card.currency === 'KRW' ? '원' : ''}</span>
-               <span className="text-[9px] text-gray-300 font-bold uppercase">/ {card.target.toLocaleString()} target</span>
-            </p>
+
+            {/* Annual Column */}
+            <div className="flex flex-col items-center px-2 space-y-1">
+              <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest opacity-80">연간 누적</span>
+              <div className="flex items-baseline gap-0.5 text-gray-500">
+                 <span className="text-[22px] font-display font-black leading-none">{Math.round((card.current * 1.5 / card.target) * 100)}</span>
+                 <span className="text-[10px] font-black opacity-60">%</span>
+              </div>
+              <p className="text-[12px] font-black text-gray-700 leading-none">{(card.current * 12.5).toLocaleString()}원</p>
+              <p className="text-[8px] text-gray-400 font-bold uppercase tracking-tighter">최근 1년 합계</p>
+            </div>
           </div>
         </div>
       </div>

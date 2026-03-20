@@ -1,6 +1,6 @@
 # CardWise - 프로젝트 통합 문서 가이드 (docs/README.md)
 
-이 문서는 CardWise 프로젝트의 모든 개발 산출물과 가이드라인을 분류한 **전체 문서 지도**입니다.
+이 문서는 CardWise 프로젝트의 모든 개발 산출물과 가이드라인을 분류한 **전체 문서 지도**입니다. (v3.5 프리미엄 업적 시스템 업데이트 반영)
 
 ## 🧭 문서 카테고리 (6단계 가공 프로세스)
 
@@ -15,7 +15,7 @@
 
 ### [02. 기획 및 계획 (Planning)](02-planning/)
 *일정, 범위, 태스크를 관리합니다.*
-- `implementation_plan_v3.4.md`: 최신 버전(v3.4) 구현 로드맵
+- `implementation_plan_v3.4.md`: 이전 버전(v3.4) 구현 로드맵
 - `TASKS.md`: 기능 코드별 세부 체크리스트 및 작업 현황
 - `feature-matrix.md`: 전체 완성도 대조표 (95%+)
 
@@ -30,6 +30,7 @@
 ### [04. 디자인 (Design)](04-design/)
 *UI/UX 원칙과 가이드라인을 정의합니다.*
 - `design-system.md`: 컬러 패밀리, 타이포그래피, 컴포넌트 토큰
+- `BADGE_SYSTEM.md`: **20종 뱃지 및 업적 시스템 상세 명세 (v3.5)**
 - `pencil-new.pen`: Pencil 전용 디자인 에셋 파일 (백업)
 
 ### [05. 구현 및 운영 (Implementation)](05-implementation/)

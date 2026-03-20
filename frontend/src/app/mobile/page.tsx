@@ -1,10 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 import { 
   Plus, 
   Bell,
+  Settings,
+  Menu
 } from 'lucide-react';
 
 // Common Components
@@ -16,7 +19,8 @@ import {
   EditHomeModal, 
   NotificationModal, 
   AssetActionModal, 
-  CardSettingsModal 
+  CardSettingsModal,
+  SitemapModal
 } from '@/components/mobile/modals';
 import { CardRegistrationModal } from '@/components/mobile/CardRegistrationModal';
 
@@ -24,8 +28,8 @@ import { CardRegistrationModal } from '@/components/mobile/CardRegistrationModal
 import { HomeView } from '@/components/mobile/views/HomeView';
 import { CardsView } from '@/components/mobile/views/CardsView';
 import { LedgerView } from '@/components/mobile/views/LedgerView';
-import { BenefitsView } from '@/components/mobile/benefits'; // Partially refactored already
-import { ProfileView } from '@/components/mobile/profile';
+import { BenefitsView } from '@/components/mobile/benefits'; 
+import { ProfileView, AllBadgesView } from '@/components/mobile/profile';
 import { CommunityView } from '@/components/mobile/community';
 
 // Data & Types
@@ -51,10 +55,30 @@ function StatusBar() {
 }
 
 export default function MobileHomePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-rose-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <MobileHomePageContent />
+    </Suspense>
+  );
+}
+
+function MobileHomePageContent() {
   const router = useRouter();
   
   // App Shell State
-  const [activeTab, setActiveTab] = useState('home');
+  const searchParams = useSearchParams();
+  const activeTab = searchParams.get('tab') || 'home';
+
+  const setActiveTab = (tab: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('tab', tab);
+    router.replace(`?${params.toString()}`, { scroll: false });
+  };
+
   const [cards, setCards] = useState<Card[]>(SAMPLE_CARDS);
   const [transactions] = useState<Transaction[]>(SAMPLE_TRANSACTIONS);
   
@@ -66,6 +90,7 @@ export default function MobileHomePage() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showAssetAction, setShowAssetAction] = useState<'fill' | 'send' | null>(null);
   const [showCardSettings, setShowCardSettings] = useState(false);
+  const [showSitemap, setShowSitemap] = useState(false);
   
   // View State
   const [ledgerMode, setLedgerMode] = useState<'personal' | 'group'>('personal');
@@ -73,34 +98,26 @@ export default function MobileHomePage() {
   const [selectedLedgerDate, setSelectedLedgerDate] = useState(new Date());
   const [visibleSections, setVisibleSections] = useState(['balance', 'performance', 'weekly', 'category', 'goal', 'recent']);
 
-
-  // ─────────────────────────────────────────────────────────────
-  // Session Management (5-minute Timeout)
-  // ─────────────────────────────────────────────────────────────
   useEffect(() => {
     let timeout: NodeJS.Timeout;
     const resetTimer = () => {
       clearTimeout(timeout);
       timeout = setTimeout(() => {
-        // Use window.alert and replace for guaranteed redirect across all browsers/Next.js states
         if (typeof window !== 'undefined') {
           window.alert('보안을 위해 세션이 만료되었습니다. 다시 로그인해 주세요.');
           window.location.href = '/mobile/login';
         }
-      }, 5 * 60 * 1000); // 5 minutes
+      }, 5 * 60 * 1000); 
     };
-
     const events = ['mousemove', 'keydown', 'touchstart', 'scroll', 'click'];
     events.forEach(event => window.addEventListener(event, resetTimer));
     resetTimer();
-
     return () => {
       events.forEach(event => window.removeEventListener(event, resetTimer));
       clearTimeout(timeout);
     };
   }, []);
 
-  // Computed Data
   const buckets = [
     { label: '이번달 목표', pct: SAMPLE_USER.savingRate, achieved: false, value: `${(SAMPLE_USER.monthlySpend/10000).toFixed(1)}만원`, target: SAMPLE_USER.monthlyBudget },
   ];
@@ -112,17 +129,19 @@ export default function MobileHomePage() {
   }));
 
   const tabTitles: Record<string, string> = {
-    home: '자산',
+    home: '자산 현황',
     cards: '카드 관리',
-    ledger: '가계부',
-    community: '커뮤니티',
-    benefits: '혜택 센터',
-    mypage: '내 정보',
-    dashboard: '자산' // Add dashboard as alias to prevent English fallback
+    ledger: '소비 내역',
+    benefits: '혜택 가이드',
+    community: '소셜 센터',
+    mypage: '내 프로필',
+    settings: '환경 설정',
+    insights: '소비 분석',
+    'all-badges': '업적 센터'
   };
 
   const toggleSection = (id: string) => {
-    setVisibleSections(prev => 
+    setVisibleSections(prev =>
       prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
     );
   };
@@ -132,34 +151,53 @@ export default function MobileHomePage() {
   return (
     <div className="flex flex-col min-h-screen bg-white">
       <StatusBar />
-      
-      {/* ─── Header ─── */}
-      <header className="px-5 pt-4 pb-4 flex items-center justify-between bg-white border-b border-gray-50 sticky top-[44px] z-[90]">
+
+      {/* ─── Global App Header ─── */}
+      <header className="px-5 pt-4 pb-4 flex items-center justify-between bg-white/80 backdrop-blur-xl border-b border-gray-50 sticky top-[44px] z-[90]">
           <div className="flex items-center gap-3 active:scale-95 transition-all">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-rose-600 flex items-center justify-center shadow-lg shadow-rose-500/20">
-              <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" className="w-6 h-6">
-                <rect x="2" y="5" width="20" height="14" rx="3" />
-                <path d="M2 10h20" />
-              </svg>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-[18px] font-black text-rose-500 tracking-[-0.05em] leading-none uppercase">
-                {tabTitles[activeTab] || 'CardWise'}
-              </span>
-              <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest mt-1">Premium Identity</span>
-            </div>
+             <div className="w-10 h-10 rounded-2xl bg-gray-100 flex items-center justify-center text-xl shadow-inner border border-gray-100/50">
+               👤
+             </div>
+             <div className="flex flex-col">
+               <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-50 border border-slate-100">
+                    <span className="text-[11px] font-black text-slate-600 tracking-tight">크로노 님</span>
+                    <span className="text-[10px] animate-pulse">⚡</span>
+                  </div>
+                  <div className="w-1 h-1 rounded-full bg-slate-300" />
+                  <span className="text-[14px] font-black text-slate-800 tracking-tight leading-none opacity-60">
+                    {tabTitles[activeTab] || 'CardWise'}
+                  </span>
+               </div>
+                <div className="flex items-center gap-1 mt-1.5 ml-0.5">
+                  <div className="px-1.5 py-0.5 rounded-md bg-amber-50 border border-amber-100 flex items-center gap-1 shadow-sm">
+                    <span className="text-[7.5px] font-black text-amber-600 uppercase tracking-widest leading-none">PLATINUM</span>
+                  </div>
+                  <div className="px-1.5 py-0.5 rounded-md bg-rose-50 border border-rose-100 flex items-center gap-1 shadow-sm">
+                    <span className="text-[7.5px] font-black text-rose-500 uppercase tracking-widest leading-none">LV.24 ELITE</span>
+                  </div>
+               </div>
+             </div>
           </div>
-        <div className="flex items-center gap-2">
-          <button onClick={() => setShowCardSettings(true)}
-            className="w-10 h-10 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 active:scale-75 transition-transform">
-            <Plus size={18} className="rotate-45" />
-          </button>
-          <button onClick={() => setShowNotifications(true)}
-            className="relative w-10 h-10 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-500 active:scale-75 transition-transform">
-            <Bell size={17} />
-            <div className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-rose-500 border border-white" />
-          </button>
-        </div>
+
+          <div className="flex items-center gap-2">
+            <button onClick={() => setShowNotifications(true)}
+              className="relative w-10 h-10 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 active:scale-75 transition-transform">
+              <Bell size={18} />
+              <div className="absolute top-2.5 right-2.5 w-1.5 h-1.5 rounded-full bg-rose-500 border border-white" />
+            </button>
+            <button onClick={() => {
+               if (activeTab === 'cards') setShowCardSettings(true);
+               else setShowEditHome(true);
+            }}
+              className="w-10 h-10 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 active:scale-75 transition-transform">
+              <Settings size={18} />
+            </button>
+            <button onClick={() => setShowSitemap(true)}
+              className="w-10 h-10 rounded-2xl bg-white border border-gray-100 flex items-center justify-center text-slate-400 shadow-sm active:scale-75 transition-transform">
+              <Menu size={20} />
+            </button>
+          </div>
       </header>
 
       {/* ─── Main View ─── */}
@@ -170,13 +208,10 @@ export default function MobileHomePage() {
             categories={categories}
             buckets={buckets}
             transactions={transactions}
-            setShowEditHome={setShowEditHome}
-            setShowAssetAction={setShowAssetAction}
             setSelectedTx={setSelectedTx}
             router={router}
           />
         )}
-
         {activeTab === 'cards' && (
           <CardsView 
             cards={cards}
@@ -184,7 +219,6 @@ export default function MobileHomePage() {
             router={router}
           />
         )}
-
         {activeTab === 'ledger' && (
           <LedgerView 
             ledgerMode={ledgerMode}
@@ -197,9 +231,7 @@ export default function MobileHomePage() {
             router={router}
           />
         )}
-
         {activeTab === 'community' && <CommunityView />}
-
         {activeTab === 'benefits' && (
           <div className="space-y-8 pt-5">
             <div>
@@ -226,12 +258,10 @@ export default function MobileHomePage() {
             <BenefitsView />
           </div>
         )}
-
-        {activeTab === 'mypage' && (
-          <div className="pt-5">
-            <ProfileView />
-          </div>
-        )}
+        {activeTab === 'mypage' && <ProfileView onSeeMoreBadges={() => setActiveTab('all-badges')} />}
+        {activeTab === 'all-badges' && <AllBadgesView onBack={() => setActiveTab('mypage')} />}
+        {activeTab === 'settings' && <div className="p-10 text-center text-slate-400 font-bold">환경 설정 준비 중</div>}
+        {activeTab === 'insights' && <div className="p-10 text-center text-slate-400 font-bold">AI 소비 분석 준비 중</div>}
       </main>
 
       {/* ─── Navigation & FAB ─── */}
@@ -255,8 +285,12 @@ export default function MobileHomePage() {
         <EditHomeModal isOpen={showEditHome} onClose={() => setShowEditHome(false)} visibleSections={visibleSections} onToggleSection={toggleSection} />
         <NotificationModal isOpen={showNotifications} onClose={() => setShowNotifications(false)} />
         <AssetActionModal isOpen={!!showAssetAction} onClose={() => setShowAssetAction(null)} type={showAssetAction} />
-        <CardSettingsModal isOpen={showCardSettings} onClose={() => setShowCardSettings(false)} cards={cards} />
+        <CardSettingsModal isOpen={showCardSettings} onClose={() => setShowCardSettings(false)} cards={cards} onUpdate={setCards} />
         <CardRegistrationModal isOpen={showAddCard} onClose={() => setShowAddCard(false)} onAdd={(newCard) => setCards([newCard, ...cards])} />
+        <SitemapModal isOpen={showSitemap} onClose={() => setShowSitemap(false)} onNavigate={(tab) => {
+          setActiveTab(tab);
+          setShowSitemap(false);
+        }} />
       </div>
     </div>
   );

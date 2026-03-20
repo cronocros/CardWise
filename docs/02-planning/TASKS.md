@@ -12,6 +12,7 @@
 |------|------------|------|
 | 🔴 P1 | F8 백엔드 API 신설 | `/dashboard` 프론트가 새로 만들어졌으나 대응 API가 없어 빈 화면 |
 | 🔴 P1 | F2 결제 수정/삭제 UI | 입력만 되고 수정 불가 → UX 미완성 |
+| 🔴 P1 | F9 커뮤니티 MVP 구현 | 신규 도메인(게시글/댓글/반응) 전체 스택 구현 |
 | 🟡 P2 | F2 결제 입력 폼 고도화 | 품목, FX, 태그, 혜택 연동 UI |
 | 🟡 P2 | F4 PerformanceTierChangedEvent | 실적 구간 달성 모달 트리거 미완성 |
 | 🟢 P3 | F2 card_benefit 자동 매칭 | 결제 입력 시 혜택 자동 추천 |
@@ -336,3 +337,42 @@
   → F8-FE-06: 그룹 대시보드 전환
   → F4-FE-03~04: 실적 제외/그레이스 기간 UI
 ```
+---
+
+## ─────────────────────────────────────
+#### [x] F9 - 커뮤니티 도메인 (Spec v1.0)
+## ─────────────────────────────────────
+
+> 사용자 간의 정보 공유 및 소통을 위한 게시판 기능.
+> DB 스키마부터 BE API, FE UI까지 전체 스택 구현 필요.
+
+### [F9-DB-01] 커뮤니티 스키마 및 시드 (🔴 P1)
+- **체크리스트**:
+  - [ ] `community_post`, `comment`, `like`, `bookmark` 테이블 생성 마이그레이션
+  - [ ] 샘플 게시글/댓글/좋아요 시드 데이터 추가
+
+### [F9-BE-02] 게시글 CRUD API (🔴 P1)
+- **체크리스트**:
+  - [ ] `CommunityPostEntity` 및 리포지토리(JPA)
+  - [ ] `CommunityPostService` (조회수, Soft Delete 처리)
+  - [ ] `CommunityPostController` (`GET /posts`, `POST /posts` 등)
+
+### [F9-BE-03] 댓글 및 반응 API (🔴 P1)
+- **체크리스트**:
+  - [ ] `CommunityCommentController` 및 서비스
+  - [ ] `Like`, `Bookmark` 토글 로직 구현
+
+### [F9-FE-04] BFF 프록시 및 타입 정의 (🔴 P1)
+- **체크리스트**:
+  - [ ] `frontend/src/app/api/community/**/route.ts` 추가
+  - [ ] 커뮤니티 관련 DTO/응답 타입 정의
+
+### [F9-FE-05] 모바일 커뮤니티 UI (🔴 P1)
+- **체크리스트**:
+  - [ ] `components/mobile/community.tsx` API 연동
+  - [ ] 게시글 상세 모달 및 댓글 폼 구현
+
+### [F9-FE-06] 웹 커뮤니티 페이지 (🔴 P1)
+- **체크리스트**:
+  - [ ] `app/community/page.tsx` 신규 생성
+  - [ ] `app-shell.tsx` 내비게이션 연동

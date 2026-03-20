@@ -2,13 +2,14 @@
 
 import React from 'react';
 import { Search, Sparkles, ChevronRight, Gift, Tag, Percent } from 'lucide-react';
+import { Mascot } from './mascot';
 
 export function BenefitsView() {
   const [searchTerm, setSearchTerm] = React.useState('');
   
   const recommendations = [
-    { title: '오늘의 AI 추천', desc: '커피 50% 할인 카드 혜택이 곧 만료됩니다!', icon: '☕', color: 'from-amber-400 to-orange-500' },
-    { title: '깜짝 리워드', desc: '이번 주말 마트 결제 시 5천원 페이백', icon: '🎁', color: 'from-rose-400 to-pink-500' },
+    { title: '오늘의 AI 추천', desc: '커피 50% 할인 카드 혜택이 곧 만료됩니다!', icon: '☕', color: '#ffedd5' },
+    { title: '깜짝 리워드', desc: '이번 주말 마트 결제 시 5천원 페이백', icon: '🎁', color: '#fff1f2' },
   ];
 
   const popularBenefits = [
@@ -40,24 +41,51 @@ export function BenefitsView() {
       </div>
 
       {/* AI Recommendation Banner */}
-      <div className="relative p-8 rounded-[48px] bg-var(--text-strong) overflow-hidden shadow-2xl group active:scale-[0.98] transition-all">
-        <div className="absolute top-0 right-0 w-48 h-48 bg-rose-500/20 blur-[80px]" />
-        <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-blue-500/10 blur-[60px]" />
+      <div className="relative p-8 rounded-[48px] bg-white border border-rose-100/50 overflow-hidden shadow-2xl shadow-rose-100/50 group active:scale-[0.98] transition-all">
+        {/* Animated Background Orbs */}
+        <div className="absolute top-0 right-0 w-80 h-80 bg-rose-100/30 blur-[100px] animate-pulse" />
+        <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-indigo-100/20 blur-[80px]" />
         
+        {/* Floating Mascot Character */}
+        <div className="absolute top-4 right-4 w-32 h-32 opacity-20 pointer-events-none group-hover:opacity-40 transition-opacity">
+           <Mascot pose="thinking" size={120} className="rotate-12 translate-x-12 -translate-y-4" />
+        </div>
+
         <div className="relative z-10">
-           <div className="flex items-center gap-2 mb-4">
-              <Sparkles size={16} className="text-rose-400 animate-pulse" />
-              <span className="text-[12px] font-black text-rose-400 uppercase tracking-[0.2em]">AI Intelligence</span>
+           <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-xl bg-rose-500 shadow-lg shadow-rose-200 flex items-center justify-center">
+                   <Sparkles size={14} className="text-white animate-pulse" />
+                </div>
+                <span className="text-[12px] font-black text-rose-500 uppercase tracking-[0.2em]">AI 스마트 분석</span>
+              </div>
+              {/* 3D Floating Tag */}
+              <div className="px-3 py-1 bg-white border-2 border-slate-900 rounded-full shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] -rotate-3 hover:rotate-0 transition-transform cursor-default scale-90">
+                 <span className="text-[10px] font-black text-slate-900">오늘의 추천 🔥</span>
+              </div>
            </div>
-           <h3 className="text-[22px] font-black text-white tracking-tighter leading-tight mb-6">
-             김카드 님께 딱 맞는<br/>
-             <span className="text-rose-500">이달의 원픽 혜택</span>은?
+           
+           <h3 className="text-[26px] font-black text-slate-800 tracking-tighter leading-[1.1] mb-10 max-w-[200px]">
+              크로노 님께<br/>딱 맞는 
+              <span className="relative inline-block ml-1">
+                 <span className="relative z-10">원픽 혜택</span>
+                 <div className="absolute -bottom-1 left-0 w-full h-3 bg-rose-200/60 -rotate-1" />
+              </span>은?
            </h3>
-           <div className="flex gap-4">
+           
+           <div className="flex flex-col gap-3">
               {recommendations.map((r, i) => (
-                <div key={i} className="flex-1 p-5 rounded-[28px] bg-white/5 border border-white/10 backdrop-blur-md">
-                   <div className="text-2xl mb-3">{r.icon}</div>
-                   <p className="text-white text-[13px] font-black tracking-tight leading-snug">{r.desc}</p>
+                <div key={i} className="group/item flex items-center gap-4 p-5 rounded-[32px] bg-slate-50 hover:bg-white border border-transparent hover:border-rose-100 hover:shadow-2xl hover:shadow-rose-100/50 transition-all cursor-pointer">
+                   <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shadow-sm transition-transform group-hover/item:scale-110" style={{ backgroundColor: r.color }}>
+                      {r.icon}
+                   </div>
+                   <div className="flex-1">
+                      <p className="text-[11px] font-black text-rose-400 uppercase tracking-widest mb-0.5">{r.title}</p>
+                      <p className="text-[14px] font-bold text-slate-700 leading-tight tracking-tight">{r.desc}</p>
+                   </div>
+                   <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-slate-300 group-hover/item:text-rose-500 transition-colors">
+                      <ChevronRight size={18} strokeWidth={3} />
+                   </div>
                 </div>
               ))}
            </div>

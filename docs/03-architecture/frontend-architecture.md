@@ -102,6 +102,9 @@ src/
 │   │   │   ├── page.tsx
 │   │   │   └── [voucherId]/
 │   │   │       └── page.tsx
+│   │   ├── profile/                  # 마이페이지 (프리미엄 프로필)
+│   │   │   ├── page.tsx              # 프로필 히어로 & 메뉴
+│   │   │   └── all-badges/           # 업적 센터 (Sub-view pattern)
 │   │   └── settings/                 # 설정
 │   │       └── page.tsx
 │   ├── (public)/                     # 공개 라우트
@@ -787,7 +790,14 @@ Mobile-First 접근:
 
 ## 9. 주요 UI 패턴
 
-### 로딩 상태
+### 9.1. 프리미엄 업적 및 프로필 시스템 (v3.5)
+
+*   **히어로 섹션**: 그라데이션 글로우와 글래스모피즘이 적용된 고해상도 카드.
+*   **레벨 시스템**: `Level -> XP Progress Bar` 흐름으로 실시간 성취도 가시화.
+*   **서브뷰 라우팅**: 모바일 탭 내부에서 `activeTab` 상태를 전이하여 별도의 페이지 없이 업적 센터(`AllBadgesView`) 렌더링.
+*   **인터랙티브 그리드**: 뱃지 카테고리별 분리 및 획득 여부에 따른 동적 필터링(Grayscale).
+
+### 9.2. 로딩 상태
 
 ```
 Suspense 바운더리 + Skeleton 컴포넌트

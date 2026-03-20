@@ -20,6 +20,7 @@ type NavKey =
   | "cards"
   | "ledger"
   | "benefits"
+  | "community"
   | "settings";
 
 type ThemeKey = "blossom" | "minimal" | "glass";
@@ -42,6 +43,7 @@ const navItems: NavItem[] = [
   { href: "/cards", label: "카드", key: "cards", icon: CardIcon },
   { href: "/ledger", label: "가계부", key: "ledger", icon: LedgerIcon },
   { href: "/notifications", label: "알림", key: "notifications", icon: BellIcon },
+  { href: "/community", label: "커뮤니티", key: "community", icon: UsersIcon },
   { href: "/benefits", label: "혜택", key: "benefits", icon: SparkIcon },
   { href: "/settings", label: "마이", key: "settings", icon: UserIcon },
 ];
@@ -169,6 +171,7 @@ export function AppShell({
                 <span>/dashboard</span>
                 <span>/cards</span>
                 <span>/ledger</span>
+                <span>/community</span>
                 <span>/notifications</span>
                 <span>/benefits</span>
                 <span>/settings</span>
@@ -566,6 +569,17 @@ function UserIcon(props: SVGProps<SVGSVGElement>) {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
       <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
       <path d="M5 20a7 7 0 0 1 14 0" />
+    </svg>
+  );
+}
+
+function UsersIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
     </svg>
   );
 }

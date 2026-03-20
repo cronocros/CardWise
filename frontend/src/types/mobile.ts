@@ -47,20 +47,26 @@ export interface Badge {
 }
 
 export interface CommunityPost {
-  id: string;
-  author: {
+  postId: number;
+  accountId: string;
+  category: string;
+  title: string;
+  content: string;
+  imageUrl?: string | null;
+  tags: string[];
+  viewCount: number;
+  likeCount: number;
+  commentCount: number;
+  isLiked: boolean;
+  isBookmarked: boolean;
+  createdAt: string;
+  updatedAt: string;
+  // UI-only virtual author for display
+  author?: {
     name: string;
     avatar: string;
     badge?: string;
   };
-  category: '꿀팁' | '카드수다' | '질문' | '챌린지';
-  title: string;
-  content: string;
-  image?: string;
-  likes: number;
-  comments: number;
-  createdAt: string;
-  tags: string[];
 }
 
 export interface CategoryData {
@@ -81,4 +87,13 @@ export interface Bucket {
   achieved: boolean;
   value?: string;
   target?: number;
+}
+
+export interface CommunityComment {
+  commentId: number;
+  postId: number;
+  accountId: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
 }

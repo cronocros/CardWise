@@ -1,3 +1,5 @@
+import { CommunityPost, CommunityComment } from "@/types/mobile";
+
 export const BACKEND_BASE_URL =
   process.env.BACKEND_BASE_URL ?? "http://localhost:8080/api/v1";
 
@@ -551,6 +553,64 @@ export interface GroupStatsEnvelope {
     }>;
   };
 }
+export interface CommunityReactionResponse {
+  postId: number;
+  isActive: boolean;
+  count: number;
+}
+
+export interface CommunityPostsResponse {
+  data: CommunityPost[];
+}
+
+export interface CommunityPostResponse {
+  data: CommunityPost;
+}
+
+export interface CommunityCommentsResponse {
+  data: CommunityComment[];
+}
+
+export interface CommunityCommentResponse {
+  data: CommunityComment;
+}
+
+export interface CommunityReactionEnvelope {
+  data: CommunityReactionResponse;
+}
+
+export async function getCommunityPosts(category?: string) {
+  const query = category ? `?category=${category}` : "";
+  return tryFetchBackendJson<CommunityPostsResponse>(`/community/posts${query}`);
+}
+
+export async function getCommunityPost(postId: number) {
+  return tryFetchBackendJson<CommunityPostResponse>(`/community/posts/${postId}`);
+}
+
+export async function togglePostLike(postId: number) {
+  return tryFetchBackendJson<CommunityReactionEnvelope>(`/community/posts/${postId}/like`, {
+    method: "POST",
+  });
+}
+
+export async function togglePostBookmark(postId: number) {
+  return tryFetchBackendJson<CommunityReactionEnvelope>(`/community/posts/${postId}/bookmark`, {
+    method: "POST",
+  });
+}
+
+export async function getPostComments(postId: number) {
+  return tryFetchBackendJson<CommunityCommentsResponse>(`/community/posts/${postId}/comments`);
+}
+
+export async function createPostComment(postId: number, content: string) {
+  return tryFetchBackendJson<CommunityCommentResponse>(`/community/posts/${postId}/comments`, {
+    method: "POST",
+    body: JSON.stringify({ content }),
+    headers: { "Content-Type": "application/json" },
+  });
+}
 
 function normalizeBaseUrl(baseUrl: string) {
   return baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
@@ -558,6 +618,13 @@ function normalizeBaseUrl(baseUrl: string) {
 
 export function backendUrl(pathname: string) {
   const normalizedPath = pathname.startsWith("/") ? pathname.slice(1) : pathname;
+  
+  // Client-side requests should use the BFF proxy (/api/...) 
+  // for environment-aware routing and CORS compliance.
+  if (typeof window !== "undefined") {
+    return `/api/${normalizedPath}`;
+  }
+
   return new URL(normalizedPath, normalizeBaseUrl(BACKEND_BASE_URL)).toString();
 }
 
