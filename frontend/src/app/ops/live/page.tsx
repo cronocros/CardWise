@@ -1,26 +1,11 @@
 import Link from "next/link";
-import Image from "next/image";
-import { AppShell } from "@/components/app-shell";
-import { formatDateTime, getPendingCount, tryFetchBackendJson, type PendingActionCountResponse, type PendingActionsResponse } from "@/lib/cardwise-api";
+import { getPendingCount, tryFetchBackendJson, type PendingActionCountResponse, type PendingActionsResponse } from "@/lib/cardwise-api";
 
 // ⚠️ 이 페이지는 CardWise 제품 기능이 아닙니다.
 // 개발자 전용 OPS 모니터링 도구입니다. (/ops/live)
 // CardWise 사용자 대시보드는 /dashboard 입니다.
 export const dynamic = "force-dynamic";
 
-function priorityLabel(priority: string) {
-  if (priority === "HIGH") return "높음";
-  if (priority === "MEDIUM") return "보통";
-  if (priority === "LOW") return "낮음";
-  return priority;
-}
-
-function pendingStatusLabel(status: string) {
-  if (status === "PENDING") return "대기 중";
-  if (status === "RESOLVED") return "해결됨";
-  if (status === "DISMISSED") return "제외됨";
-  return status;
-}
 
 function actionTypeLabel(actionType: string) {
   const labels: Record<string, string> = {
@@ -100,190 +85,199 @@ export default async function DashboardPage() {
   ];
 
   return (
-    <AppShell
-      active="dashboard"
-      eyebrow="Intelligence Hub"
-      title="운영 대시보드"
-      description="CardWise 내부의 AI 에이전트 동작 상태와 인간 개입(Human-in-the-loop)이 필요한 작업을 모니터링합니다."
-      actions={
-        <Link
-          href="/inbox"
-          className="rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-[var(--accent-soft)] transition hover:bg-[var(--accent-strong)] transform hover:scale-105"
-        >
-          인박스 일괄 처리
-        </Link>
-      }
-    >
-      {/* Top System Metrics */}
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 mb-6">
-        <div className="relative overflow-hidden rounded-[24px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] p-5 backdrop-blur-xl">
-          <div className="text-[11px] font-bold uppercase tracking-widest text-[var(--accent)] flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[var(--accent)] animate-pulse"></span>
-            System Status
-          </div>
-          <div className="mt-3 text-[28px] font-semibold tracking-tight text-[var(--text-strong)] flex items-center justify-between">
-            Optimal
-            <Image
-              src="/mascot.png"
-              alt="CardWise Mascot"
-              width={64}
-              height={64}
-              className="absolute right-4 top-1/2 -translate-y-1/2 opacity-90 animate-[bounce_3s_infinite]"
-              priority
-            />
-          </div>
-          <div className="mt-1 text-sm text-[var(--text-muted)] relative z-10">모든 에이전트 정상 동작 중</div>
-        </div>
-
-        <div className="relative overflow-hidden rounded-[24px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] p-5 backdrop-blur-xl">
-          <div className="text-[11px] font-bold uppercase tracking-widest text-[var(--text-soft)]">
-            Active Agents
-          </div>
-          <div className="mt-3 text-[28px] font-semibold tracking-tight text-[var(--text-strong)]">
-            {activeAgents.length}
-          </div>
-          <div className="mt-1 text-sm text-[var(--success)]">활성 상태의 특화 AI</div>
-        </div>
-
-        <div className="relative overflow-hidden rounded-[24px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] p-5 backdrop-blur-xl">
-          <div className="text-[11px] font-bold uppercase tracking-widest text-[var(--text-soft)]">
-            Tokens Processed
-          </div>
-          <div className="mt-3 text-[28px] font-semibold tracking-tight text-[var(--text-strong)]">
-            1.2M
-          </div>
-          <div className="mt-1 text-sm text-[var(--text-muted)]">이번 달 사용량 (비용 최적화)</div>
-        </div>
-
-        <div className="relative overflow-hidden rounded-[24px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] p-5 backdrop-blur-xl ring-2 ring-[var(--warning-soft)]">
-          <div className="text-[11px] font-bold uppercase tracking-widest text-[var(--warning)] flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[var(--warning)]"></span>
-            Human Review
-          </div>
-          <div className="mt-3 text-[28px] font-semibold tracking-tight text-[var(--text-strong)]">
-            {pendingCount}
-          </div>
-          <div className="mt-1 text-sm text-[var(--text-muted)]">사용자 승인 대기 건</div>
-        </div>
-      </section>
-
-      <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+    <div className="min-h-screen bg-[#0a0a14] text-slate-300 font-sans selection:bg-rose-500/30">
+      <div className="max-w-[1600px] mx-auto p-8 space-y-8">
         
-        {/* Left Column: Active Agents & Recent Activity */}
-        <div className="flex flex-col gap-6">
-          <div className="rounded-[32px] border border-[var(--surface-border-strong)] bg-white/70 backdrop-blur-2xl p-6 shadow-xl shadow-[var(--surface-shadow)]">
-            <div className="mb-5 flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-bold text-[var(--text-strong)] tracking-tight">AI 에이전트 모니터링</h2>
-                <p className="mt-1 text-sm text-[var(--text-body)]">현재 백그라운드에서 동작 중인 LLM 에이전트 상태입니다.</p>
-              </div>
+        {/* Futuristic Header */}
+        <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-white/5">
+          <div>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_15px_rgba(16,185,129,0.6)]" />
+              <span className="text-[12px] font-black text-emerald-400 uppercase tracking-[0.3em]">System Live: Optimal</span>
             </div>
+            <h1 className="text-[42px] font-black text-white tracking-tighter leading-none mb-4">
+              Agent Control Center <span className="text-rose-500 text-[24px] align-top opacity-50">v4.0</span>
+            </h1>
+            <p className="text-slate-400 max-w-2xl font-medium leading-relaxed">
+              CardWise AI 에이전트의 연산 커널과 실시간 의사결정 프로세스를 모니터링합니다. 
+              <span className="text-rose-400/80 ml-2">Human-in-the-loop 개입이 필요한 {pendingCount}개의 세션이 탐지되었습니다.</span>
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="px-6 py-4 rounded-[24px] bg-white/5 border border-white/10 backdrop-blur-xl flex flex-col items-end">
+               <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Total Tokens</span>
+               <span className="text-[20px] font-black text-white font-display">1,248,392 <span className="text-[12px] opacity-30 text-emerald-400">▲ 12%</span></span>
+            </div>
+            <Link
+              href="/inbox"
+              className="px-8 py-5 rounded-[24px] bg-rose-600 text-white font-black text-[15px] shadow-[0_20px_40px_rgba(225,29,72,0.3)] hover:bg-rose-500 active:scale-95 transition-all text-center"
+            >
+              커널 인박싱 처리
+            </Link>
+          </div>
+        </header>
 
-            <div className="grid gap-4">
-              {activeAgents.map((agent) => (
-                <div key={agent.id} className="group relative overflow-hidden rounded-[20px] border border-[var(--surface-border)] bg-gradient-to-br from-white to-[var(--surface-soft)] p-5 transition-all hover:shadow-md hover:-translate-y-0.5">
-                  <div className="flex justify-between items-start">
-                    <div className="flex gap-4">
-                      <div className={`mt-1 h-3 w-3 rounded-full flex-shrink-0 ${agent.status === "processing" ? "bg-[var(--accent)] animate-pulse" : "bg-[var(--neutral-300)]"}`} />
-                      <div>
-                        <div className="flex items-center gap-3">
-                          <h3 className="font-semibold text-lg text-[var(--text-strong)]">{agent.name}</h3>
-                          <span className="inline-flex rounded-full bg-[var(--accent-soft)] px-2.5 py-0.5 text-xs font-semibold text-[var(--accent-strong)]">
-                            {agent.llm}
-                          </span>
+        {/* Real-time Infrastructure Metrics */}
+        <section className="grid gap-6 md:grid-cols-4">
+           {[
+             { label: 'Latency', value: '42ms', color: 'text-emerald-400', sub: 'P99 Stable', icon: '⚡' },
+             { label: 'Active Sessions', value: '842', color: 'text-blue-400', sub: 'Peak 1.2k', icon: '🌐' },
+             { label: 'Success Rate', value: '99.2%', color: 'text-rose-400', sub: 'AI Correction On', icon: '🎯' },
+             { label: 'Review Queue', value: pendingCount, color: 'text-amber-400', sub: 'Urgent: 2', icon: '🔥' },
+           ].map((m, i) => (
+             <div key={i} className="p-6 rounded-[32px] bg-white/[0.03] border border-white/10 backdrop-blur-3xl shadow-2xl relative group overflow-hidden">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="flex items-center justify-between mb-4">
+                   <span className="text-[11px] font-black text-slate-500 uppercase tracking-widest">{m.label}</span>
+                   <span className="text-[18px] opacity-80">{m.icon}</span>
+                </div>
+                <div className={`text-[32px] font-black font-display tracking-tighter ${m.color} mb-1`}>{m.value}</div>
+                <div className="text-[10px] font-bold text-slate-500 italic">{m.sub}</div>
+             </div>
+           ))}
+        </section>
+
+        <div className="grid gap-8 xl:grid-cols-[1.26fr_0.74fr]">
+           
+           {/* Left: Agent Heartbeat & Logs */}
+           <div className="space-y-8">
+              <div className="rounded-[40px] bg-[#111122] border border-white/5 p-8 shadow-3xl">
+                 <div className="flex items-center justify-between mb-8">
+                    <h2 className="text-[22px] font-black text-white tracking-tight flex items-center gap-3">
+                       AI Heartbeat Monitoring
+                       <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-black animate-pulse uppercase">Active Engine</span>
+                    </h2>
+                 </div>
+
+                 <div className="space-y-4">
+                    {activeAgents.map((agent) => (
+                      <div key={agent.id} className="p-6 rounded-[32px] bg-white/[0.02] border border-white/[0.05] hover:border-white/10 transition-all group active:scale-[0.99]">
+                         <div className="flex items-center justify-between">
+                            <div className="flex items-start gap-5">
+                               <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl bg-slate-800/50 shadow-inner ${agent.status === 'processing' ? 'animate-spin-slow' : ''}`}>
+                                  {agent.name === 'Receipt Parser' ? '📄' : agent.name === 'Categorizer' ? '📁' : '💎'}
+                               </div>
+                               <div>
+                                  <div className="flex items-center gap-3 mb-1">
+                                     <h3 className="text-[18px] font-black text-white">{agent.name}</h3>
+                                     <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-white/5 text-slate-400 capitalize">{agent.llm}</span>
+                                  </div>
+                                  <p className="text-[13px] font-medium text-slate-500 leading-relaxed font-mono">
+                                     <span className="text-emerald-500/70 mr-2">➤</span> {agent.currentTask}
+                                  </p>
+                               </div>
+                            </div>
+                            <div className="text-right">
+                               <div className="text-[10px] font-black text-slate-600 uppercase mb-1">Core Integrity</div>
+                               <div className="text-[20px] font-black text-emerald-400/90 font-display">{agent.successRate}%</div>
+                            </div>
+                         </div>
+                      </div>
+                    ))}
+                 </div>
+              </div>
+
+              {/* Terminal-style Activity Log */}
+              <div className="rounded-[40px] bg-black border border-white/5 p-8 font-mono shadow-inner relative overflow-hidden">
+                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500/20 via-rose-500/20 to-blue-500/20" />
+                 <h2 className="text-[14px] font-black text-slate-600 mb-6 uppercase tracking-[0.2em] flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-slate-700 animate-pulse" />
+                    Kernel Activity Log
+                 </h2>
+                 <div className="space-y-4 max-h-[400px] overflow-y-auto scrollbar-hide">
+                    {recentActivities.map((act) => (
+                      <div key={act.id} className="flex gap-4 group">
+                         <span className="text-slate-700 text-[11px] font-bold">{act.time}</span>
+                         <div className="flex flex-col gap-1">
+                            <p className="text-[13px] leading-relaxed">
+                               <span className="text-blue-400 font-bold mr-2">[{act.agent}]</span>
+                               <span className="text-slate-300">{act.action}</span>
+                            </p>
+                            <div className="flex gap-3 scale-90 origin-left opacity-40 group-hover:opacity-100 transition-opacity">
+                               <span className="text-[10px] text-slate-500">LLM: {act.llm}</span>
+                               <span className="text-[10px] text-emerald-500">CONF: {act.conf}%</span>
+                            </div>
+                         </div>
+                      </div>
+                    ))}
+                    <div className="flex gap-4 animate-pulse">
+                       <span className="text-slate-800 text-[11px] font-bold">NOW</span>
+                       <span className="text-emerald-500/50 text-[13px]">Kernel scanning for anomalies... _</span>
+                    </div>
+                 </div>
+              </div>
+           </div>
+
+           {/* Right: Human Review / Critical Alerts */}
+           <div className="space-y-8">
+              <div className="rounded-[40px] bg-gradient-to-br from-[#1a1111] to-[#0a0a14] border border-rose-900/20 p-8 shadow-2xl relative overflow-hidden group">
+                 <div className="absolute -top-20 -right-20 w-60 h-60 bg-rose-500/5 rounded-full blur-[80px]" />
+                 <div className="flex items-center justify-between mb-8">
+                    <h2 className="text-[20px] font-black text-rose-500 tracking-tight flex items-center gap-3">
+                       Pending Intersection
+                       <div className="flex gap-1">
+                         <div className="w-1 h-1 rounded-full bg-rose-500 animate-ping" />
+                         <div className="w-1 h-1 rounded-full bg-rose-500 animate-ping delay-75" />
+                       </div>
+                    </h2>
+                 </div>
+
+                 <div className="space-y-5">
+                    {pendingItems.length === 0 ? (
+                      <div className="py-20 text-center text-slate-600 font-medium italic border border-dashed border-white/5 rounded-[32px]">
+                         대기 중인 인터셉트 항목이 없습니다
+                      </div>
+                    ) : (
+                      pendingItems.map((item) => (
+                        <div key={item.pendingActionId} className="p-5 rounded-[28px] bg-white/5 border border-white/[0.03] hover:bg-white/[0.08] transition-all cursor-pointer">
+                           <div className="flex items-center gap-3 mb-3">
+                              <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest ${item.priority === 'HIGH' ? 'bg-rose-500/20 text-rose-400' : 'bg-amber-500/20 text-amber-400'}`}>
+                                {item.priority}
+                              </span>
+                              <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{actionTypeLabel(item.actionType)}</span>
+                           </div>
+                           <h3 className="text-[15px] font-bold text-slate-200 mb-2 leading-snug">{item.title}</h3>
+                           <p className="text-[12px] text-slate-500 leading-relaxed mb-4 line-clamp-2">{item.description}</p>
+                           <Link href="/inbox" className="w-full py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white text-[12px] font-black transition-all flex items-center justify-center gap-2">
+                              커널 결정 내리기
+                              <span className="text-rose-500">→</span>
+                           </Link>
                         </div>
-                        <p className="mt-1.5 text-sm text-[var(--text-body)] font-medium">
-                          {agent.currentTask}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-[10px] uppercase font-bold text-[var(--text-soft)] tracking-widest">정확도</div>
-                      <div className="mt-1 text-base font-bold text-[var(--success)]">{agent.successRate}%</div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+                      ))
+                    )}
+                 </div>
 
-          <div className="rounded-[32px] border border-[var(--surface-border)] bg-[var(--surface-elevated)] p-6">
-            <h2 className="text-lg font-bold text-[var(--text-strong)] tracking-tight mb-5">실시간 결정 로그</h2>
-            <div className="border-l-2 border-[var(--surface-border-strong)] ml-3 pl-5 space-y-6">
-              {recentActivities.map((act) => (
-                <div key={act.id} className="relative">
-                  <div className="absolute -left-[27px] top-1.5 h-3 w-3 rounded-full border-2 border-[var(--accent)] bg-white"></div>
-                  <div className="flex items-center gap-3 mb-1">
-                    <span className="text-xs font-bold text-[var(--accent-strong)]">{act.agent}</span>
-                    <span className="text-xs text-[var(--text-muted)]">{act.time}</span>
-                  </div>
-                  <p className="text-sm font-medium text-[var(--text-strong)] leading-relaxed">{act.action}</p>
-                  <div className="mt-2 flex gap-2">
-                    <span className="inline-block rounded-md bg-[var(--surface-soft)] px-2 py-1 text-[11px] text-[var(--text-body)] border border-[var(--surface-border)]">⚙ {act.llm}</span>
-                    <span className="inline-block rounded-md bg-[var(--success-soft)] px-2 py-1 text-[11px] text-[var(--success)] border border-[var(--success-soft)]">신뢰도 {act.conf}%</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column: Human-in-the-loop */}
-        <div>
-          <div className="sticky top-[100px] rounded-[32px] border border-[var(--warning-soft)] bg-gradient-to-b from-[#fffaf0] to-white p-6 shadow-2xl shadow-[var(--warning-soft)]">
-            <div className="mb-5 flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-bold text-[var(--warning)] tracking-tight flex items-center gap-2">
-                  Human-in-the-Loop
-                </h2>
-                <p className="mt-1 text-sm text-[var(--text-body)]">AI가 인간의 확정을 기다리고 있는 항목</p>
+                 {pendingCount > 6 && (
+                   <Link href="/inbox" className="block mt-6 text-center text-[12px] font-black text-slate-500 hover:text-rose-400 uppercase tracking-widest transition-colors">
+                      View all interlocks ({pendingCount})
+                   </Link>
+                 )}
               </div>
-            </div>
 
-            <div className="space-y-4">
-              {pendingItems.length === 0 ? (
-                <div className="rounded-[20px] border border-dashed border-[var(--warning-soft)] bg-white/50 px-5 py-10 text-center text-sm text-[var(--text-muted)]">
-                  현재 AI가 요청한 검토 대기열이 비어 있습니다.
-                </div>
-              ) : (
-                pendingItems.map((item) => (
-                  <article key={item.pendingActionId} className="group relative overflow-hidden rounded-[20px] border border-[var(--warning-soft)] bg-white p-4 transition-all hover:border-[var(--warning)] hover:shadow-lg">
-                    <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-                      <div className="flex gap-2">
-                        <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase ${item.priority === "HIGH" ? "bg-rose-100 text-rose-700" : "bg-amber-100 text-amber-700"}`}>
-                          {priorityLabel(item.priority)}
-                        </span>
-                        <span className="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-700">
-                          {actionTypeLabel(item.actionType)}
-                        </span>
+              {/* System Diagnostics View */}
+              <div className="rounded-[40px] bg-[#111122] border border-white/5 p-8">
+                 <h2 className="text-[14px] font-black text-slate-500 mb-6 uppercase tracking-widest">Core Diagnostics</h2>
+                 <div className="space-y-5">
+                    {[
+                      { label: 'Neural Engine', pct: 68, color: 'bg-emerald-500' },
+                      { label: 'Data Stream', pct: 42, color: 'bg-blue-500' },
+                      { label: 'LLM Response', pct: 85, color: 'bg-purple-500' },
+                    ].map((d, i) => (
+                      <div key={i} className="space-y-2">
+                         <div className="flex justify-between text-[11px] font-black text-slate-400 uppercase tracking-tighter">
+                            <span>{d.label}</span>
+                            <span>{d.pct}%</span>
+                         </div>
+                         <div className="h-2 w-full bg-black rounded-full overflow-hidden border border-white/5">
+                            <div className={`h-full ${d.color} transition-all duration-1000 ease-out`} style={{ width: `${d.pct}%` }} />
+                         </div>
                       </div>
-                    </div>
-                    <h3 className="text-sm font-bold text-[var(--text-strong)] leading-snug">{item.title}</h3>
-                    <p className="mt-1.5 text-xs leading-5 text-[var(--text-body)]">{item.description}</p>
-                    <div className="mt-4 flex gap-2">
-                      <Link href="/inbox" className="flex-1 rounded-[12px] bg-[var(--text-strong)] py-2 text-center text-xs font-bold text-white transition hover:bg-black">
-                        결정하기
-                      </Link>
-                      <button className="flex-1 rounded-[12px] border border-[var(--surface-border-strong)] bg-white py-2 text-center text-xs font-bold text-[var(--text-strong)] transition hover:bg-[var(--surface-soft)]">
-                        자세히
-                      </button>
-                    </div>
-                  </article>
-                ))
-              )}
-            </div>
-
-            {pendingCount > 6 && (
-              <div className="mt-5 text-center">
-                <Link href="/inbox" className="text-sm font-bold text-[var(--accent-strong)] hover:underline">
-                  +{pendingCount - 6}개의 대기 항목 전체 보기
-                </Link>
+                    ))}
+                 </div>
               </div>
-            )}
-          </div>
+           </div>
         </div>
-
       </div>
-    </AppShell>
+    </div>
   );
 }
