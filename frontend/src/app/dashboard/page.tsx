@@ -16,13 +16,20 @@ export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const now = new Date();
-  const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1;
+  const yearMonth = `${year}-${String(month).padStart(2, "0")}`;
+  
+  // 이번 달 시작일/종료일 구하기 (ISO.DATE 형식 YYYY-MM-DD)
+  const fromDate = `${yearMonth}-01`;
+  const lastDay = new Date(year, month, 0).getDate();
+  const toDate = `${yearMonth}-${String(lastDay).padStart(2, "0")}`;
 
   const [monthlySummary, cardSummary, categorySummary, trend] = await Promise.all([
-    tryFetchBackendJson<DashboardMonthlySummaryResponse>(`/dashboard/monthly-summary?yearMonth=${yearMonth}`),
-    tryFetchBackendJson<DashboardCardSummaryResponse>(`/dashboard/card-summary?yearMonth=${yearMonth}`),
-    tryFetchBackendJson<DashboardCategorySummaryResponse>(`/dashboard/category-summary?yearMonth=${yearMonth}`),
-    tryFetchBackendJson<DashboardTrendResponse>(`/dashboard/trend?months=6`),
+    tryFetchBackendJson<DashboardMonthlySummaryResponse>(`/dashboard/monthly?year=${year}&month=${month}`),
+    tryFetchBackendJson<DashboardCardSummaryResponse>(`/dashboard/cards?from=${fromDate}&to=${toDate}`),
+    tryFetchBackendJson<DashboardCategorySummaryResponse>(`/dashboard/categories?from=${fromDate}&to=${toDate}`),
+    tryFetchBackendJson<DashboardTrendResponse>(`/dashboard/trends?period=monthly&limit=6`),
   ]);
 
   const summary = monthlySummary?.data;

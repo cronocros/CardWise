@@ -56,15 +56,17 @@ export interface PaymentAdjustmentsResponse {
   data: PaymentAdjustment[];
 }
 
-export interface PaymentRecord {
+export type PaymentRecord = {
   paymentId: number;
   userCardId: number;
   merchantName: string;
   krwAmount: number;
-  finalKrwAmount: number | null;
+  finalKrwAmount?: number;
   paidAt: string;
   isAdjusted: boolean;
-}
+  tierChanged?: boolean;
+  newTierName?: string;
+};
 
 export interface CreatePaymentRequest {
   userCardId: number;

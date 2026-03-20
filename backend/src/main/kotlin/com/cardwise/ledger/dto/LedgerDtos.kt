@@ -71,6 +71,17 @@ data class CreatePaymentRequest(
     val paidAt: OffsetDateTime,
 )
 
+data class UpdatePaymentRequest(
+    @field:NotNull
+    val userCardId: Long,
+    @field:NotBlank
+    val merchantName: String,
+    @field:Positive
+    val krwAmount: Long,
+    @field:NotNull
+    val paidAt: OffsetDateTime,
+)
+
 data class AdjustmentResponse(
     val adjustmentId: Long,
     val paymentId: Long,
@@ -131,6 +142,8 @@ data class PaymentResponse(
     val paidAt: OffsetDateTime,
     val isAdjusted: Boolean,
     val createdAt: OffsetDateTime? = null,
+    val tierChanged: Boolean? = null,
+    val newTierName: String? = null,
 )
 
 data class PaymentListResponse(

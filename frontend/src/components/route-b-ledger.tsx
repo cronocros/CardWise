@@ -5,8 +5,9 @@ import { Chip, MetricCard, Panel } from "@/components/app-shell";
 import type { PendingAction, PaymentAdjustment, PaymentRecord, UserCardSummaryResponse } from "@/lib/cardwise-api";
 import { formatCurrency, formatDateTime } from "@/lib/cardwise-api";
 import { DeletePaymentButton } from "@/components/ledger-item-actions";
-import { createPayment } from "@/app/ledger/actions";
+import { createPayment, updatePayment } from "@/app/ledger/actions";
 import { useState } from "react";
+import { PerformanceTierModal } from "@/components/performance-modal";
 
 type LedgerHubProps = {
   actions: PendingAction[];
@@ -69,6 +70,12 @@ export function LedgerHub({
   userCards,
 }: LedgerHubProps) {
   const [showForm, setShowForm] = useState(false);
+  const [editingPaymentId, setEditingPaymentId] = useState<number | null>(null);
+  const [tierModal, setTierModal] = useState<{ open: boolean; name: string }>({ open: false, name: "" });
+
+  const handleTierChange = (newTierName: string) => {
+    setTierModal({ open: true, name: newTierName });
+  };
   const recentActions = actions.slice(0, 4);
   const recentAdjustments = adjustments.slice(0, 4);
   const totalDelta = adjustments.reduce((sum, item) => sum + item.differenceAmount, 0);
@@ -90,7 +97,11 @@ export function LedgerHub({
         >
           {showForm && (
             <div className="mb-6">
-              <ManualPaymentForm userCards={userCards} onComplete={() => setShowForm(false)} />
+              <ManualPaymentForm 
+                userCards={userCards} 
+                onComplete={() => setShowForm(false)} 
+                onTierChange={handleTierChange}
+              />
             </div>
           )}
 
@@ -222,27 +233,49 @@ export function LedgerHub({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[var(--surface-border)]">
-                    {payments.map((p) => (
-                      <tr key={p.paymentId} className="group transition hover:bg-[var(--surface-soft)]">
-                        <td className="whitespace-nowrap px-6 py-4 text-[var(--text-muted)]">
-                          {formatDateTime(p.paidAt)}
-                        </td>
-                        <td className="px-6 py-4 font-semibold text-[var(--text-strong)]">
-                          {p.merchantName}
-                        </td>
-                        <td className="px-6 py-4 text-right font-bold text-[var(--text-strong)]">
-                          {formatCurrency(p.finalKrwAmount ?? p.krwAmount)}
-                        </td>
-                        <td className="px-6 py-4">
-                          <Chip tone={p.isAdjusted ? "emerald" : "slate"}>
-                            {p.isAdjusted ? "조정됨" : "일반"}
-                          </Chip>
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <DeletePaymentButton paymentId={p.paymentId} />
-                        </td>
-                      </tr>
-                    ))}
+                    {payments.map((p) => {
+                      if (editingPaymentId === p.paymentId) {
+                        return (
+                          <tr key={p.paymentId}>
+                            <td colSpan={5} className="bg-[var(--surface-soft)] p-4">
+                             <ManualPaymentForm 
+                                userCards={userCards} 
+                                initialData={p}
+                                onComplete={() => setEditingPaymentId(null)} 
+                                onTierChange={handleTierChange}
+                              />
+                            </td>
+                          </tr>
+                        );
+                      }
+                      return (
+                        <tr key={p.paymentId} className="group transition hover:bg-[var(--surface-soft)]">
+                          <td className="whitespace-nowrap px-6 py-4 text-[var(--text-muted)]">
+                            {formatDateTime(p.paidAt)}
+                          </td>
+                          <td className="px-6 py-4 font-semibold text-[var(--text-strong)]">
+                            {p.merchantName}
+                          </td>
+                          <td className="px-6 py-4 text-right font-bold text-[var(--text-strong)]">
+                            {formatCurrency(p.finalKrwAmount ?? p.krwAmount)}
+                          </td>
+                          <td className="px-6 py-4">
+                            <Chip tone={p.isAdjusted ? "emerald" : "slate"}>
+                              {p.isAdjusted ? "조정됨" : "일반"}
+                            </Chip>
+                          </td>
+                          <td className="px-6 py-4 text-right space-x-3">
+                            <button
+                              onClick={() => setEditingPaymentId(p.paymentId)}
+                              className="text-xs font-semibold text-[var(--accent)] opacity-0 transition group-hover:opacity-100 hover:underline"
+                            >
+                              수정
+                            </button>
+                            <DeletePaymentButton paymentId={p.paymentId} />
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -250,15 +283,31 @@ export function LedgerHub({
           </div>
         </Panel>
       </section>
+
+      <PerformanceTierModal 
+        isOpen={tierModal.open} 
+        onClose={() => setTierModal({ ...tierModal, open: false })} 
+        newTierName={tierModal.name}
+      />
     </div>
   );
 }
 
-function ManualPaymentForm({ userCards, onComplete }: { userCards: UserCardSummaryResponse[], onComplete: () => void }) {
-  const [userCardId, setUserCardId] = useState(userCards[0]?.userCardId.toString() ?? "");
-  const [merchantName, setMerchantName] = useState("");
-  const [krwAmount, setKrwAmount] = useState("");
-  const [paidAt, setPaidAt] = useState(new Date().toISOString().slice(0, 16));
+function ManualPaymentForm({ 
+  userCards, 
+  onComplete, 
+  onTierChange,
+  initialData 
+}: { 
+  userCards: UserCardSummaryResponse[], 
+  onComplete: () => void, 
+  onTierChange?: (name: string) => void,
+  initialData?: PaymentRecord 
+}) {
+  const [userCardId, setUserCardId] = useState(initialData?.userCardId.toString() ?? userCards[0]?.userCardId.toString() ?? "");
+  const [merchantName, setMerchantName] = useState(initialData?.merchantName ?? "");
+  const [krwAmount, setKrwAmount] = useState(initialData?.krwAmount.toString() ?? "");
+  const [paidAt, setPaidAt] = useState(initialData ? initialData.paidAt.slice(0, 16) : new Date().toISOString().slice(0, 16));
   const [isPending, setIsPending] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -267,16 +316,28 @@ function ManualPaymentForm({ userCards, onComplete }: { userCards: UserCardSumma
 
     setIsPending(true);
     try {
-      await createPayment({
+      const payload = {
         userCardId: parseInt(userCardId),
         merchantName,
         krwAmount: parseInt(krwAmount),
         paidAt: new Date(paidAt).toISOString(),
-      });
+      };
+      
+      if (initialData) {
+        const res = await updatePayment(initialData.paymentId, payload);
+        if (res?.tierChanged && res.newTierName) {
+          onTierChange?.(res.newTierName);
+        }
+      } else {
+        const res = await createPayment(payload);
+        if (res?.tierChanged && res.newTierName) {
+          onTierChange?.(res.newTierName);
+        }
+      }
       onComplete();
     } catch (err) {
       console.error(err);
-      alert("결제 등록에 실패했습니다.");
+      alert(initialData ? "결제 수정에 실패했습니다." : "결제 등록에 실패했습니다.");
     } finally {
       setIsPending(false);
     }
@@ -346,7 +407,7 @@ function ManualPaymentForm({ userCards, onComplete }: { userCards: UserCardSumma
           disabled={isPending}
           className="rounded-full bg-[var(--accent)] px-8 py-2.5 text-sm font-bold text-white shadow-lg transition hover:bg-[var(--accent-strong)] disabled:opacity-50"
         >
-          {isPending ? "등록 중..." : "결제 내역 등록"}
+          {isPending ? "진행 중..." : initialData ? "수정 완료" : "결제 내역 등록"}
         </button>
       </div>
     </form>

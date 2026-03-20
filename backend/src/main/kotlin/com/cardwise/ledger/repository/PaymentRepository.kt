@@ -31,6 +31,11 @@ interface PaymentRepository : JpaRepository<PaymentEntity, Long> {
         @Param("accountId") accountId: UUID,
     ): PaymentProjection?
 
+    fun findEntityByPaymentIdAndAccountIdAndDeletedAtIsNull(
+        paymentId: Long,
+        accountId: UUID,
+    ): PaymentEntity?
+
     @Query(
         value = """
             select

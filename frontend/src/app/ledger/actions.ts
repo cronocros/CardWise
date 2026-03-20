@@ -2,7 +2,6 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/utils/supabase/server'
-import { redirect } from 'next/navigation'
 import { backendUrl, type CreatePaymentRequest } from '@/lib/cardwise-api'
 
 export async function deletePayment(paymentId: number) {
@@ -22,7 +21,6 @@ export async function deletePayment(paymentId: number) {
   }
 
   revalidatePath('/ledger')
-  redirect('/cards')
 }
 
 export async function createPayment(request: CreatePaymentRequest) {
@@ -42,6 +40,31 @@ export async function createPayment(request: CreatePaymentRequest) {
   if (!response.ok) {
     throw new Error('Failed to create payment')
   }
-
+  
+  const payload = await response.json()
   revalidatePath('/ledger')
+  return { tierChanged: payload.data?.tierChanged, newTierName: payload.data?.newTierName }
+}
+
+export async function updatePayment(paymentId: number, request: CreatePaymentRequest) {
+  const supabase = await createClient()
+  const { data: { session } } = await supabase.auth.getSession()
+  const token = session?.access_token
+
+  const response = await fetch(backendUrl(`/payments/${paymentId}`), {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+    },
+    body: JSON.stringify(request)
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to update payment')
+  }
+
+  const payload = await response.json()
+  revalidatePath('/ledger')
+  return { tierChanged: payload.data?.tierChanged, newTierName: payload.data?.newTierName }
 }

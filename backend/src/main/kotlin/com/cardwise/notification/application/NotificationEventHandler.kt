@@ -65,4 +65,32 @@ class NotificationEventHandler(
             ),
         )
     }
+
+    @EventListener
+    fun handlePerformanceTierChanged(event: com.cardwise.performance.domain.event.PerformanceTierChangedEvent) {
+        if (event.newTierName == null) return
+        val title = if (event.oldTierName == null) {
+            "새로운 실적 구간 달성!"
+        } else {
+            "실적 구간 변경"
+        }
+        val body = if (event.oldTierName != null) {
+            "실적 구간이 ${event.oldTierName}에서 ${event.newTierName}(으)로 변경되었습니다. (${event.yearMonth})"
+        } else {
+            "새롭게 ${event.newTierName} 구간을 달성했습니다! (${event.yearMonth})"
+        }
+        notificationService.createNotification(
+            NotificationInsertCommand(
+                accountId = event.accountId,
+                notificationType = "SYSTEM",
+                eventCode = "PERFORMANCE_TIER_CHANGED",
+                title = title,
+                body = body,
+                actionUrl = "/performance/${event.userCardId}",
+                actionLabel = "실적 확인",
+                referenceTable = "user_card",
+                referenceId = event.userCardId,
+            )
+        )
+    }
 }

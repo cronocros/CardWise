@@ -23,7 +23,7 @@
 | Frontend | Next.js 16 (App Router) + TypeScript + Tailwind CSS + shadcn/ui |
 | Backend | Spring Boot 3.x (Kotlin), Hexagonal Architecture |
 | DB | Supabase PostgreSQL (서비스 롤 키 접속, 포트 6543 Pooler) |
-| Auth | Supabase Auth — JWT (미연결, 설계만 완성) |
+| Auth | Supabase Auth — JWT | ✅ DONE | 연동 및 미들웨어 처리 완료 |
 | Cache | Docker Redis (로컬) / Upstash Redis (운영) |
 | 배포 | Vercel (FE) + Cloud Run (BE) — 미배포 상태 |
 
