@@ -48,8 +48,14 @@ CREATE TYPE pending_action_type_enum AS ENUM ('FX_CORRECTION_NEEDED', 'BILLING_D
 
 | # | 테이블 | 설명 |
 |---|--------|------|
-| 1 | card_company | 카드사 마스터 (신한, 삼성, 현대 등) |
-| 2 | card | 카드 상품 (이름, 연회비, 카드타입) |
+|#### 💳 카드 상품 (Card Templates)
+- `card`: 카드 상품 기본 정보 (이름, 타입, 룰)
+- `card_issuer`: 카드사 정보 (신한, 현대, 롯데 등)
+- `card_brand`: 제휴 브랜드 정보 (Visa, Mastercard, Amex 등)
+
+#### 🏦 사용자 보유 카드 (User Cards)
+- `user_card`: 사용자가 등록한 카드 정보 (회원 연결, 닉네임, 실적 목표)
+  - `issuer_id`, `brand_id`, `card_type` 등 상세 필드 확장 (v3.6)
 | 3 | performance_tier | 전월실적 구간 (30만/50만/100만) |
 | 4 | category | 업종 카테고리 (계층 구조, self-ref) |
 | 5 | merchant | 가맹점 브랜드 |

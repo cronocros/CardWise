@@ -8,6 +8,49 @@ data class RegisterCardRequest(
     val cardNickname: String? = null,
 )
 
+data class RegisterCardDetailedRequest(
+    val cardNickname: String,
+    val issuerId: String,
+    val brandId: String,
+    val cardType: String,
+    val cardNumberFirstFour: String,
+    val cardNumberLastFour: String,
+    val expiryMonth: String,
+    val expiryYear: String,
+    val monthlyTargetAmount: Long,
+    val annualTargetAmount: Long,
+    val features: List<String>,
+    val isNotificationEnabled: Boolean,
+    val isMain: Boolean,
+    val isPinned: Boolean
+)
+
+data class CardMetadataResponse(
+    val issuers: List<IssuerDto>,
+    val brands: List<BrandDto>
+)
+
+data class IssuerDto(
+    val id: String,
+    val name: String,
+    val logoUrl: String? = null
+)
+
+data class BrandDto(
+    val id: String,
+    val name: String,
+    val logoUrl: String? = null
+)
+
+data class CardSummaryDto(
+    val cardId: Long,
+    val cardName: String,
+    val issuerId: String,
+    val brandId: String,
+    val cardType: String,
+    val features: List<String> = emptyList()
+)
+
 data class UpdateCardRequest(
     val cardNickname: String? = null,
     val issuedAt: LocalDate? = null,
@@ -15,7 +58,7 @@ data class UpdateCardRequest(
 
 data class UserCardSummaryResponse(
     val userCardId: Long,
-    val cardId: Long,
+    val cardId: Long?,
     val cardName: String,
     val cardNickname: String?,
     val issuedAt: LocalDate,
@@ -24,10 +67,12 @@ data class UserCardSummaryResponse(
 
 data class UserCardDetailResponse(
     val userCardId: Long,
-    val cardId: Long,
+    val cardId: Long?,
     val cardName: String,
     val cardNickname: String?,
     val issuedAt: LocalDate,
+    val expiryMonth: String?,
+    val expiryYear: String?,
 )
 
 data class DeleteCardResponse(

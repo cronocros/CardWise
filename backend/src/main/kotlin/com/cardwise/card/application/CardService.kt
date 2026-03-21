@@ -1,10 +1,6 @@
 package com.cardwise.card.application
 
-import com.cardwise.card.api.DeleteCardResponse
-import com.cardwise.card.api.RegisterCardRequest
-import com.cardwise.card.api.UpdateCardRequest
-import com.cardwise.card.api.UserCardDetailResponse
-import com.cardwise.card.api.UserCardSummaryResponse
+import com.cardwise.card.api.*
 import com.cardwise.card.infrastructure.CardManagementRepository
 import com.cardwise.common.api.ApiResponse
 import com.cardwise.performance.infrastructure.CardEntity
@@ -17,6 +13,36 @@ import org.springframework.transaction.annotation.Transactional
 class CardService(
     private val cardRepository: CardManagementRepository,
 ) {
+    fun getMetadata(): ApiResponse<CardMetadataResponse> {
+        val issuers = cardRepository.getIssuers().map { IssuerDto(it.issuerId, it.name, it.logoUrl) }
+        val brands = cardRepository.getBrands().map { BrandDto(it.brandId, it.name, it.logoUrl) }
+        return ApiResponse(data = CardMetadataResponse(issuers = issuers, brands = brands))
+    }
+
+    private val objectMapper = com.fasterxml.jackson.module.kotlin.jacksonObjectMapper()
+
+    fun getCards(issuerId: String?, brandId: String?, keyword: String?): ApiResponse<List<CardSummaryDto>> {
+        val cards = when {
+            keyword != null && keyword.isNotBlank() -> cardRepository.searchCardsByKeyword(keyword)
+            issuerId != null && brandId != null -> cardRepository.searchCardsByIssuerAndBrand(issuerId, brandId)
+            else -> cardRepository.getAllCards()
+        }
+
+        return ApiResponse(data = cards.map { 
+            CardSummaryDto(
+                cardId = it.cardId!!,
+                cardName = it.cardName,
+                issuerId = it.issuerId ?: "",
+                brandId = it.brandId ?: "",
+                cardType = it.cardType.name,
+                features = try {
+                    if (it.features != null) objectMapper.readValue(it.features!!, Array<String>::class.java).toList()
+                    else emptyList()
+                } catch (e: Exception) { emptyList() }
+            )
+        })
+    }
+
     fun listMyCards(accountId: UUID): ApiResponse<List<UserCardSummaryResponse>> {
         val cards = cardRepository.listUserCards(accountId)
         return ApiResponse(data = cards.map { toSummary(it) })
@@ -24,7 +50,7 @@ class CardService(
 
     fun getMyCard(accountId: UUID, userCardId: Long): ApiResponse<UserCardDetailResponse> {
         val userCard = cardRepository.findUserCard(userCardId, accountId)
-        val card = cardRepository.findCard(userCard.cardId!!)
+        val card = userCard.cardId?.let { cardRepository.findCard(it) }
         return ApiResponse(data = toDetail(userCard, card))
     }
 
@@ -41,6 +67,12 @@ class CardService(
     }
 
     @Transactional
+    fun registerCardDetailed(accountId: UUID, request: RegisterCardDetailedRequest): ApiResponse<UserCardDetailResponse> {
+        val saved = cardRepository.registerCardDetailed(accountId, request)
+        return ApiResponse(data = toDetail(saved, null))
+    }
+
+    @Transactional
     fun updateCard(accountId: UUID, userCardId: Long, request: UpdateCardRequest): ApiResponse<UserCardDetailResponse> {
         val userCard = cardRepository.findUserCard(userCardId, accountId)
 
@@ -48,7 +80,7 @@ class CardService(
         request.issuedAt?.let { userCard.issuedAt = it }
 
         val saved = cardRepository.updateUserCard(userCard)
-        val card = cardRepository.findCard(saved.cardId!!)
+        val card = saved.cardId?.let { cardRepository.findCard(it) }
         return ApiResponse(data = toDetail(saved, card))
     }
 
@@ -67,9 +99,9 @@ class CardService(
     private fun toSummary(userCard: UserCardEntity): UserCardSummaryResponse {
         return UserCardSummaryResponse(
             userCardId = requireNotNull(userCard.userCardId),
-            cardId = requireNotNull(userCard.cardId),
+            cardId = userCard.cardId,
             cardName = try {
-                cardRepository.findCard(userCard.cardId!!).cardName
+                userCard.cardId?.let { cardRepository.findCard(it).cardName } ?: userCard.cardNickname ?: "커스텀 카드"
             } catch (e: Exception) {
                 "알 수 없는 카드"
             },
@@ -79,13 +111,15 @@ class CardService(
         )
     }
 
-    private fun toDetail(userCard: UserCardEntity, card: CardEntity): UserCardDetailResponse {
+    private fun toDetail(userCard: UserCardEntity, card: CardEntity?): UserCardDetailResponse {
         return UserCardDetailResponse(
             userCardId = requireNotNull(userCard.userCardId),
-            cardId = requireNotNull(userCard.cardId),
-            cardName = card.cardName,
+            cardId = userCard.cardId,
+            cardName = card?.cardName ?: userCard.cardNickname ?: "커스텀 카드",
             cardNickname = userCard.cardNickname,
             issuedAt = userCard.issuedAt,
+            expiryMonth = userCard.expiryMonth,
+            expiryYear = userCard.expiryYear
         )
     }
 }

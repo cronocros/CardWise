@@ -5,25 +5,32 @@ import com.cardwise.common.api.ApiResponse
 import com.cardwise.common.web.RequestAccountIdResolver
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PatchMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestHeader
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.ResponseStatus
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 @RestController
-@RequestMapping("/api/v1/my-cards")
+@RequestMapping("/api/v1")
 class CardController(
     private val cardService: CardService,
     private val requestAccountIdResolver: RequestAccountIdResolver,
 ) {
+    /** 카드 메타데이터 조회 (카드사, 브랜드) */
+    @GetMapping("/cards/metadata")
+    fun getCardMetadata(): ApiResponse<CardMetadataResponse> {
+        return cardService.getMetadata()
+    }
+
+    /** 카드 목록 조회 (필터링 및 검색) */
+    @GetMapping("/cards")
+    fun getCards(
+        @RequestParam(required = false) issuerId: String?,
+        @RequestParam(required = false) brandId: String?,
+        @RequestParam(required = false) keyword: String?
+    ): ApiResponse<List<CardSummaryDto>> {
+        return cardService.getCards(issuerId, brandId, keyword)
+    }
+
     /** 내 카드 목록 조회 */
-    @GetMapping
+    @GetMapping("/my-cards")
     fun listMyCards(
         @RequestHeader(name = "X-Account-Id", required = false) accountIdHeader: String?,
     ): ApiResponse<List<UserCardSummaryResponse>> {
@@ -31,7 +38,7 @@ class CardController(
     }
 
     /** 내 카드 상세 조회 */
-    @GetMapping("/{userCardId}")
+    @GetMapping("/my-cards/{userCardId}")
     fun getMyCard(
         @PathVariable userCardId: Long,
         @RequestHeader(name = "X-Account-Id", required = false) accountIdHeader: String?,
@@ -39,8 +46,8 @@ class CardController(
         return cardService.getMyCard(requestAccountIdResolver.resolve(accountIdHeader), userCardId)
     }
 
-    /** 카드 등록 */
-    @PostMapping
+    /** 카드 기본 등록 (템플릿 기반) */
+    @PostMapping("/my-cards")
     @ResponseStatus(HttpStatus.CREATED)
     fun registerCard(
         @RequestHeader(name = "X-Account-Id", required = false) accountIdHeader: String?,
@@ -49,8 +56,18 @@ class CardController(
         return cardService.registerCard(requestAccountIdResolver.resolve(accountIdHeader), request)
     }
 
-    /** 카드 별칭/발급일 수정 */
-    @PatchMapping("/{userCardId}")
+    /** 카드 상세 등록 (사용자 입력 기반) */
+    @PostMapping("/my-cards/detailed")
+    @ResponseStatus(HttpStatus.CREATED)
+    fun registerCardDetailed(
+        @RequestHeader(name = "X-Account-Id", required = false) accountIdHeader: String?,
+        @Valid @RequestBody request: RegisterCardDetailedRequest,
+    ): ApiResponse<UserCardDetailResponse> {
+        return cardService.registerCardDetailed(requestAccountIdResolver.resolve(accountIdHeader), request)
+    }
+
+    /** 카드 수정 */
+    @PatchMapping("/my-cards/{userCardId}")
     fun updateCard(
         @PathVariable userCardId: Long,
         @RequestHeader(name = "X-Account-Id", required = false) accountIdHeader: String?,
@@ -59,8 +76,8 @@ class CardController(
         return cardService.updateCard(requestAccountIdResolver.resolve(accountIdHeader), userCardId, request)
     }
 
-    /** 카드 삭제 (비활성화) */
-    @DeleteMapping("/{userCardId}")
+    /** 카드 삭제 */
+    @DeleteMapping("/my-cards/{userCardId}")
     fun deleteCard(
         @PathVariable userCardId: Long,
         @RequestHeader(name = "X-Account-Id", required = false) accountIdHeader: String?,

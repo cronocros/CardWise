@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import {
   Settings, Shield, Bell, HelpCircle, LogOut, ChevronRight,
   Camera, Award, Star, Zap,
-  Crown, CreditCard, Gift, Globe, FileText, Trash2, MessageCircle
+  Crown, CreditCard, Gift, Globe, FileText, Trash2, MessageCircle, Megaphone
 } from 'lucide-react';
 import { SettingsDetailModal } from './modals';
 import { logout } from '@/app/login/actions';
@@ -30,39 +30,45 @@ const BADGES = [
   { id: 'group', label: '그룹 리더', emoji: '👑', description: '공동 가계부 그룹 생성 및 관리', achieved: false, cat: '소셜 & 소통' },
   { id: 'manager', label: '자산 관리사', emoji: '💼', description: '그룹 예산 관리 10회 고정', achieved: false, cat: '소셜 & 소통' },
   
-  // Milestones
-  { id: 'million', label: '백만원 클럽', emoji: '🏆', description: '월간 지출 100만원 달성', achieved: true, cat: '마일스톤 & 업적' },
-  { id: 'ten_million', label: '천만원 클럽', emoji: '🏛️', description: '연간 실적 1,000만원 달성', achieved: false, cat: '마일스톤 & 업적' },
-  { id: 'morning', label: '아침형 인간', emoji: '🌅', description: '새벽 6시 이전 첫 결제', achieved: true, cat: '마일스톤 & 업적' },
-  { id: 'night', label: '밤샘 소비', emoji: '🌙', description: '자정 이후 결제 5회', achieved: true, cat: '마일스톤 & 업적' },
-  { id: 'streak', label: '연속 사용', emoji: '🔥', description: '30일 연속 앱 접속', achieved: true, cat: '마일스톤 & 업적' },
-  { id: 'lucky', label: '오늘의 운세', emoji: '🔮', description: '운세 서비스 30회 이용', achieved: true, cat: '마일스톤 & 업적' },
 ];
 
-const MENU_GROUPS = [
+interface MenuItem {
+  label: string;
+  icon: React.ReactNode;
+  badge: string;
+  route?: string;
+  color: string;
+}
+
+interface MenuGroup {
+  title: string;
+  items: MenuItem[];
+}
+
+const MENU_GROUPS: MenuGroup[] = [
   {
-    title: '계정',
+    title: '계정 설정',
     items: [
-      { label: '개인정보 관리', icon: <Settings size={17} />, badge: '' },
-      { label: '알림 설정', icon: <Bell size={17} />, badge: '3' },
-      { label: '보안 및 인증', icon: <Shield size={17} />, badge: '' },
+      { label: '개인정보 관리', icon: <Settings size={18} />, badge: '', color: 'bg-indigo-50 text-indigo-500' },
+      { label: '알림 설정', icon: <Bell size={18} />, badge: '3', color: 'bg-blue-50 text-blue-500' },
+      { label: '보안 및 인증', icon: <Shield size={18} />, badge: '', color: 'bg-slate-100 text-slate-500' },
     ],
   },
   {
     title: '카드 & 혜택',
     items: [
-      { label: '카드 관리', icon: <CreditCard size={17} />, badge: '' },
-      { label: '바우처 관리', icon: <Gift size={17} />, badge: '2' },
-      { label: '언어/지역 설정', icon: <Globe size={17} />, badge: '' },
+      { label: '카드 관리', icon: <CreditCard size={18} />, badge: '', color: 'bg-rose-50 text-rose-500' },
+      { label: '바우처 관리', icon: <Gift size={18} />, badge: '2', color: 'bg-pink-50 text-pink-500' },
+      { label: '언어/지역 설정', icon: <Globe size={18} />, badge: '', color: 'bg-teal-50 text-teal-500' },
     ],
   },
   {
-    title: '고객지원',
+    title: '고객 지원',
     items: [
-      { label: '공지사항', icon: <Bell size={17} />, badge: 'N', route: '/mobile/support' },
-      { label: '자주 묻는 질문', icon: <HelpCircle size={17} />, badge: '', route: '/mobile/support' },
-      { label: '1:1 문의', icon: <MessageCircle size={17} />, badge: '', route: '/mobile/support' },
-      { label: '개인정보처리방침', icon: <FileText size={17} />, badge: '' },
+      { label: '공지사항', icon: <Megaphone size={18} />, badge: 'N', route: '/mobile/support?tab=NOTICE', color: 'bg-amber-50 text-amber-500' },
+      { label: '자주 묻는 질문', icon: <HelpCircle size={18} />, badge: '', route: '/mobile/support?tab=FAQ', color: 'bg-cyan-50 text-cyan-500' },
+      { label: '1:1 문의', icon: <MessageCircle size={18} />, badge: '', route: '/mobile/support?tab=INQUIRY', color: 'bg-violet-50 text-violet-500' },
+      { label: '개인정보처리방침', icon: <FileText size={18} />, badge: '', route: '/mobile/support?tab=NOTICE', color: 'bg-gray-100 text-gray-500' },
     ],
   },
 ];
@@ -83,7 +89,7 @@ export function ProfileView({
     }
   };
 
-  const handleMenuClick = (item: any) => {
+  const handleMenuClick = (item: MenuItem) => {
     if (item.route) {
        router.push(item.route);
     } else {
@@ -95,7 +101,7 @@ export function ProfileView({
   const displayBadges = BADGES.slice(0, 3);
 
   return (
-    <div className="space-y-6 animate-fade-in pb-24">
+    <div className="space-y-6 animate-fade-in pb-24 font-sans tracking-tight">
       {/* ── Profile Hero Card ── */}
       <div className="relative p-7 rounded-[48px] bg-white border border-gray-100 shadow-2xl shadow-rose-100/30 overflow-hidden group">
         <div className="absolute top-0 right-0 w-80 h-80 blur-[120px] rounded-full opacity-40 group-hover:scale-125 transition-transform duration-1000"
@@ -115,8 +121,8 @@ export function ProfileView({
 
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                <h3 className="text-[26px] font-black text-slate-900 tracking-tighter leading-none">{user?.displayName || 'Loading...'} 님</h3>
-                <div className="px-2.5 py-1 rounded-lg text-[9px] font-black text-amber-600 bg-amber-50 border border-amber-100 shadow-sm flex items-center gap-1 uppercase tracking-tighter">
+                <h3 className="text-[26px] font-black text-slate-900 tracking-tighter leading-none whitespace-nowrap">{user?.displayName || 'Loading...'} 님</h3>
+                <div className="px-2.5 py-1 rounded-lg text-[9px] font-black text-amber-600 bg-amber-50 border border-amber-100 shadow-sm flex items-center gap-1 uppercase tracking-tighter self-start">
                   <Crown size={10} strokeWidth={3} /> {user?.tierName || '플래티넘'}
                 </div>
               </div>
@@ -168,7 +174,7 @@ export function ProfileView({
             </div>
             <div>
                <h4 className="text-[17px] font-black text-slate-800 tracking-tight">수집한 뱃지</h4>
-               <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mt-0.5">업적</p>
+               <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mt-0.5">업적 센터</p>
             </div>
           </div>
           <span className="text-[13px] font-black text-rose-500 bg-rose-50 px-3 py-1 rounded-full">{achievedCount} / {BADGES.length}</span>
@@ -197,43 +203,68 @@ export function ProfileView({
         </button>
       </div>
 
-      {/* ── Menu Categories ── */}
-      <div className="space-y-6">
+      {/* ── Unified Menu Box (Enhanced 3D Headers & High Density) ── */}
+      <div className="bg-white rounded-[56px] border border-slate-50 shadow-2xl shadow-slate-200/20 overflow-hidden px-4 pt-8 pb-6 relative">
+        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-rose-200 via-indigo-200 to-amber-200 opacity-30" />
+
         {MENU_GROUPS.map((group, gi) => (
-          <div key={gi} className="space-y-3">
-            <p className="text-[11px] font-black text-slate-300 uppercase tracking-[0.25em] ml-5">{group.title}</p>
-            <div className="bg-white rounded-[40px] border border-gray-50 shadow-xl overflow-hidden divide-y divide-gray-50 px-2">
+          <div key={gi} className="mb-7 last:mb-2">
+            {/* Larger 3D Heavy Headers */}
+            <div className="px-6 mb-3 relative flex items-center gap-3">
+              <div className="w-1.5 h-6 bg-slate-100 rounded-full" />
+              <h5 
+                className="text-[19px] font-[950] text-[#0f172a] uppercase tracking-tighter font-display select-none"
+                style={{ 
+                  textShadow: '0.5px 0.5px 0 #fff, 1px 1px 0 #e2e8f0, 2px 2px 0 #cbd5e1, 3.5px 3.5px 7px rgba(0,0,0,0.18)' 
+                }}
+              >
+                {group.title}
+              </h5>
+            </div>
+            
+            <div className="space-y-0.5 px-2">
               {group.items.map((item, ii) => (
                 <div key={ii}
                   onClick={() => handleMenuClick(item)}
-                  className="flex items-center justify-between px-6 py-5 cursor-pointer active:bg-rose-50 transition-all group rounded-[28px] hover:px-8">
+                  className="flex items-center justify-between px-5 py-3.5 cursor-pointer rounded-[32px] hover:bg-slate-50 active:scale-[0.98] transition-all group mx-1"
+                >
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-300 group-hover:text-rose-400 group-hover:bg-rose-50 transition-all">
+                    <div className={`w-10 h-10 rounded-[18px] flex items-center justify-center transition-all shadow-sm ${item.color} group-hover:scale-105 group-active:scale-95 border border-white/50`}>
                       {item.icon}
                     </div>
-                    <span className="text-[15px] font-black text-slate-700">{item.label}</span>
+                    <div>
+                        <span className="text-[15.5px] font-black text-slate-800 tracking-tight group-hover:text-rose-600 transition-colors">
+                          {item.label}
+                        </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  
+                  <div className="flex items-center gap-4">
                     {item.badge && (
-                      <div className="px-2 py-0.5 min-w-[20px] rounded-full bg-rose-500 flex items-center justify-center text-white text-[10px] font-black shadow-lg shadow-rose-500/20">
+                      <div className="px-2.5 py-1 min-w-[22px] rounded-xl bg-slate-900 text-white text-[10px] font-black shadow-lg shadow-slate-900/10">
                         {item.badge}
                       </div>
                     )}
-                    <ChevronRight size={18} className="text-gray-200 group-hover:text-rose-300 transition-all" />
+                    <ChevronRight size={18} className="text-slate-200 group-hover:text-slate-400 transition-all group-hover:translate-x-1" />
                   </div>
                 </div>
               ))}
             </div>
+            
+            {/* Subtle Divider Line */}
+            {gi < MENU_GROUPS.length - 1 && (
+              <div className="mx-6 mt-6 h-[1.5px] bg-slate-50 opacity-60" />
+            )}
           </div>
         ))}
       </div>
 
-      <div className="space-y-4 pt-4">
+      <div className="space-y-4 pt-2">
         <button 
           onClick={handleLogout}
-          className="w-full h-16 rounded-[28px] bg-rose-50 text-rose-500 font-black text-[16px] active:scale-95 transition-all border border-rose-100 shadow-sm flex items-center justify-center gap-3"
+          className="w-full h-18 rounded-[32px] bg-rose-50 text-rose-500 font-black text-[17px] active:scale-95 transition-all border border-rose-100 shadow-sm flex items-center justify-center gap-3"
         >
-          <LogOut size={20} /> 로그아웃
+          <LogOut size={22} /> 로그아웃
         </button>
         <button className="w-full h-14 rounded-2xl text-slate-300 font-black text-[13px] active:opacity-50 transition-all flex items-center justify-center gap-2">
           <Trash2 size={16} /> 서비스 탈퇴하기
@@ -271,22 +302,22 @@ export function AllBadgesView({ onBack }: { onBack: () => void }) {
           </div>
           <div className="grid grid-cols-3 gap-3">
              {BADGES.filter(b => b.cat === cat).map(badge => (
-               <div key={badge.id}
-                 className={`p-4 rounded-[32px] flex flex-col items-center text-center gap-2 border transition-all active:scale-95 group ${
-                   badge.achieved
-                     ? 'bg-white border-rose-100 shadow-xl shadow-rose-100/20'
-                     : 'bg-slate-50 border-slate-100 opacity-40 grayscale'
-                 }`}>
-                 <div className="text-3xl mb-1 group-hover:scale-110 transition-transform duration-500">{badge.emoji}</div>
-                 <div className="flex flex-col gap-1">
-                    <p className={`text-[11px] font-black leading-tight tracking-tighter ${badge.achieved ? 'text-slate-800' : 'text-slate-400'}`}>
-                      {badge.label}
-                    </p>
-                    <p className="text-[8px] font-bold text-slate-300 leading-[1.2] tracking-tighter max-w-[80px]">
-                      {badge.description}
-                    </p>
-                 </div>
-               </div>
+                <div key={badge.id}
+                  className={`p-4 rounded-[32px] flex flex-col items-center text-center gap-2 border transition-all active:scale-95 group ${
+                    badge.achieved
+                      ? 'bg-white border-rose-100 shadow-xl shadow-rose-100/20'
+                      : 'bg-slate-50 border-slate-100 opacity-40 grayscale'
+                  }`}>
+                  <div className="text-3xl mb-1 group-hover:scale-110 transition-transform duration-500">{badge.emoji}</div>
+                  <div className="flex flex-col gap-1">
+                     <p className={`text-[11px] font-black leading-tight tracking-tighter ${badge.achieved ? 'text-slate-800' : 'text-slate-400'}`}>
+                       {badge.label}
+                     </p>
+                     <p className="text-[8px] font-bold text-slate-300 leading-[1.2] tracking-tighter max-w-[80px]">
+                       {badge.description}
+                     </p>
+                  </div>
+                </div>
              ))}
           </div>
         </div>

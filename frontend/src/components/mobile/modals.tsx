@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { X, Home, CreditCard, Gift, LineChart, Users, Settings, User, Sparkles, Pencil, Trash2, MapPin, Tag, Smartphone, ShoppingBag, HelpCircle } from 'lucide-react';
+import { X, Home, CreditCard, Gift, LineChart, Users, Settings, User, Sparkles, Pencil, Trash2, MapPin, Tag, Smartphone, ShoppingBag, HelpCircle, Check, Star, Pin, Plus } from 'lucide-react';
 import { Mascot } from './mascot';
 import { Transaction, Card, CommunityPost, CommunityComment } from '@/types/mobile';
 
@@ -460,20 +460,22 @@ interface EditHomeModalProps {
   isOpen: boolean;
   onClose: () => void;
   visibleSections: string[];
-  onToggleSection: (sectionId: string) => void;
+  onToggleSection: (id: string) => void;
+  onReorder: (sections: string[]) => void;
+  onReset?: () => void;
 }
 
 const ALL_SECTIONS = [
-  { id: 'balance', name: '내 잔액 현황', icon: '💰' },
-  { id: 'performance', name: '실적 달성 현황', icon: '🚀' },
-  { id: 'weekly', name: '주간 소비 패턴', icon: '📊' },
-  { id: 'category', name: '카테고리 비율', icon: '🍕' },
-  { id: 'goal', name: '이달의 목표', icon: '🎯' },
+  { id: 'balance', name: '종합 지출 내역', icon: '💰' },
+  { id: 'performance', name: '실적 달성 현황', icon: '💎' },
+  { id: 'analytics', name: '소비 분석 데이터', icon: '📊' },
+  { id: 'insights', name: '소비 키워드', icon: '🧠' },
   { id: 'recent', name: '최근 소비 내역', icon: '📑' },
 ];
 
-export function EditHomeModal({ isOpen, onClose, visibleSections, onToggleSection }: EditHomeModalProps) {
+export function EditHomeModal({ isOpen, onClose, visibleSections, onToggleSection, onReorder, onReset }: EditHomeModalProps) {
   const [visible, setVisible] = useState(false);
+  const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setVisible(isOpen), 30);
@@ -482,49 +484,116 @@ export function EditHomeModal({ isOpen, onClose, visibleSections, onToggleSectio
 
   if (!isOpen) return null;
 
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIdx(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedIdx === null || draggedIdx === index) return;
+
+    const newSections = [...visibleSections];
+    const draggedItem = newSections[draggedIdx];
+    newSections.splice(draggedIdx, 1);
+    newSections.splice(index, 0, draggedItem);
+    
+    setDraggedIdx(index);
+    onReorder(newSections);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIdx(null);
+  };
+
   return (
     <div className={`fixed inset-0 z-[1000] flex items-end justify-center transition-all duration-300 ${visible ? 'opacity-100' : 'opacity-0'}`}>
-       <div className="absolute inset-0 bg-black/60 backdrop-blur-xl" onClick={onClose} />
+       <div className="absolute inset-0 bg-[#0a0005]/70 backdrop-blur-xl" onClick={onClose} />
        
-       <div className={`relative w-full max-w-[430px] bg-gray-50 rounded-t-[50px] p-9 pb-12 shadow-2xl transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${visible ? 'translate-y-0' : 'translate-y-full'}`}>
-          <div className="w-14 h-1.5 bg-gray-200/60 rounded-full mx-auto mb-10" />
+       <div className={`relative w-full max-w-[430px] bg-white rounded-t-[50px] p-9 pb-12 shadow-2xl transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${visible ? 'translate-y-0' : 'translate-y-full'}`}>
+          <div className="w-14 h-1.5 bg-gray-200/40 rounded-full mx-auto mb-10" />
           
-          <div className="flex items-center justify-between mb-8">
-             <div>
-                <h2 className="text-[24px] font-black text-var(--text-strong) tracking-tighter">홈 화면 편집</h2>
-                <p className="text-[12px] text-var(--text-soft) font-bold mt-1">원하는 항목만 골라서 볼 수 있어요.</p>
-             </div>
-             <button onClick={onClose} className="w-11 h-11 rounded-2xl bg-white border border-gray-100 flex items-center justify-center text-gray-400 active:scale-75 transition-transform shadow-sm"><X size={20} /></button>
-          </div>
+          <div className="flex items-center justify-between mb-6 px-1">
+              <div className="flex items-center gap-2">
+                 <div className="w-1 h-4 bg-rose-500 rounded-full" />
+                 <h2 className="text-[18px] font-black text-slate-900 tracking-tighter">홈 화면 구성</h2>
+              </div>
+              <div className="flex items-center gap-5">
+                 <button 
+                   onClick={() => {
+                     if (window.confirm('홈 구성을 초기 상태로 되돌리시겠습니까?')) {
+                        onReset?.();
+                     }
+                   }}
+                   className="text-slate-300 hover:text-rose-500 transition-colors active:rotate-180 duration-500"
+                   title="초기화"
+                 >
+                   <Sparkles size={16} />
+                 </button>
+                 <button 
+                   onClick={() => {
+                     if (window.confirm('현재 설정을 저장하시겠습니까?')) {
+                        onClose();
+                     }
+                   }}
+                   className="text-slate-300 hover:text-emerald-500 transition-colors"
+                   title="저장"
+                 >
+                   <Check size={20} />
+                 </button>
+                 <button 
+                   onClick={onClose} 
+                   className="text-slate-300 hover:text-slate-900 transition-colors"
+                   title="닫기"
+                 >
+                   <X size={18} />
+                 </button>
+              </div>
+           </div>
 
-          <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2 scrollbar-hide py-2">
-             {ALL_SECTIONS.map((section) => {
-                const isActive = visibleSections.includes(section.id);
-                return (
-                  <div key={section.id} className="p-5 rounded-[28px] bg-white border border-gray-100 flex items-center gap-4 shadow-sm transition-all active:scale-[0.98]">
-                     <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center text-2xl shadow-inner">{section.icon}</div>
-                     <span className="flex-1 text-[15px] font-black text-var(--text-strong)">{section.name}</span>
-                     <button 
-                       onClick={() => onToggleSection(section.id)}
-                       className={`w-14 h-8 rounded-full transition-all duration-300 relative ${isActive ? 'bg-rose-500' : 'bg-gray-200'}`}
-                     >
-                        <div className={`absolute top-1 w-6 h-6 rounded-full bg-white shadow-md transition-all duration-300 ${isActive ? 'left-7' : 'left-1'}`} />
-                     </button>
-                  </div>
-                );
-             })}
-          </div>
+           <div className="bg-slate-50/50 rounded-[32px] p-1.5 border border-slate-100/30">
+              <div className="max-h-[50vh] overflow-y-auto pr-1 scrollbar-hide space-y-1">
+                 {[...visibleSections, ...ALL_SECTIONS.map(s => s.id).filter(id => !visibleSections.includes(id))].map((id, index) => {
+                    const section = ALL_SECTIONS.find(s => s.id === id);
+                    if (!section) return null;
+                    const isActive = visibleSections.includes(id);
 
-          <button 
-            onClick={onClose}
-            className="w-full py-6 rounded-[28px] bg-var(--text-strong) text-white font-black text-[16px] shadow-2xl shadow-gray-400/30 active:scale-95 transition-all mt-10 tracking-widest uppercase"
-          >
-             설정 완료
-          </button>
+                    return (
+                      <div 
+                        key={id} 
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, index)}
+                        onDragOver={(e) => handleDragOver(e, index)}
+                        onDragEnd={handleDragEnd}
+                        className={`py-2 px-3.5 rounded-[20px] flex items-center gap-3 transition-all cursor-grab active:cursor-grabbing border ${isActive ? 'bg-white border-white shadow-sm' : 'bg-transparent border-transparent opacity-40'} ${draggedIdx === index ? 'opacity-10 scale-95' : ''}`}
+                      >
+                         <div className="flex flex-col gap-0.5 opacity-20">
+                            <div className="w-0.5 h-0.5 rounded-full bg-slate-900" />
+                            <div className="w-0.5 h-0.5 rounded-full bg-slate-900" />
+                            <div className="w-0.5 h-0.5 rounded-full bg-slate-900" />
+                         </div>
+                         <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-base shadow-inner ${isActive ? 'bg-rose-50' : 'bg-gray-100'}`}>
+                           {section.icon}
+                         </div>
+                         <span className={`flex-1 text-[14px] font-black tracking-tight ${isActive ? 'text-slate-800' : 'text-slate-400'}`}>
+                           {section.name}
+                         </span>
+                         <button 
+                           onClick={() => onToggleSection(id)}
+                           className={`w-9 h-5 rounded-full transition-all duration-300 relative ${isActive ? 'bg-rose-500' : 'bg-slate-200'}`}
+                         >
+                            <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-all duration-300 ${isActive ? 'left-4.5' : 'left-0.5'}`} />
+                         </button>
+                      </div>
+                    );
+                 })}
+              </div>
+           </div>
        </div>
     </div>
   );
 }
+
 // ─────────────────────────────────────────────────────────────
 // Add Card Modal (New Registration)
 // ─────────────────────────────────────────────────────────────
@@ -724,6 +793,8 @@ export function AssetActionModal({ isOpen, onClose, type }: AssetActionModalProp
 // ─────────────────────────────────────────────────────────────
 // Card Settings Modal
 // ─────────────────────────────────────────────────────────────
+import { useRouter } from 'next/navigation';
+
 interface CardSettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -739,6 +810,28 @@ export function CardSettingsModal({ isOpen, onClose, cards, onUpdate }: CardSett
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState<Card | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const router = useRouter();
+
+  const toggleMain = (id: string) => {
+    setLocalCards(prev => prev.map(c => ({
+      ...c,
+      isMain: c.id === id ? !c.isMain : false
+    })));
+  };
+
+  const togglePin = (id: string) => {
+    setLocalCards(prev => prev.map(c => ({
+      ...c,
+      isPinned: c.id === id ? !c.isPinned : !!c.isPinned
+    })));
+  };
+
+  const resetToDefault = () => {
+    if (window.confirm('카드 구성을 초기 상태로 되돌리시겠습니까?')) {
+      // In a real app we might fetch from server, but here we reset local state
+      setLocalCards([...cards].sort((a,b) => a.id.localeCompare(b.id)));
+    }
+  };
   
   // Swipe state
   const [swipeId, setSwipeId] = useState<string | null>(null);
@@ -840,11 +933,6 @@ export function CardSettingsModal({ isOpen, onClose, cards, onUpdate }: CardSett
     }
   };
 
-  const handleSave = () => {
-    onUpdate?.(localCards);
-    onClose();
-  };
-
   if (!isOpen) return null;
 
   return (
@@ -853,21 +941,35 @@ export function CardSettingsModal({ isOpen, onClose, cards, onUpdate }: CardSett
        <div className={`relative w-full max-w-[430px] bg-gray-50 rounded-t-[50px] p-9 pb-12 shadow-2xl transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${visible ? 'translate-y-0' : 'translate-y-full'}`}>
           <div className="w-14 h-1.5 bg-gray-200/60 rounded-full mx-auto mb-10" />
           
-          <div className="flex justify-between items-center mb-8">
-             <div className="flex flex-col gap-1">
-                <h2 className="text-[24px] font-black text-slate-800 tracking-tighter">카드 목록 관리</h2>
-                <p className="text-[11px] text-gray-400 font-bold uppercase tracking-widest">설정된 모든 카드를 관리합니다.</p>
-             </div>
-             <div className="flex items-center gap-3">
-               <button 
-                 onClick={handleSave}
-                 className="px-6 py-2.5 rounded-2xl bg-slate-900 text-white font-black text-[13px] active:scale-95 transition-all shadow-lg"
-               >
-                 저장
-               </button>
-               <button onClick={onClose} className="w-10 h-10 rounded-2xl bg-white border border-gray-100 flex items-center justify-center text-gray-400 active:scale-75 shadow-sm"><X size={18} /></button>
-             </div>
-          </div>
+          <div className="flex items-center justify-between mb-8 px-1">
+            <div className="flex items-center gap-2">
+               <div className="w-1 h-4 bg-rose-500 rounded-full" />
+               <h2 className="text-[18px] font-black text-slate-900 tracking-tighter">카드 목록 관리</h2>
+            </div>
+            <div className="flex items-center gap-5">
+              <button 
+                onClick={resetToDefault} 
+                className="text-slate-300 hover:text-amber-500 transition-colors active:rotate-180 duration-500"
+                title="초기화"
+              >
+                <Sparkles size={16} />
+              </button>
+              <button 
+                onClick={() => onUpdate && onUpdate(localCards)} 
+                className="text-slate-300 hover:text-emerald-500 transition-colors"
+                title="저장"
+              >
+                <Check size={20} />
+              </button>
+              <button 
+                onClick={onClose} 
+                className="text-slate-300 hover:text-slate-900 transition-colors"
+                title="닫기"
+              >
+                <X size={18} />
+              </button>
+            </div>
+         </div>
 
           <div className="space-y-3 mb-6 max-h-[50vh] overflow-y-auto no-scrollbar py-2">
              {localCards.map((card, idx) => (
@@ -925,22 +1027,47 @@ export function CardSettingsModal({ isOpen, onClose, cards, onUpdate }: CardSett
                     }}
                     className={`p-4 rounded-[28px] bg-white border border-gray-100 flex items-center gap-4 shadow-sm relative z-10 cursor-grab active:cursor-grabbing hover:scale-[1.01] ${dragIndex === idx ? 'opacity-30 scale-95 border-rose-200 bg-rose-50/10' : 'opacity-100'}`}
                   >
-                     <div className="flex flex-col gap-1 pr-2 opacity-20 pointer-events-none">
-                        <span className="text-[14px]">⣿</span>
+                     <div className="flex flex-col gap-0.5 pr-2 opacity-20 pointer-events-none">
+                        <div className="w-1 h-1 rounded-full bg-slate-900" />
+                        <div className="w-1 h-1 rounded-full bg-slate-900" />
+                        <div className="w-1 h-1 rounded-full bg-slate-900" />
                      </div>
                      <div className="w-12 h-8 rounded-lg shadow-sm flex-shrink-0 pointer-events-none" style={{ background: card.gradient || card.color }} />
                      <div className="flex-1 min-w-0 pointer-events-none">
-                        <p className="text-[14px] font-black text-slate-800 truncate">{card.name}</p>
-                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{card.brand} · {card.tier}</p>
+                        <p className="text-[14px] font-[900] text-slate-800 truncate tracking-tight">{card.name}</p>
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{card.issuer} · {card.tier}</p>
+                     </div>
+                     <div className="flex items-center gap-1.5 pr-1">
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); togglePin(card.id); }}
+                          className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${card.isPinned ? 'bg-indigo-50 text-indigo-500' : 'bg-transparent text-slate-200 hover:text-slate-400'}`}
+                        >
+                           <Pin size={14} fill={card.isPinned ? "currentColor" : "none"} className={`transition-transform duration-300 ${card.isPinned ? 'rotate-45' : ''}`} />
+                        </button>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); toggleMain(card.id); }}
+                          className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${card.isMain ? 'bg-amber-50 text-amber-500' : 'bg-transparent text-slate-200 hover:text-slate-400'}`}
+                        >
+                           <Star size={16} fill={card.isMain ? "currentColor" : "none"} />
+                        </button>
                      </div>
                   </div>
                </div>
              ))}
           </div>
 
-          <div className="flex items-center justify-center gap-2 py-4 bg-gray-100/50 rounded-3xl border border-dashed border-gray-200 mb-4 cursor-pointer active:scale-95 transition-all">
-             <p className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em]">+ 새 카드 직접 등록</p>
-          </div>
+            <button 
+               onClick={() => {
+                  onClose();
+                  router.push('/mobile/add-card');
+               }}
+               className="w-full h-16 rounded-[40px] flex items-center justify-center gap-3 bg-white border-2 border-dashed border-rose-200 text-rose-500 font-black text-[15px] active:scale-95 transition-all shadow-sm group hover:bg-rose-50"
+            >
+               <div className="w-8 h-8 rounded-xl bg-rose-50 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Plus size={20} />
+               </div>
+               <span>새로운 카드 등록</span>
+            </button>
           
           {/* Internal Confirmation Layer */}
           {confirmingDelete && (
@@ -1023,11 +1150,19 @@ interface CommunityDetailModalProps {
   post: CommunityPost | null;
 }
 
+const getAvatar = (accountId?: string) => {
+  if (!accountId) return '👤';
+  const avatars = ['🦊', '🐻', '🐯', '🦁', '🐼', '🐹'];
+  const hash = accountId.split('-').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return avatars[hash % avatars.length];
+};
+
 export function CommunityDetailModal({ isOpen, onClose, post }: CommunityDetailModalProps) {
   const [visible, setVisible] = useState(false);
   const [comments, setComments] = useState<CommunityComment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<{ id: number; name: string } | null>(null);
 
   const loadComments = useCallback(async () => {
     if (!post) return;
@@ -1048,9 +1183,10 @@ export function CommunityDetailModal({ isOpen, onClose, post }: CommunityDetailM
   const handleCreateComment = async () => {
     if (!post || !newComment.trim()) return;
     setLoading(true);
-    const res = await createPostComment(post.postId, newComment);
+    const res = await createPostComment(post.postId, newComment, replyingTo?.id);
     if (res?.data) {
       setNewComment('');
+      setReplyingTo(null);
       loadComments();
     }
     setLoading(false);
@@ -1064,40 +1200,93 @@ export function CommunityDetailModal({ isOpen, onClose, post }: CommunityDetailM
        <div className={`relative w-full max-w-sm bg-white rounded-[48px] p-9 shadow-2xl transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${visible ? 'translate-y-0 scale-100' : 'translate-y-24 scale-90'}`}>
           <div className="flex items-center gap-4 mb-8">
              <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-2xl border border-gray-100">
-                {post?.author?.avatar}
+                {getAvatar(post?.author?.accountId || post?.accountId)}
              </div>
              <div>
-                <p className="text-[15px] font-black text-slate-800">{post?.author?.name}</p>
-                <p className="text-[11px] text-gray-400 font-bold uppercase tracking-widest">{post?.category} · {post?.createdAt ? new Date(post.createdAt).toLocaleDateString() : ''}</p>
+                <p className="text-[15px] font-black text-slate-800">{post?.author?.displayName || '익명 계정'}</p>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  {post?.author?.tierName && (
+                    <span className="text-[9px] font-black text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded-md uppercase tracking-tighter">
+                      {post.author.tierName}
+                    </span>
+                  )}
+                  <span className="text-[9px] font-bold text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded-md uppercase tracking-tighter">
+                    Lv.{post?.author?.level || 1}
+                  </span>
+                  <span className="text-[11px] text-gray-400 font-bold uppercase tracking-widest pl-1">· {post?.category} · {post?.createdAt ? new Date(post.createdAt).toLocaleDateString() : ''}</span>
+                </div>
              </div>
           </div>
           <h2 className="text-[22px] font-black text-slate-800 tracking-tight leading-tight mb-4">{post?.title}</h2>
           <p className="text-[14px] text-slate-500 leading-relaxed font-medium mb-10">{post?.content}</p>
-          <div className="p-5 rounded-3xl bg-gray-50 border border-gray-100 mb-8 max-h-[250px] overflow-y-auto no-scrollbar">
-             <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest mb-4">Comments ({comments.length})</p>
-             <div className="space-y-4">
+          <div className="p-5 rounded-[28px] bg-gray-50 border border-gray-100 mb-6 max-h-[300px] overflow-y-auto no-scrollbar shadow-inner">
+             <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest mb-4">Comments ({comments.length + comments.reduce((acc, c) => acc + (c.replies?.length || 0), 0)})</p>
+             <div className="space-y-5">
                 {comments.length === 0 ? (
-                  <p className="text-[11px] text-gray-400 font-bold text-center py-4">첫 댓글을 남겨보세요! 💬</p>
+                  <p className="text-[12px] text-gray-400 font-bold text-center py-6">첫 댓글을 남겨보세요! 💬</p>
                 ) : (
                   comments.map(c => (
-                    <div key={c.commentId} className="flex gap-3">
-                       <div className="w-8 h-8 rounded-full bg-rose-50 flex items-center justify-center text-xs">👤</div>
-                       <div className="flex-1">
-                          <p className="text-[11px] font-black text-slate-700">{c.accountId.slice(0, 8)}</p>
-                          <p className="text-[12px] text-slate-500">{c.content}</p>
-                       </div>
+                    <div key={c.commentId} className="flex flex-col gap-3">
+                      <div className="flex gap-3">
+                         <div className="w-9 h-9 rounded-2xl bg-white border border-gray-100 flex items-center justify-center text-sm shadow-sm">
+                           {getAvatar(c.author?.accountId || c.accountId)}
+                         </div>
+                         <div className="flex-1 bg-white p-4 rounded-2xl rounded-tl-none border border-gray-100 shadow-sm relative">
+                            <div className="flex items-center gap-2 mb-1">
+                              <p className="text-[12px] font-black text-slate-700">{c.author?.displayName || c.accountId.slice(0, 8)}</p>
+                              <span className="text-[8px] font-black text-indigo-500 bg-indigo-50 px-1.5 rounded uppercase">Lv.{c.author?.level || 1}</span>
+                              <span className="text-[10px] text-slate-300 ml-auto">{new Date(c.createdAt).toLocaleDateString()}</span>
+                            </div>
+                            <p className="text-[13px] text-slate-600 font-medium leading-relaxed">{c.content}</p>
+                            <button 
+                              onClick={() => setReplyingTo({ id: c.commentId, name: c.author?.displayName || '익명' })}
+                              className="text-[11px] font-bold text-gray-400 hover:text-slate-800 transition-colors mt-2 uppercase tracking-wide"
+                            >
+                              답글쓰기
+                            </button>
+                         </div>
+                      </div>
+                      
+                      {/* Replies */}
+                      {c.replies && c.replies.length > 0 && (
+                        <div className="pl-12 space-y-3">
+                          {c.replies.map(r => (
+                            <div key={r.commentId} className="flex gap-3 relative before:content-[''] before:absolute before:-left-5 before:top-4 before:w-4 before:h-[1px] before:bg-gray-200">
+                               <div className="w-7 h-7 rounded-xl bg-white border border-gray-100 flex items-center justify-center text-xs shadow-sm">
+                                 {getAvatar(r.author?.accountId || r.accountId)}
+                               </div>
+                               <div className="flex-1 bg-gray-100 p-3 rounded-[18px] rounded-tl-none border border-gray-50 shadow-sm">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <p className="text-[11px] font-black text-slate-700">{r.author?.displayName || r.accountId.slice(0, 8)}</p>
+                                    <span className="text-[8px] font-black text-indigo-500 bg-indigo-50 px-1 rounded uppercase">Lv.{r.author?.level || 1}</span>
+                                  </div>
+                                  <p className="text-[12px] text-slate-600 font-medium">{r.content}</p>
+                               </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   ))
                 )}
              </div>
           </div>
 
-          <div className="flex gap-2 mb-8">
+          {replyingTo && (
+            <div className="flex items-center justify-between bg-slate-100 px-4 py-2 rounded-xl mb-3 border border-slate-200">
+               <span className="text-[11px] font-bold text-slate-600">
+                 <strong className="text-slate-800">{replyingTo.name}</strong>님에게 답글 작성 중...
+               </span>
+               <button onClick={() => setReplyingTo(null)} className="text-gray-400 active:scale-75 transition-all"><X size={14}/></button>
+            </div>
+          )}
+
+          <div className="flex gap-2 mb-8 relative">
              <input 
                type="text" 
                value={newComment}
                onChange={(e) => setNewComment(e.target.value)}
-               placeholder="댓글을 입력하세요"
+               placeholder={replyingTo ? "답글을 입력하세요" : "댓글을 입력하세요"}
                className="flex-1 px-4 py-3 rounded-2xl bg-gray-50 border border-gray-100 text-[13px] outline-none focus:bg-white focus:border-rose-200 transition-all font-medium"
                onKeyPress={(e) => e.key === 'Enter' && handleCreateComment()}
              />
@@ -1308,3 +1497,7 @@ export function CreatePostModal({ isOpen, onClose }: { isOpen: boolean; onClose:
     </div>
   );
 }
+
+
+
+

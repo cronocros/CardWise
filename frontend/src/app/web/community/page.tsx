@@ -17,14 +17,11 @@ const CATEGORY_LABELS: Record<string, string> = {
   'FREE': '💬 자유'
 };
 
-const getAuthorInfo = (accountId: string) => {
+const getAvatar = (accountId?: string) => {
+  if (!accountId) return '👤';
   const avatars = ['🦊', '🐻', '🐯', '🦁', '🐼', '🐹'];
-  const names = ['카드고수', '절약왕', '혜택요정', '소비요정', '금융똑똑'];
-  const hash = accountId.split('-')[0].split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  return {
-    name: names[hash % names.length] + ' ' + accountId.slice(0, 4),
-    avatar: avatars[hash % avatars.length]
-  };
+  const hash = accountId.split('-').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return avatars[hash % avatars.length];
 };
 
 export default function WebCommunityPage() {
@@ -39,12 +36,7 @@ export default function WebCommunityPage() {
     const res = await getCommunityPosts(category);
     const rawPosts = unwrapArray<CommunityPost>(res);
     
-    const mapped = rawPosts.map(p => ({
-      ...p,
-      author: getAuthorInfo(p.accountId)
-    }));
-    
-    setPosts(mapped);
+    setPosts(rawPosts);
     setLoading(false);
   }, [selectedCategory]);
 
@@ -74,6 +66,20 @@ export default function WebCommunityPage() {
             isBookmarked: res.data.isActive 
           } : p
        ));
+    }
+  };
+
+  const handleShare = async (post: CommunityPost) => {
+    const shareData = {
+      title: post.title,
+      text: post.content.substring(0, 50) + '...',
+      url: window.location.href + '?postId=' + post.postId,
+    };
+    if (navigator.share) {
+      try { await navigator.share(shareData); } catch {}
+    } else {
+      navigator.clipboard.writeText(shareData.url);
+      alert('링크가 복사되었습니다!');
     }
   };
 
@@ -153,11 +159,17 @@ export default function WebCommunityPage() {
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-2xl shadow-inner border border-slate-100">
-                      {post.author?.avatar}
+                      {getAvatar(post.author?.accountId || post.accountId)}
                     </div>
                     <div>
-                      <h4 className="font-black text-slate-800">{post.author?.name}</h4>
-                      <p className="text-xs font-bold text-slate-300">{new Date(post.createdAt).toLocaleDateString()} · {post.category}</p>
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="font-black text-slate-800">{post.author?.displayName || '익명 계정'}</h4>
+                        {post.author?.tierName && (
+                          <span className="text-[10px] font-black text-rose-500 bg-rose-50 px-2 rounded uppercase">{post.author.tierName}</span>
+                        )}
+                        <span className="text-[10px] font-black text-indigo-500 bg-indigo-50 px-2 rounded uppercase">Lv.{post.author?.level || 1}</span>
+                      </div>
+                      <p className="text-xs font-bold text-slate-400">{new Date(post.createdAt).toLocaleDateString()} · {post.category}</p>
                     </div>
                   </div>
                   <button 
@@ -183,7 +195,10 @@ export default function WebCommunityPage() {
                     <MessageSquare size={20} />
                     {post.commentCount}
                   </button>
-                  <button className="ml-auto text-slate-200 hover:text-slate-800 transition-all">
+                  <button 
+                    className="ml-auto text-slate-300 hover:text-slate-800 transition-all active:scale-95"
+                    onClick={() => handleShare(post)}
+                  >
                     <Share2 size={20} />
                   </button>
                 </div>

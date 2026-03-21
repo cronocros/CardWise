@@ -24,10 +24,16 @@ export interface Card {
   name: string;
   firstFour: string;
   lastFour: string;
+  expiryMonth?: string; // e.g., "12"
+  expiryYear?: string;  // e.g., "28"
   issuer: string;
   gradient: string;
   current: number;
   target: number;
+  annualTarget?: number;
+  isMain?: boolean;
+  isPinned?: boolean;
+  type?: 'credit' | 'debit';
   benefitType: 'discount' | 'mileage' | 'point';
   benefitValue: string;
   tags?: string[];
@@ -36,6 +42,7 @@ export interface Card {
   tier: 'classic' | 'gold' | 'platinum' | 'signature' | 'infinite' | 'world' | 'world_elite';
   color: string;
   currency: 'KRW' | 'USD';
+  features?: string[]; // e.g., ["apple_pay", "atm", "samsung_pay", "transport", "contactless"]
 }
 
 export interface Badge {
@@ -65,11 +72,11 @@ export interface CommunityPost {
   isBookmarked: boolean;
   createdAt: string;
   updatedAt: string;
-  // UI-only virtual author for display
   author?: {
-    name: string;
-    avatar: string;
-    badge?: string;
+    accountId: string;
+    displayName: string | null;
+    level: number;
+    tierName: string | null;
   };
 }
 
@@ -98,6 +105,14 @@ export interface CommunityComment {
   postId: number;
   accountId: string;
   content: string;
+  parentId?: number | null;
+  author?: {
+    accountId: string;
+    displayName: string | null;
+    level: number;
+    tierName: string | null;
+  };
+  replies?: CommunityComment[];
   createdAt: string;
   updatedAt: string;
 }

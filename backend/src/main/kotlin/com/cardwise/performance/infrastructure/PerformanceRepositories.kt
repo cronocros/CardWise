@@ -7,6 +7,12 @@ interface CardRepository : JpaRepository<CardEntity, Long> {
     fun findByCardIdAndIsActiveTrue(cardId: Long): CardEntity?
 
     fun findAllByCardIdInAndIsActiveTrue(cardIds: Collection<Long>): List<CardEntity>
+
+    fun findAllByIssuerIdAndBrandIdAndIsActiveTrue(issuerId: String, brandId: String): List<CardEntity>
+
+    fun findAllByCardNameContainingIgnoreCaseAndIsActiveTrue(keyword: String): List<CardEntity>
+
+    fun findAllByIsActiveTrue(): List<CardEntity>
 }
 
 interface UserCardRepository : JpaRepository<UserCardEntity, Long> {
@@ -49,4 +55,12 @@ interface UserVoucherRepository : JpaRepository<UserVoucherEntity, Long> {
     fun findAllByUserCardId(userCardId: Long): List<UserVoucherEntity>
 
     fun findAllByUserCardIdIn(userCardIds: Collection<Long>): List<UserVoucherEntity>
+}
+
+interface CardIssuerRepository : JpaRepository<CardIssuerEntity, String> {
+    fun findAllByIsActiveTrue(): List<CardIssuerEntity>
+}
+
+interface CardBrandRepository : JpaRepository<CardBrandEntity, String> {
+    fun findAllByIsActiveTrue(): List<CardBrandEntity>
 }

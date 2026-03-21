@@ -26,6 +26,9 @@ open class CommunityCommentEntity {
     @Column(name = "content", nullable = false)
     var content: String? = null
 
+    @Column(name = "parent_id")
+    var parentId: Long? = null
+
     @Column(name = "created_at")
     var createdAt: OffsetDateTime? = null
 

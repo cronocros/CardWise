@@ -12,6 +12,7 @@ import com.cardwise.community.repository.CommunityCommentRepository
 import com.cardwise.community.repository.CommunityPostBookmarkRepository
 import com.cardwise.community.repository.CommunityPostLikeRepository
 import com.cardwise.community.repository.CommunityPostRepository
+import com.cardwise.community.repository.CommunityAccountRepository
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
@@ -27,6 +28,7 @@ class CommunityPostService(
     private val commentRepository: CommunityCommentRepository,
     private val likeRepository: CommunityPostLikeRepository,
     private val bookmarkRepository: CommunityPostBookmarkRepository,
+    private val accountRepository: CommunityAccountRepository,
     private val objectMapper: ObjectMapper
 ) {
     fun listPosts(accountId: UUID, category: String?, page: Int, limit: Int): ApiResponse<List<PostResponse>> {
@@ -37,7 +39,10 @@ class CommunityPostService(
             postRepository.findAllByDeletedAtIsNull(pageable)
         }
         
-        val data = postsPage.content.map { toPostResponse(it, accountId) }
+        val authorIds = postsPage.content.mapNotNull { it.accountId }.distinct()
+        val authorMap = accountRepository.findAuthorProfiles(authorIds)
+
+        val data = postsPage.content.map { toPostResponse(it, accountId, authorMap[it.accountId]) }
         return ApiResponse(data = data)
     }
 
@@ -49,7 +54,8 @@ class CommunityPostService(
         post.viewCount += 1
         postRepository.save(post)
         
-        return ApiResponse(data = toPostResponse(post, accountId))
+        val authorMap = accountRepository.findAuthorProfiles(listOf(post.accountId!!))
+        return ApiResponse(data = toPostResponse(post, accountId, authorMap[post.accountId]))
     }
 
     @Transactional
@@ -65,7 +71,8 @@ class CommunityPostService(
             updatedAt = OffsetDateTime.now()
         }
         val saved = postRepository.save(post)
-        return ApiResponse(data = toPostResponse(saved, accountId))
+        val authorMap = accountRepository.findAuthorProfiles(listOf(accountId))
+        return ApiResponse(data = toPostResponse(saved, accountId, authorMap[accountId]))
     }
 
     @Transactional
@@ -80,7 +87,8 @@ class CommunityPostService(
         post.updatedAt = OffsetDateTime.now()
         
         val saved = postRepository.save(post)
-        return ApiResponse(data = toPostResponse(saved, accountId))
+        val authorMap = accountRepository.findAuthorProfiles(listOf(post.accountId!!))
+        return ApiResponse(data = toPostResponse(saved, accountId, authorMap[post.accountId]))
     }
 
     @Transactional
@@ -133,7 +141,7 @@ class CommunityPostService(
         return ApiResponse(data = ReactionResponse(postId, active, bookmarkRepository.countByPostId(postId)))
     }
 
-    fun toPostResponse(entity: CommunityPostEntity, accountId: UUID): PostResponse {
+    fun toPostResponse(entity: CommunityPostEntity, accountId: UUID, author: com.cardwise.community.dto.AuthorResponse?): PostResponse {
         val tagsNode = entity.tags
         val tags = if (tagsNode != null && tagsNode.isArray) {
             tagsNode.map { it.asText() }
@@ -152,6 +160,7 @@ class CommunityPostService(
             commentCount = commentRepository.findAllByPostIdAndDeletedAtIsNullOrderByCreatedAtAsc(entity.postId!!).size.toLong(),
             isLiked = likeRepository.findByPostIdAndAccountId(entity.postId!!, accountId) != null,
             isBookmarked = bookmarkRepository.findByPostIdAndAccountId(entity.postId!!, accountId) != null,
+            author = author,
             createdAt = entity.createdAt,
             updatedAt = entity.updatedAt
         )

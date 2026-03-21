@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
 import { SessionWarden } from "@/components/auth/SessionWarden";
+import { UserProvider } from "@/providers/UserProvider";
 
 export const metadata: Metadata = {
   title: "CardWise",
@@ -27,9 +28,11 @@ export default function RootLayout({
         <meta name="theme-color" content="#fb7185" />
       </head>
       <body className="theme-blossom">
-        <SessionWarden>
-          {children}
-        </SessionWarden>
+        <UserProvider>
+          <SessionWarden>
+            {children}
+          </SessionWarden>
+        </UserProvider>
       </body>
     </html>
   );

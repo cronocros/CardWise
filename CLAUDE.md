@@ -44,6 +44,7 @@ node ops/dashboard/render-terminal.js  # Terminal watcher
 ```
 
 ## 🏗️ 개발 원칙 (Rules)
+- **백엔드 아키텍처 (Mandatory)**: 모든 백엔드 코드는 **CQRS**, **Hexagonal Architecture (Ports/Adapters)**, **DDD (Domain-Driven Design)**, **MSA (Microservices Architecture)** 원칙을 엄격히 준수하여 작성해야 합니다.
 - **Turbopack 주의**: Windows 환경의 의존성 해결을 위해 루트 `package.json`에 `workspaces`를 유지합니다.
 - **Hydration 관리**: `sampleData.ts`의 `pseudoRandom` 시드를 사용하여 서버/클라이언트 렌더링을 일치시킵니다.
 - **BFF 패턴**: Client Component는 반드시 `/api/*` Route Handlers를 경유하여 백엔드와 통신합니다.

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Smartphone, Bus, Wifi, Apple, Wallet, Star, Pin } from 'lucide-react';
 import { RadialGauge } from './charts';
 import { Transaction, Card, Tier } from '@/types/mobile';
 
@@ -140,9 +140,9 @@ export function PerformanceTrack({ current, tiers, cardName = '삼성카드 iD S
   const nextTier = tiers.find(t => current < t.amount);
 
   return (
-    <div className="p-7 rounded-[32px] bg-white border border-var(--primary-100) shadow-lg animate-spring" style={{ boxShadow: 'var(--shadow-card)' }}>
+    <div className="p-4 pb-3 rounded-[32px] bg-white border border-gray-50 shadow-lg animate-spring" style={{ boxShadow: 'var(--shadow-card)' }}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <div>
           <h3 className="text-[16px] font-black text-var(--text-strong) tracking-tight">이번달 실적 달성 현황</h3>
           <p className="text-[11px] text-var(--text-soft) font-bold mt-0.5 opacity-60">{cardName}</p>
@@ -154,9 +154,9 @@ export function PerformanceTrack({ current, tiers, cardName = '삼성카드 iD S
       </div>
 
       {/* Node Track */}
-      <div className="relative py-8">
-        {/* Progress Bar Background (absolutely positioned under nodes) */}
-        <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 px-6">
+      <div className="relative py-2 mt-2">
+        {/* Progress Bar Background (absolutely positioned to center perfectly with the 32px node circles) */}
+        <div className="absolute left-0 right-0 top-[16px] px-6">
           <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden shadow-inner">
             <div
               className="h-full rounded-full transition-all duration-[1800ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
@@ -170,7 +170,7 @@ export function PerformanceTrack({ current, tiers, cardName = '삼성카드 iD S
         </div>
 
         {/* Nodes (flex row, evenly distributed) */}
-        <div className="relative z-10 flex justify-between items-center">
+        <div className="relative z-10 flex justify-between items-start">
           {nodes.map((node, i) => {
             const isStart = i === 0;
             const isReached = current >= node.amount;
@@ -190,8 +190,8 @@ export function PerformanceTrack({ current, tiers, cardName = '삼성카드 iD S
                   {isStart ? (
                     <div className="w-2 h-2 rounded-full bg-gray-300" />
                   ) : isReached ? (
-                    <svg viewBox="0 0 12 12" fill="white" className="w-3 h-3">
-                      <path d="M2 6L5 9L10 3" stroke="white" strokeWidth="2" strokeLinecap="round" fill="none" />
+                    <svg viewBox="0 0 12 12" fill="white" className="w-3.5 h-3.5 mt-0.5">
+                      <path d="M2 5.5L4.5 8.5L9.5 3" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
                     </svg>
                   ) : (
                     <div className="w-2 h-2 rounded-full bg-gray-200" />
@@ -199,7 +199,7 @@ export function PerformanceTrack({ current, tiers, cardName = '삼성카드 iD S
                 </div>
 
                 {/* Label below node */}
-                <div className="mt-3 text-center" style={{ width: '52px' }}>
+                <div className="mt-2 text-center" style={{ width: '52px' }}>
                   <p className={`text-[11px] font-black leading-tight ${isReached && !isStart ? 'text-rose-500' : 'text-gray-400'}`}>
                     {isStart ? '0원' : formatKRWFull(node.amount)}
                   </p>
@@ -216,7 +216,7 @@ export function PerformanceTrack({ current, tiers, cardName = '삼성카드 iD S
       </div>
 
       {/* Footer */}
-      <div className="mt-2 flex items-center justify-between pt-4 border-t border-gray-50">
+      <div className="mt-1 flex items-center justify-between pt-3 border-t border-gray-50">
         <div>
           {currentTier ? (
             <p className="text-[12px] font-bold text-var(--text-main)">
@@ -245,33 +245,36 @@ export function PerformanceTrack({ current, tiers, cardName = '삼성카드 iD S
 // ─────────────────────────────────────────────────────────────
 export function TransactionItem({ tx, onClick, delay = 0 }: { tx: Transaction; onClick?: () => void; delay?: number }) {
 
-  const bgMap: Record<string, string> = {
-    '카페': 'bg-rose-50 border-rose-100',
-    '쇼핑': 'bg-purple-50 border-purple-100',
-    '교통': 'bg-blue-50 border-blue-100',
-    '식비': 'bg-orange-50 border-orange-100',
-    '수입': 'bg-emerald-50 border-emerald-100',
+  const colorMap: Record<string, { bg: string; text: string; border: string }> = {
+    '카페': { bg: 'bg-rose-50/50', text: 'text-rose-500', border: 'border-rose-100/50' },
+    '쇼핑': { bg: 'bg-purple-50/50', text: 'text-purple-500', border: 'border-purple-100/50' },
+    '교통': { bg: 'bg-blue-50/50', text: 'text-blue-500', border: 'border-blue-100/50' },
+    '식비': { bg: 'bg-orange-50/50', text: 'text-orange-500', border: 'border-orange-100/50' },
+    '생활': { bg: 'bg-emerald-50/50', text: 'text-emerald-500', border: 'border-emerald-100/50' },
+    '수입': { bg: 'bg-emerald-50/50', text: 'text-emerald-600', border: 'border-emerald-100/50' },
+    '서비스': { bg: 'bg-indigo-50/50', text: 'text-indigo-500', border: 'border-indigo-100/50' },
   };
 
+  const style = colorMap[tx.category] || { bg: 'bg-gray-50', text: 'text-gray-400', border: 'border-gray-200' };
   const isIncome = tx.type === 'income';
 
   return (
     <div 
       onClick={onClick}
-      className="flex items-center gap-4 py-6 border-b border-gray-50 last:border-0 group cursor-pointer active:bg-gray-50/50 transition-all rounded-[32px] px-8 animate-fade-in"
+      className="flex items-center justify-between gap-4 py-4 border-b border-gray-50 last:border-0 group cursor-pointer active:bg-gray-50/50 transition-all rounded-[16px] px-2 animate-fade-in"
       style={{ animationDelay: `${delay}s` }}
     >
       <div 
-        className={`w-12 h-12 rounded-[20px] flex items-center justify-center text-xl flex-shrink-0 transition-all group-hover:scale-110 shadow-sm border ${bgMap[tx.category] || 'bg-gray-100 border-gray-200'}`} 
+        className={`w-12 h-12 rounded-[22px] flex items-center justify-center text-xl flex-shrink-0 transition-all group-hover:scale-110 shadow-sm border ${style.bg.replace('/50','')} ${style.border.replace('/50','')}`} 
       >
         {tx.icon}
       </div>
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 pr-2">
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-[15px] font-black text-var(--text-strong) tracking-tighter truncate leading-none">
+          <span className="text-[15px] font-black text-var(--text-strong) tracking-tighter truncate leading-none block">
             {tx.name || '가맹점 정보 없음'}
           </span>
-          <span className="text-[10px] font-bold text-gray-300 opacity-60">
+          <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-[6px] border ${style.bg} ${style.text} ${style.border} whitespace-nowrap shrink-0 leading-none`}>
             {tx.category}
           </span>
         </div>
@@ -316,7 +319,7 @@ export function TransactionItem({ tx, onClick, delay = 0 }: { tx: Transaction; o
 // ─────────────────────────────────────────────────────────────
 // Credit Card Component (Flip Animation + Brand/Tier)
 // ─────────────────────────────────────────────────────────────
-export function CreditCardComponent({ card, onPerformanceClick }: { card: Card; onPerformanceClick?: () => void }) {
+export function CreditCardComponent({ card, onPerformanceClick, onToggleMain, onTogglePin }: { card: Card; onPerformanceClick?: () => void; onToggleMain?: (id: string) => void; onTogglePin?: (id: string) => void }) {
   const [isFlipped, setIsFlipped] = useState(false);
   const [backView, setBackView] = useState<'benefits' | 'vouchers'>('benefits');
 
@@ -380,19 +383,73 @@ export function CreditCardComponent({ card, onPerformanceClick }: { card: Card; 
                     <div className="w-1 h-1 rounded-full bg-white/30" />
                     <BrandLogo brand={card.brand} />
                   </div>
-                  <h4 className="text-[13px] font-black text-white tracking-tight drop-shadow-md">{card.name}</h4>
+                  <h4 className="text-[14px] font-black text-white tracking-tight drop-shadow-md">{card.name}</h4>
+               </div>
+               <div className="flex flex-col items-end pt-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <button 
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        onTogglePin?.(card.id); 
+                      }}
+                      className="group/pin active:scale-90 transition-all p-1.5 -m-1.5 z-20"
+                    >
+                      <Pin 
+                        size={16} 
+                        fill={card.isPinned ? "white" : "none"} 
+                        className={`${card.isPinned ? "text-white" : "text-white/20"} drop-shadow-lg transition-all transform ${card.isPinned ? 'rotate-45' : 'rotate-0'}`} 
+                      />
+                    </button>
+                    <button 
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        onToggleMain?.(card.id); 
+                      }}
+                      className="group/star active:scale-90 transition-all p-1.5 -m-1.5 z-20"
+                    >
+                      <Star 
+                        size={18} 
+                        fill={card.isMain ? "#fbbf24" : "rgba(255,255,255,0.05)"} 
+                        className={`${card.isMain ? "text-amber-400 animate-in zoom-in-50 duration-300" : "text-white/20"} drop-shadow-lg transition-all`} 
+                      />
+                    </button>
+                    <span className="text-[7px] font-black text-white/30 uppercase tracking-[0.2em] leading-none ml-1">Valid Thru</span>
+                  </div>
+                  <span className="text-[11px] font-black text-white/70 font-mono tracking-widest leading-none">
+                    {card.expiryMonth || '12'}/{card.expiryYear || '28'}
+                  </span>
                </div>
             </div>
 
-            <div className="flex items-center gap-2.5 z-10">
-               <div className="w-7 h-7 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center">
-                  <div className="w-4 h-3 bg-amber-400/80 rounded-[2px]" />
-               </div>
-               <div className="text-[9px] text-white/40 font-black tracking-widest uppercase flex items-center gap-1.5">
-                  <div className="w-1 h-1 rounded-full bg-white/20 animate-pulse" />
-                  컨택리스 결제
+            <div className="relative z-10 -mt-2">
+               <div className="flex items-center gap-4 opacity-40">
+                  <span className="text-[18px] font-black text-white tracking-[0.1em] font-mono leading-none">
+                    {card.firstFour || '4521'}
+                  </span>
+                  <div className="flex gap-2">
+                    {[1, 2].map(i => (
+                      <div key={i} className="flex gap-1.5">
+                        {[1, 2, 3, 4].map(j => <div key={j} className="w-1 h-1 rounded-full bg-white" />)}
+                      </div>
+                    ))}
+                  </div>
+                  <span className="text-[18px] font-black text-white tracking-[0.1em] font-mono leading-none">
+                    {card.lastFour || '8888'}
+                  </span>
                </div>
             </div>
+
+             <div className="flex items-center justify-between w-full relative z-10">
+               <div className="flex items-center gap-2.5">
+                 <div className="w-7 h-7 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center">
+                   <div className="w-4 h-3 bg-amber-400/80 rounded-[2px]" />
+                 </div>
+                 <div className="text-[10px] text-white/60 font-[900] tracking-widest uppercase">
+                   {card.type === 'credit' ? '신용카드' : '체크카드'}
+                 </div>
+               </div>
+               <div className="flex items-center gap-3 bg-black/20 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-sm">
+{card.features?.includes("apple_pay") && <Apple size={12} className="text-white/60" />}{card.features?.includes("samsung_pay") && <Smartphone size={12} className="text-white/60" />}{card.features?.includes("transport") && <Bus size={12} className="text-white/60" />}{card.features?.includes("contactless") && <Wifi size={12} className="text-white/60" />}{card.features?.includes("wallet") && <Wallet size={12} className="text-white/60" />}</div></div>
           </div>
 
           {/* Back Side (Expanded Content) */}
@@ -488,18 +545,22 @@ export function CreditCardComponent({ card, onPerformanceClick }: { card: Card; 
       {/* Performance Summary Section */}
       <div 
         onClick={onPerformanceClick}
-        className="mx-5 p-5 -mt-3 bg-white border border-gray-100 shadow-xl rounded-b-[40px] relative z-0 cursor-pointer active:bg-gray-50 transition-all hover:translate-y-0.5"
+        className="mx-5 p-4 pb-3.5 -mt-3 bg-white border border-gray-100 shadow-xl rounded-b-[40px] relative z-0 cursor-pointer active:bg-gray-50 transition-all hover:translate-y-0.5"
       >
         <div className="flex items-center gap-4">
           <div className="shrink-0 flex items-center justify-center">
-             <RadialGauge percent={Math.round((card.current / card.target) * 100)} id={card.id} size={64} />
+             <RadialGauge 
+               percent={Math.round((card.current / card.target) * 100)} 
+               size={64} 
+               color={card.current >= card.target ? '#3b82f6' : '#f43f5e'} 
+             />
           </div>
           
           <div className="flex-1 grid grid-cols-2">
             {/* Monthly Column */}
             <div className="flex flex-col items-center border-r border-gray-100 px-2 space-y-1">
-              <span className="text-[9px] font-black text-rose-500 uppercase tracking-widest opacity-80">월간 실적</span>
-              <div className="flex items-baseline gap-0.5 text-rose-600">
+              <span className={`text-[9px] font-black ${card.current >= card.target ? 'text-blue-500' : 'text-rose-500'} uppercase tracking-widest opacity-80`}>월간 실적</span>
+              <div className={`flex items-baseline gap-0.5 ${card.current >= card.target ? 'text-blue-600' : 'text-rose-600'}`}>
                  <span className="text-[22px] font-display font-black leading-none">{Math.round((card.current / card.target) * 100)}</span>
                  <span className="text-[10px] font-black opacity-60">%</span>
               </div>
@@ -511,11 +572,11 @@ export function CreditCardComponent({ card, onPerformanceClick }: { card: Card; 
             <div className="flex flex-col items-center px-2 space-y-1">
               <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest opacity-80">연간 누적</span>
               <div className="flex items-baseline gap-0.5 text-gray-500">
-                 <span className="text-[22px] font-display font-black leading-none">{Math.round((card.current * 1.5 / card.target) * 100)}</span>
+                 <span className="text-[22px] font-display font-black leading-none">{Math.round(((card.current * 12.5) / (card.annualTarget || 10000000)) * 100)}</span>
                  <span className="text-[10px] font-black opacity-60">%</span>
               </div>
               <p className="text-[12px] font-black text-gray-700 leading-none">{(card.current * 12.5).toLocaleString()}원</p>
-              <p className="text-[8px] text-gray-400 font-bold uppercase tracking-tighter">최근 1년 합계</p>
+              <p className="text-[8px] text-gray-400 font-bold uppercase tracking-tighter">목표: {formatKRWFull(card.annualTarget || 10000000)}</p>
             </div>
           </div>
         </div>
@@ -523,3 +584,9 @@ export function CreditCardComponent({ card, onPerformanceClick }: { card: Card; 
     </div>
   );
 }
+
+
+
+
+
+

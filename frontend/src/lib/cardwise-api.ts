@@ -1,7 +1,7 @@
 import { CommunityPost, CommunityComment } from "@/types/mobile";
 
 export const BACKEND_BASE_URL =
-  process.env.BACKEND_BASE_URL ?? "http://localhost:8080/api/v1";
+  process.env.BACKEND_BASE_URL ?? "http://127.0.0.1:8080/api/v1";
 
 export type JsonRecord = Record<string, unknown>;
 
@@ -116,6 +116,12 @@ export async function createPayment(request: CreatePaymentRequest) {
     body: JSON.stringify(request),
     headers: { "Content-Type": "application/json" },
   });
+}
+
+export async function getMonthlySpendingSummary(accountId: string, year: number, month: number) {
+  return tryFetchBackendJson<{ totalAmount: number; year: number; month: number }>(
+    `/spending-summary/monthly?accountId=${accountId}&year=${year}&month=${month}`
+  );
 }
 
 export interface PerformanceResponse {
@@ -417,16 +423,6 @@ export interface BenefitRecommendationEnvelope {
   };
 }
 
-export interface UpdateCardRequest {
-  cardNickname?: string;
-  issuedAt?: string;
-}
-
-export interface DeleteCardResponse {
-  userCardId: number;
-  message: string;
-}
-
 export interface CardBenefitDetailEnvelope {
   data: {
     cardId: number;
@@ -455,6 +451,43 @@ export interface UserCardsResponse {
   data: UserCardSummaryResponse[];
 }
 
+export interface CardMetadataResponse {
+  data: {
+    issuers: Array<{ id: string; name: string; logoUrl?: string }>;
+    brands: Array<{ id: string; name: string; logoUrl?: string }>;
+  };
+}
+
+export interface CardSummaryDto {
+  cardId: number;
+  cardName: string;
+  issuerId: string;
+  brandId: string;
+  cardType: 'CREDIT' | 'DEBIT';
+  features: string[];
+}
+
+export interface CardsResponse {
+  data: CardSummaryDto[];
+}
+
+export interface RegisterCardDetailedRequest {
+  cardNickname: string;
+  issuerId: string;
+  brandId: string;
+  cardType: 'CREDIT' | 'DEBIT';
+  cardNumberFirstFour: string;
+  cardNumberLastFour: string;
+  expiryMonth: string;
+  expiryYear: string;
+  monthlyTargetAmount: number;
+  annualTargetAmount: number;
+  features: string[];
+  isNotificationEnabled: boolean;
+  isMain: boolean;
+  isPinned: boolean;
+}
+
 export interface RegisterCardRequest {
   cardId: number;
   issuedAt: string; // ISO Date YYYY-MM-DD
@@ -464,6 +497,31 @@ export interface RegisterCardRequest {
 export interface UpdateCardRequest {
   cardNickname?: string;
   issuedAt?: string;
+}
+
+export interface DeleteCardResponse {
+  userCardId: number;
+  message: string;
+}
+
+export async function getCardMetadata() {
+  return tryFetchBackendJson<CardMetadataResponse>("/cards/metadata");
+}
+
+export async function getCards(issuerId?: string, brandId?: string, keyword?: string) {
+  let query = "";
+  if (issuerId) query += `issuerId=${issuerId}&`;
+  if (brandId) query += `brandId=${brandId}&`;
+  if (keyword) query += `keyword=${encodeURIComponent(keyword)}&`;
+  return tryFetchBackendJson<CardsResponse>(`/cards?${query}`);
+}
+
+export async function registerCardDetailed(request: RegisterCardDetailedRequest) {
+  return tryFetchBackendJson<UserCardSummaryResponse>("/my-cards/detailed", {
+    method: "POST",
+    body: JSON.stringify(request),
+    headers: { "Content-Type": "application/json" },
+  });
 }
 
 export async function getMyCards() {
@@ -492,138 +550,6 @@ export async function deleteCard(userCardId: number) {
   });
 }
 
-export interface NotificationItemResponse {
-  notificationId: number;
-  notificationType: string;
-  eventCode: string;
-  title: string;
-  body: string;
-  actionUrl: string | null;
-  actionLabel: string | null;
-  referenceTable: string | null;
-  referenceId: number | null;
-  isRead: boolean;
-  readAt: string | null;
-  createdAt: string;
-}
-
-export interface NotificationUnreadCountResponse {
-  unreadCount: number;
-}
-
-export interface GroupSummaryEnvelope {
-  data: Array<{
-    groupId: number;
-    groupName: string;
-    description: string | null;
-    role: string;
-    memberCount: number;
-    currentMonthSpent: number;
-    maxMembers: number;
-  }>;
-}
-
-export interface GroupMemberRecord {
-  accountId: string;
-  displayName: string;
-  email: string;
-  role: string;
-  joinedAt: string;
-}
-
-export interface GroupTagRecord {
-  tagId: number;
-  tagName: string;
-  color: string | null;
-}
-
-export interface GroupDetailEnvelope {
-  data: {
-    groupId: number;
-    groupName: string;
-    description: string | null;
-    role: string;
-    memberCount: number;
-    currentMonthSpent: number;
-    maxMembers: number;
-    ownerAccountId: string;
-    canManageSettings: boolean;
-    pendingInvitationCount: number;
-    members: GroupMemberRecord[];
-  };
-}
-
-export interface GroupActionEnvelope {
-  data: {
-    groupId: number;
-    status: string;
-    message: string;
-  };
-}
-
-export interface GroupTagEnvelope {
-  data: GroupTagRecord[];
-}
-
-export interface GroupPaymentRecord {
-  paymentId: number;
-  accountId: string;
-  userCardId: number;
-  payerName: string;
-  merchantName: string;
-  amount: number;
-  paidAt: string;
-  currency: string;
-  memo: string | null;
-  tagNames: string[];
-  canEdit: boolean;
-}
-
-export interface GroupInvitationEnvelope {
-  data: Array<{
-    invitationId: number;
-    groupId: number;
-    groupName: string;
-    inviterName: string;
-    inviteeEmail: string;
-    invitationStatus: string;
-    expiresAt: string;
-    createdAt: string;
-  }>;
-}
-
-export interface GroupPaymentEnvelope {
-  data: GroupPaymentRecord[];
-}
-
-export interface GroupStatsEnvelope {
-  data: {
-    groupId: number;
-    groupName: string;
-    from: string;
-    to: string;
-    totalSpent: number;
-    paymentCount: number;
-    memberStats: Array<{
-      accountId: string;
-      displayName: string;
-      spentAmount: number;
-      paymentCount: number;
-      sharePercent: number;
-    }>;
-    tagStats: Array<{
-      tagName: string;
-      spentAmount: number;
-      paymentCount: number;
-      sharePercent: number;
-    }>;
-    monthlyTrend: Array<{
-      yearMonth: string;
-      totalSpent: number;
-      paymentCount: number;
-    }>;
-  };
-}
 export interface CommunityReactionResponse {
   postId: number;
   isActive: boolean;
@@ -656,6 +582,52 @@ export async function getCommunityPosts(category?: string, page = 1, limit = 10)
   return tryFetchBackendJson<CommunityPostsResponse>(`/community/posts${query}`);
 }
 
+export interface NoticeRecord {
+  noticeId: number;
+  title: string;
+  content: string;
+  isCritical: boolean;
+  viewCount: number;
+  createdAt: string;
+}
+
+export interface FaqRecord {
+  faqId: number;
+  category: string;
+  question: string;
+  answer: string;
+  priority: number;
+  createdAt: string;
+}
+
+export interface InquiryRecord {
+  inquiryId: number;
+  accountId: string;
+  category: string;
+  title: string;
+  content: string;
+  answer: string | null;
+  status: "PENDING" | "ANSWERED" | string;
+  createdAt: string;
+  answeredAt: string | null;
+}
+
+export interface NoticeListResponse { data: NoticeRecord[] }
+export interface FaqListResponse { data: FaqRecord[] }
+export interface InquiryListResponse { data: InquiryRecord[] }
+
+export async function getNotices(page = 0, size = 10) {
+  return tryFetchBackendJson<NoticeListResponse>(`/support/notices?page=${page}&size=${size}`);
+}
+
+export async function getFaqs(page = 0, size = 20) {
+  return tryFetchBackendJson<FaqListResponse>(`/support/faqs?page=${page}&size=${size}`);
+}
+
+export async function getMyInquiries(page = 0, size = 10) {
+  return tryFetchBackendJson<InquiryListResponse>(`/support/inquiries?page=${page}&size=${size}`);
+}
+
 export async function getCommunityPost(postId: number) {
   return tryFetchBackendJson<CommunityPostResponse>(`/community/posts/${postId}`);
 }
@@ -676,10 +648,10 @@ export async function getPostComments(postId: number) {
   return tryFetchBackendJson<CommunityCommentsResponse>(`/community/posts/${postId}/comments`);
 }
 
-export async function createPostComment(postId: number, content: string) {
+export async function createPostComment(postId: number, content: string, parentId?: number) {
   return tryFetchBackendJson<CommunityCommentResponse>(`/community/posts/${postId}/comments`, {
     method: "POST",
-    body: JSON.stringify({ content }),
+    body: JSON.stringify({ content, parentId }),
     headers: { "Content-Type": "application/json" },
   });
 }
@@ -699,8 +671,6 @@ function normalizeBaseUrl(baseUrl: string) {
 export function backendUrl(pathname: string) {
   const normalizedPath = pathname.startsWith("/") ? pathname.slice(1) : pathname;
   
-  // Client-side requests should use the BFF proxy (/api/...) 
-  // for environment-aware routing and CORS compliance.
   if (typeof window !== "undefined") {
     return `/api/${normalizedPath}`;
   }

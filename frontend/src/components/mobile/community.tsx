@@ -9,31 +9,24 @@ import { CommunityPost } from '@/types/mobile';
 import { CommunityDetailModal, CreatePostModal } from './modals';
 import { getCommunityPosts, togglePostLike, togglePostBookmark, unwrapArray } from '@/lib/cardwise-api';
 
-const CATEGORIES = ['전체', 'CARD_HACKS', 'SAVING_TIPS', 'QNA', 'FREE'];
+const CATEGORIES = ['홈', 'CARD_HACKS', 'SAVING_TIPS', 'QNA', 'FREE'];
 const CATEGORY_LABELS: Record<string, string> = {
-  '전체': '🪐 전체',
+  '홈': '🪐 홈',
   'CARD_HACKS': '💡 꿀팁',
   'SAVING_TIPS': '💰 절약',
   'QNA': '❓ 질문',
   'FREE': '💬 자유'
 };
 
-const getAuthorInfo = (accountId: string) => {
+const getAvatar = (accountId?: string) => {
+  if (!accountId) return '👤';
   const avatars = ['🦊', '🐻', '🐯', '🦁', '🐼', '🐹'];
-  const names = ['카드고수', '절약왕', '혜택요정', '소비요정', '금융똑똑'];
-  const badges = ['GOLD', 'SILVER', 'BRONZE'];
-  
   const hash = accountId.split('-').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  
-  return {
-    name: names[hash % names.length] + ' ' + accountId.slice(0, 4),
-    avatar: avatars[hash % avatars.length],
-    badge: badges[hash % badges.length]
-  };
+  return avatars[hash % avatars.length];
 };
 
 export function CommunityView() {
-  const [selectedCategory, setSelectedCategory] = useState('전체');
+  const [selectedCategory, setSelectedCategory] = useState('홈');
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPost, setSelectedPost] = useState<CommunityPost | null>(null);
@@ -57,7 +50,7 @@ export function CommunityView() {
       if (page === 1) setLoading(true);
       else setIsFetchingMore(true);
 
-      const category = selectedCategory === '전체' ? undefined : selectedCategory;
+      const category = selectedCategory === '홈' ? undefined : selectedCategory;
       try {
         const res = await getCommunityPosts(category, page, 10);
         const rawPosts = unwrapArray<CommunityPost>(res);
@@ -65,12 +58,13 @@ export function CommunityView() {
         if (!active) return;
 
         if (rawPosts && rawPosts.length > 0) {
-          const mapped = rawPosts.map((p: CommunityPost) => ({
-            ...p,
-            author: getAuthorInfo(p.accountId)
-          }));
-          setPosts(prev => page === 1 ? mapped : [...prev, ...mapped]);
-          if (rawPosts.length < 10) setMore(false);
+          setPosts(prev => {
+            if (page === 1) return rawPosts;
+              const existingIds = new Set(prev.map(p => p.postId));
+              const uniqueNew = rawPosts.filter((p: CommunityPost) => !existingIds.has(p.postId));
+              return [...prev, ...uniqueNew];
+            });
+            if (rawPosts.length < 10) setMore(false);
         } else {
           if (page === 1) setPosts([]);
           setMore(false);
@@ -139,6 +133,25 @@ export function CommunityView() {
     setSelectedPost(post);
   };
 
+  const handleShare = async (post: CommunityPost, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const shareData = {
+      title: post.title,
+      text: post.content.substring(0, 50) + '...',
+      url: window.location.href + '?postId=' + post.postId,
+    };
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.error('Error sharing', err);
+      }
+    } else {
+      navigator.clipboard.writeText(shareData.url);
+      alert('링크가 복사되었습니다!');
+    }
+  };
+
   return (
     <div className="space-y-8 animate-fade-in pb-24">
       {/* Search Bar */}
@@ -151,22 +164,21 @@ export function CommunityView() {
         />
       </div>
 
-      {/* Premium Underline Tabs - Rock Solid & Stylish */}
-      <div className="sticky top-0 z-[80] bg-white pt-2 -mx-6 px-6">
-        <div className="flex gap-10 overflow-x-auto no-scrollbar border-b border-gray-100/50">
+      {/* Premium App-like Chip Tabs - Modern & Clean */}
+      <div className="sticky top-0 z-[80] bg-white/95 backdrop-blur-md pt-3 pb-3 -mx-6 px-6 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[1px] after:bg-gray-100">
+        <div className="flex gap-2 overflow-x-auto no-scrollbar relative z-10 w-full snap-x">
           {CATEGORIES.map((cat) => {
             const isActive = selectedCategory === cat;
             return (
               <button 
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`relative pb-4 text-[15px] font-black transition-all whitespace-nowrap active:scale-95 ${
-                  isActive ? 'text-slate-900' : 'text-gray-300 hover:text-gray-400'
+                className={`snap-start relative px-4 py-2.5 text-[14px] font-[900] tracking-tight transition-all rounded-full whitespace-nowrap active:scale-95 ${
+                  isActive 
+                    ? 'bg-slate-900 text-white shadow-md shadow-slate-900/10' 
+                    : 'bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-600'
                 }`}
               >
-                {isActive && (
-                  <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-slate-900 rounded-full" />
-                )}
                 {CATEGORY_LABELS[cat]}
               </button>
             );
@@ -174,22 +186,24 @@ export function CommunityView() {
         </div>
       </div>
 
-      {/* Editor's Pick */}
-      <section className="relative p-8 rounded-[40px] bg-slate-900 text-white overflow-hidden shadow-2xl">
-        <div className="absolute top-0 right-0 w-48 h-48 bg-rose-500/20 rounded-full blur-[80px]" />
-        <div className="relative z-10">
-          <div className="flex items-center gap-2 mb-4">
-             <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-rose-500">Editor&apos;s Pick</span>
+      {/* Editor's Pick - Only visible on Home */}
+      {selectedCategory === '홈' && (
+        <section className="relative p-8 rounded-[40px] bg-slate-900 text-white overflow-hidden shadow-2xl">
+          <div className="absolute top-0 right-0 w-48 h-48 bg-rose-500/20 rounded-full blur-[80px]" />
+          <div className="relative z-10">
+            <div className="flex items-center gap-2 mb-4">
+               <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-rose-500">Editor&apos;s Pick</span>
+            </div>
+            <h3 className="text-[20px] font-[900] mb-3 tracking-tighter">이번 달 신용카드 혜택 <br/>순위 대공개! 🏆</h3>
+            <p className="text-[12px] font-bold text-gray-400 mb-6 drop-shadow-sm opacity-80">가장 인기가 많았던 카드 3종을 분석해봤어요.</p>
+            <button className="px-5 py-2.5 rounded-xl bg-white text-slate-900 font-black text-[13px] active:scale-95 transition-all">보러가기</button>
           </div>
-          <h3 className="text-[20px] font-black mb-3 tracking-tighter">이번 달 신용카드 혜택 <br/>순위 대공개! 🏆</h3>
-          <p className="text-[12px] font-bold text-gray-400 mb-6 drop-shadow-sm opacity-80">가장 인기가 많았던 카드 3종을 분석해봤어요.</p>
-          <button className="px-5 py-2.5 rounded-xl bg-white text-slate-900 font-black text-[13px] active:scale-95 transition-all">보러가기</button>
-        </div>
-        <div className="absolute right-[-10px] bottom-[-10px] opacity-10 rotate-[15deg]">
-           <Flame size={120} />
-        </div>
-      </section>
+          <div className="absolute right-[-10px] bottom-[-10px] opacity-10 rotate-[15deg]">
+             <Flame size={120} />
+          </div>
+        </section>
+      )}
 
       {/* Post Feed */}
       <section className="space-y-6">
@@ -213,13 +227,20 @@ export function CommunityView() {
                 <div className="flex items-center justify-between mb-5">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center text-xl shadow-inner border border-gray-100 group-hover:scale-110 transition-transform">
-                      {post.author?.avatar}
+                      {getAvatar(post.author?.accountId || post.accountId)}
                     </div>
                     <div>
-                       <p className="text-[14px] font-black text-slate-800">{post.author?.name}</p>
-                       <div className="flex items-center gap-1.5">
-                          <span className="text-[9px] font-black text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded-md uppercase tracking-tighter">{post.author?.badge}</span>
-                          <span className="text-[10px] font-bold text-gray-300">· {new Date(post.createdAt).toLocaleDateString()}</span>
+                       <p className="text-[14px] font-black text-slate-800">{post.author?.displayName || '익명 사용자'}</p>
+                       <div className="flex items-center gap-1.5 mt-0.5">
+                          {post.author?.tierName && (
+                            <span className="text-[9px] font-black text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded-md uppercase tracking-tighter">
+                              {post.author.tierName}
+                            </span>
+                          )}
+                          <span className="text-[9px] font-bold text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded-md uppercase tracking-tighter">
+                            Lv.{post.author?.level || 1}
+                          </span>
+                          <span className="text-[10px] font-bold text-gray-400">· {new Date(post.createdAt).toLocaleDateString()}</span>
                        </div>
                     </div>
                   </div>
@@ -249,7 +270,10 @@ export function CommunityView() {
                       <MessageSquare size={16} />
                       <span className="text-[12px] font-black">{post.commentCount}</span>
                     </button>
-                    <button className="ml-auto text-gray-300 active:text-slate-900 transition-colors" onClick={(e) => e.stopPropagation()}>
+                    <button 
+                      className="ml-auto text-gray-300 hover:text-slate-900 active:scale-90 transition-all flex items-center gap-1.5 p-2" 
+                      onClick={(e) => handleShare(post, e)}
+                    >
                       <Share2 size={16} />
                     </button>
                 </div>
@@ -266,14 +290,19 @@ export function CommunityView() {
         )}
       </section>
 
-      {/* Floating Write Button */}
-      <button 
-        onClick={() => setIsWriteModalOpen(true)}
-        className="fixed bottom-28 right-6 w-16 h-16 rounded-full bg-slate-900 text-white shadow-2xl shadow-slate-400 flex items-center justify-center active:scale-90 transition-all z-40 group overflow-hidden"
-      >
-        <div className="absolute inset-0 bg-gradient-to-tr from-rose-500/20 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
-        <Plus size={32} strokeWidth={3} className="relative z-10" />
-      </button>
+      {/* Floating Write Button - Locked to Mobile App Container */}
+      <div className="fixed bottom-28 left-0 right-0 max-w-[430px] mx-auto pointer-events-none z-[60]">
+        <div className="relative w-full h-full">
+          <button 
+            onClick={() => setIsWriteModalOpen(true)}
+            className="absolute right-6 bottom-0 pointer-events-auto w-[60px] h-[60px] rounded-[24px] bg-slate-900 text-white flex items-center justify-center active:scale-90 transition-all group overflow-hidden"
+            style={{boxShadow: '0 10px 25px -5px rgba(15, 23, 42, 0.4), inset 0 2px 0 rgba(255,255,255,0.1)'}}
+          >
+            <div className="absolute inset-0 bg-gradient-to-tr from-rose-500/20 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+            <Plus size={30} strokeWidth={2.5} className="relative z-10" />
+          </button>
+        </div>
+      </div>
 
       <CommunityDetailModal 
         isOpen={!!selectedPost} 

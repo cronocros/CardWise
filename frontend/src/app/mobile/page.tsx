@@ -3,12 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
-import { 
-  Plus, 
-  Bell,
-  Settings,
-  Menu
-} from 'lucide-react';
+import { Plus } from 'lucide-react';
 
 // Common Components
 import { BottomNavigation } from '@/components/mobile/nav';
@@ -22,9 +17,8 @@ import {
   CardSettingsModal,
   SitemapModal
 } from '@/components/mobile/modals';
-import { CardRegistrationModal } from '@/components/mobile/CardRegistrationModal';
 import { createClient } from '@/utils/supabase/client';
-import { getPayments, PaymentRecord, getMyCards, UserCardSummaryResponse } from '@/lib/cardwise-api';
+import { getPayments, PaymentRecord, getMyCards, UserCardSummaryResponse, getMonthlySpendingSummary } from '@/lib/cardwise-api';
 
 // Views (Refactored)
 import { HomeView } from '@/components/mobile/views/HomeView';
@@ -37,24 +31,8 @@ import { CommunityView } from '@/components/mobile/community';
 // Data & Types
 import { Transaction, Card } from '@/types/mobile';
 import { SAMPLE_USER, SAMPLE_CARDS, SAMPLE_TRANSACTIONS, SPENDING_CATEGORIES } from '@/lib/sampleData';
+import { WeeklyBarChart } from '@/components/mobile/charts';
 
-// ─────────────────────────────────────────────────────────────
-// Shared UI Components
-// ─────────────────────────────────────────────────────────────
-function StatusBar() {
-  return (
-    <div className="flex justify-between items-center px-6 pt-3 pb-3 text-[12px] font-black text-gray-700 sticky top-0 z-[100] bg-white border-b-2 border-gray-100">
-      <span>9:41</span>
-      <div className="flex items-center gap-2">
-        <span className="opacity-50">75%</span>
-        <div className="w-[22px] h-[11px] border-[1.5px] border-gray-400 rounded-[3px] p-[1.5px] relative">
-          <div className="absolute right-[-4px] top-1/2 -translate-y-1/2 w-[2px] h-[5px] bg-gray-400 rounded-r-[1px]" />
-          <div className="h-full w-[75%] bg-gray-700 rounded-[1px]" />
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export default function MobileHomePage() {
   return (
@@ -69,6 +47,37 @@ export default function MobileHomePage() {
 }
 
 // ... (StatusBar component)
+
+function ScrollToTop() {
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsVisible(window.scrollY > 300);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  if (!isVisible) return null;
+
+  return (
+    <div className="fixed bottom-28 left-0 right-0 max-w-[430px] mx-auto pointer-events-none z-[80]">
+      <div className="relative w-full h-full flex justify-center">
+        <button 
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="pointer-events-auto flex items-center justify-center px-5 py-3.5 rounded-[30px] bg-slate-800/80 backdrop-blur-xl text-white shadow-xl active:scale-95 transition-all outline-none border border-slate-700/50"
+          style={{boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255,255,255,0.1)'}}
+        >
+          <div className="mr-1.5 mt-0.5 animate-bounce">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+          </div>
+          <span className="text-[14px] font-[900] tracking-[0.2em] uppercase px-1">Top</span>
+        </button>
+      </div>
+    </div>
+  );
+}
 
 function MobileHomePageContent() {
   const router = useRouter();
@@ -88,6 +97,7 @@ function MobileHomePageContent() {
   
   // Real Data State
   const [userData, setUserData] = useState<{ id: string; email: string; displayName: string; level: number; exp: number; tierName: string } | null>(null);
+  const [monthlySpend, setMonthlySpend] = useState(SAMPLE_USER.monthlySpend);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -110,6 +120,13 @@ function MobileHomePageContent() {
           exp: profile?.exp || 0,
           tierName: profile?.tier_name || 'BRONZE'
         });
+        
+        // Fetch monthly summary
+        const now = new Date();
+        const summary = await getMonthlySpendingSummary(user.id, now.getFullYear(), now.getMonth() + 1);
+        if (summary && summary.totalAmount != null) {
+          setMonthlySpend(summary.totalAmount);
+        }
       }
     };
     
@@ -165,16 +182,54 @@ function MobileHomePageContent() {
   const [showAddTx, setShowAddTx] = useState(false);
   const [showAchievement, setShowAchievement] = useState(false);
   const [showEditHome, setShowEditHome] = useState(false);
-  const [showAddCard, setShowAddCard] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showAssetAction, setShowAssetAction] = useState<'fill' | 'send' | null>(null);
   const [showCardSettings, setShowCardSettings] = useState(false);
   const [showSitemap, setShowSitemap] = useState(false);
+
+  // Persistence for user card settings
+  useEffect(() => {
+    const saved = localStorage.getItem('cardwise_user_cards');
+    if (saved) {
+      try {
+        setCards(JSON.parse(saved));
+      } catch (e) {
+        console.error('Failed to parse saved cards', e);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (cards.length > 0) {
+      localStorage.setItem('cardwise_user_cards', JSON.stringify(cards));
+    }
+  }, [cards]);
   
   // View State
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
   const [selectedLedgerDate, setSelectedLedgerDate] = useState(new Date());
-  const [visibleSections, setVisibleSections] = useState(['balance', 'performance', 'weekly', 'category', 'goal', 'recent']);
+  
+  // Persistent Home Sections
+  const DEFAULT_SECTIONS = ['balance', 'performance', 'analytics', 'insights', 'recent'];
+  const [visibleSections, setVisibleSections] = useState<string[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('home_visible_sections');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error('Failed to load home sections:', e);
+        }
+      }
+    }
+    return DEFAULT_SECTIONS;
+  });
+
+  // Sync to localStorage
+  const saveSections = (sections: string[]) => {
+    setVisibleSections(sections);
+    localStorage.setItem('home_visible_sections', JSON.stringify(sections));
+  };
 
   useEffect(() => {
     let timeout: NodeJS.Timeout;
@@ -190,8 +245,22 @@ function MobileHomePageContent() {
     const events = ['mousemove', 'keydown', 'touchstart', 'scroll', 'click'];
     events.forEach(event => window.addEventListener(event, resetTimer));
     resetTimer();
+    const handleEditHome = () => setShowEditHome(true);
+    const handleNotification = () => setShowNotifications(true);
+    const handleCardSettings = () => setShowCardSettings(true);
+    const handleSitemap = () => setShowSitemap(true);
+    
+    window.addEventListener('openEditHomeModal', handleEditHome);
+    window.addEventListener('openNotificationModal', handleNotification);
+    window.addEventListener('openCardSettingsModal', handleCardSettings);
+    window.addEventListener('openSitemapModal', handleSitemap);
+    
     return () => {
       events.forEach(event => window.removeEventListener(event, resetTimer));
+      window.removeEventListener('openEditHomeModal', handleEditHome);
+      window.removeEventListener('openNotificationModal', handleNotification);
+      window.removeEventListener('openCardSettingsModal', handleCardSettings);
+      window.removeEventListener('openSitemapModal', handleSitemap);
       clearTimeout(timeout);
     };
   }, []);
@@ -206,77 +275,38 @@ function MobileHomePageContent() {
     color: c.color
   }));
 
-  const tabTitles: Record<string, string> = {
-    home: '자산 현황',
-    cards: '카드 관리',
-    ledger: '소비 내역',
-    benefits: '혜택 가이드',
-    community: '소셜 센터',
-    mypage: '내 프로필',
-    settings: '환경 설정',
-    insights: '소비 분석',
-    'all-badges': '업적 센터'
-  };
 
   const toggleSection = (id: string) => {
-    setVisibleSections(prev =>
-      prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
-    );
+    const newSections = visibleSections.includes(id) 
+      ? visibleSections.filter(s => s !== id) 
+      : [...visibleSections, id];
+    saveSections(newSections);
   };
 
-  const showFAB = ['home', 'ledger', 'cards'].includes(activeTab);
+  const resetSections = () => {
+    if (window.confirm('홈 화면 구성을 초기 상태로 되돌리시겠습니까?')) {
+      saveSections(DEFAULT_SECTIONS);
+    }
+  };
+
+  const onToggleMainCard = (cardId: string) => {
+    setCards(prev => prev.map(c => ({
+      ...c,
+      isMain: c.id === cardId ? !c.isMain : false
+    })));
+  };
+
+  const onTogglePinCard = (cardId: string) => {
+    setCards(prev => prev.map(c => ({
+      ...c,
+      isPinned: c.id === cardId ? !c.isPinned : c.isPinned
+    })));
+  };
+
+  const showFAB = ['ledger', 'cards'].includes(activeTab);
 
   return (
-    <div className="flex flex-col min-h-screen bg-white">
-      <StatusBar />
-
-      {/* ─── Global App Header ─── */}
-      <header className="px-5 pt-4 pb-4 flex items-center justify-between bg-white/80 backdrop-blur-xl border-b border-gray-50 sticky top-[44px] z-[90]">
-          <div className="flex items-center gap-3 active:scale-95 transition-all">
-             <div className="w-10 h-10 rounded-2xl bg-gray-100 flex items-center justify-center text-xl shadow-inner border border-gray-100/50">
-               {userData?.displayName?.[0] || '👤'}
-             </div>
-             <div className="flex flex-col">
-               <div className="flex items-center gap-1.5">
-                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-50 border border-slate-100">
-                    <span className="text-[11px] font-black text-slate-600 tracking-tight">{userData?.displayName || 'Loading...'} 님</span>
-                    <span className="text-[10px]">⚡</span>
-                  </div>
-                  <div className="w-1 h-1 rounded-full bg-slate-300" />
-                  <span className="text-[14px] font-black text-slate-800 tracking-tight leading-none opacity-60">
-                    {tabTitles[activeTab] || 'CardWise'}
-                  </span>
-               </div>
-                 <div className="flex items-center gap-1 mt-1.5 ml-0.5">
-                   <div className="px-1.5 py-0.5 rounded-md bg-amber-50 border border-amber-100 flex items-center gap-1 shadow-sm">
-                     <span className="text-[7.5px] font-black text-amber-600 uppercase tracking-widest leading-none">{userData?.tierName || '플래티넘'}</span>
-                   </div>
-                   <div className="px-1.5 py-0.5 rounded-md bg-rose-50 border border-rose-100 flex items-center gap-1 shadow-sm">
-                     <span className="text-[7.5px] font-black text-rose-500 uppercase tracking-widest leading-none">LV.{userData?.level || '24'}</span>
-                   </div>
-                </div>
-             </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button onClick={() => setShowNotifications(true)}
-              className="relative w-10 h-10 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 active:scale-75 transition-transform">
-              <Bell size={18} />
-              <div className="absolute top-2.5 right-2.5 w-1.5 h-1.5 rounded-full bg-rose-500 border border-white" />
-            </button>
-            <button onClick={() => {
-               if (activeTab === 'cards') setShowCardSettings(true);
-               else setShowEditHome(true);
-            }}
-              className="w-10 h-10 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 active:scale-75 transition-transform">
-              <Settings size={18} />
-            </button>
-            <button onClick={() => setShowSitemap(true)}
-              className="w-10 h-10 rounded-2xl bg-white border border-gray-100 flex items-center justify-center text-slate-400 shadow-sm active:scale-75 transition-transform">
-              <Menu size={20} />
-            </button>
-          </div>
-      </header>
+    <div className="flex flex-col min-h-screen bg-transparent">
 
       {/* ─── Main View ─── */}
       <main className="flex-1 px-6 max-w-[430px] mx-auto pb-32 w-full">
@@ -288,13 +318,15 @@ function MobileHomePageContent() {
             transactions={transactions}
             setSelectedTx={setSelectedTx}
             router={router}
+            monthlySpend={monthlySpend}
           />
         )}
         {activeTab === 'cards' && (
           <CardsView 
             cards={cards}
-            setShowAddCard={setShowAddCard}
             router={router}
+            onToggleMain={onToggleMainCard}
+            onTogglePin={onTogglePinCard}
           />
         )}
         {activeTab === 'ledger' && (
@@ -337,14 +369,68 @@ function MobileHomePageContent() {
         {activeTab === 'mypage' && <ProfileView onSeeMoreBadges={() => setActiveTab('all-badges')} user={userData} />}
         {activeTab === 'all-badges' && <AllBadgesView onBack={() => setActiveTab('mypage')} />}
         {activeTab === 'settings' && <div className="p-10 text-center text-slate-400 font-bold">환경 설정 준비 중</div>}
-        {activeTab === 'insights' && <div className="p-10 text-center text-slate-400 font-bold">AI 소비 분석 준비 중</div>}
+        {activeTab === 'insights' && (
+          <div className="animate-fade-in py-6 space-y-6">
+             <div className="px-6 mb-2 mt-4 inline-block">
+               <h2 className="text-[26px] font-black text-gray-800 tracking-tighter mb-1 relative z-10">AI 소비 분석</h2>
+               <p className="text-[12px] font-bold text-gray-400">데이터 기반 똑똑한 맞춤 리포트</p>
+             </div>
+
+             {/* Weekly Pattern Chart */}
+             <div className="px-6">
+               <section className="px-6 py-5 rounded-[40px] bg-white border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.03)] animate-fade-in" style={{ animationDelay: '0.1s' }}>
+                 <div className="flex items-center justify-between mb-8 px-2">
+                   <h3 className="text-[17px] font-black text-gray-800 tracking-tighter">주간 소비 패턴</h3>
+                   <span className="text-[10px] font-black text-gray-400 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100 uppercase tracking-widest">이번주</span>
+                 </div>
+                 <WeeklyBarChart />
+               </section>
+             </div>
+
+             <div className="px-6">
+               {/* WordCloud styled with box */}
+               <div className="bg-white rounded-[40px] px-6 py-8 border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.05)] text-center">
+                 <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-[17px] font-black text-gray-800 tracking-tighter">소비 키워드 인사이트</h3>
+                    <div className="px-3 py-1 rounded-full bg-rose-50 text-[10px] font-black text-rose-500 uppercase tracking-widest">AI 분석</div>
+                 </div>
+                 {/* Dummy or real WordCloud component can go here, handled in charts.tsx */}
+                 <div className="opacity-80 scale-110 mt-4">
+                   <div className="flex flex-wrap justify-center items-center gap-x-5 gap-y-3 py-6 px-4 min-h-[140px] bg-gradient-to-b from-transparent to-rose-50/20 rounded-[32px] border border-dashed border-rose-100/50">
+                     {[
+                        { text: '편의점', size: 24, color: 'text-rose-500' },
+                        { text: '스타벅스', size: 18, color: 'text-blue-500' },
+                        { text: '배달의민족', size: 22, color: 'text-emerald-500' },
+                        { text: '교통', size: 14, color: 'text-slate-400' },
+                        { text: '넷플릭스', size: 16, color: 'text-rose-400' },
+                        { text: '쇼핑', size: 20, color: 'text-purple-500' },
+                        { text: '자기계발', size: 13, color: 'text-amber-500' },
+                        { text: '점심식사', size: 22, color: 'text-rose-600' },
+                     ].map((tag, i) => (
+                       <span key={i} className={`font-black tracking-tight ${tag.color}`} style={{ fontSize: `${tag.size}px` }}>
+                         #{tag.text}
+                       </span>
+                     ))}
+                   </div>
+                 </div>
+               </div>
+             </div>
+          </div>
+        )}
       </main>
 
       {/* ─── Navigation & FAB ─── */}
       {showFAB && (
-        <div className="fixed bottom-[110px] right-8 z-[70]">
-          <button onClick={() => setShowAddTx(true)}
-            className="w-16 h-16 rounded-[24px] flex items-center justify-center text-white active:scale-75 transition-all shadow-xl"
+        <div className="fixed bottom-[110px] left-1/2 -translate-x-1/2 w-full max-w-[430px] flex justify-end px-8 z-[70] pointer-events-none">
+          <button 
+            onClick={() => {
+              if (activeTab === 'cards') {
+                router.push('/mobile/add-card');
+              } else {
+                setShowAddTx(true);
+              }
+            }}
+            className="w-16 h-16 rounded-[24px] flex items-center justify-center text-white active:scale-75 transition-all shadow-xl pointer-events-auto"
             style={{ background: 'linear-gradient(135deg, #f43f5e, #e11d48)' }}>
             <Plus size={28} strokeWidth={2.5} />
           </button>
@@ -358,16 +444,27 @@ function MobileHomePageContent() {
         <AddTransactionModal isOpen={showAddTx} onClose={() => setShowAddTx(false)} cards={cards} />
         <AchievementModal isOpen={showAchievement} onClose={() => setShowAchievement(false)} tierName="골드 챌린저" benefit="카페 5% 추가" current={245000} target={300000} />
         <TransactionDetailModal isOpen={!!selectedTx} onClose={() => setSelectedTx(null)} tx={selectedTx} />
-        <EditHomeModal isOpen={showEditHome} onClose={() => setShowEditHome(false)} visibleSections={visibleSections} onToggleSection={toggleSection} />
+        <EditHomeModal 
+          isOpen={showEditHome} 
+          onClose={() => setShowEditHome(false)} 
+          visibleSections={visibleSections} 
+          onToggleSection={toggleSection}
+          onReorder={saveSections}
+          onReset={resetSections}
+        />
         <NotificationModal isOpen={showNotifications} onClose={() => setShowNotifications(false)} />
         <AssetActionModal isOpen={!!showAssetAction} onClose={() => setShowAssetAction(null)} type={showAssetAction} />
         <CardSettingsModal isOpen={showCardSettings} onClose={() => setShowCardSettings(false)} cards={cards} onUpdate={setCards} />
-        <CardRegistrationModal isOpen={showAddCard} onClose={() => setShowAddCard(false)} onAdd={(newCard) => setCards([newCard, ...cards])} />
+        {/* Removed CardRegistrationModal as it is now a separate page */}
         <SitemapModal isOpen={showSitemap} onClose={() => setShowSitemap(false)} onNavigate={(tab) => {
           setActiveTab(tab);
           setShowSitemap(false);
         }} />
       </div>
+
+      <ScrollToTop />
     </div>
   );
 }
+
+

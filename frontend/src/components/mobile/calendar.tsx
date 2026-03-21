@@ -12,12 +12,10 @@ function cn(...classes: (string | boolean | undefined)[]) {
 export function LedgerCalendar({ 
   selectedDate, 
   onDateSelect,
-  onViewDetail,
   transactions = []
 }: { 
   selectedDate: Date; 
   onDateSelect: (date: Date) => void;
-  onViewDetail?: () => void;
   transactions?: Transaction[];
 }) {
   const [currentDate, setCurrentDate] = useState(new Date(selectedDate));
@@ -59,29 +57,29 @@ export function LedgerCalendar({
   const today = new Date();
 
   return (
-    <div className="p-6 rounded-[40px] bg-white border border-gray-100 shadow-xl mt-6 animate-fade-in">
-      <div className="flex items-center justify-between mb-8 px-2">
+    <div className="px-5 py-4 rounded-[40px] bg-white border border-gray-100 shadow-xl mt-4 animate-fade-in">
+      <div className="flex items-center justify-between mb-4 px-2">
         <h3 className="text-[18px] font-black text-slate-800 tracking-tight">{monthName}</h3>
         <div className="flex gap-2">
           <button 
             onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))}
-            className="w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 active:scale-75 transition-transform"
+            className="w-9 h-9 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 active:scale-75 transition-transform"
           >
-            <ChevronLeft size={18} />
+            <ChevronLeft size={16} />
           </button>
           <button 
             onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))}
-            className="w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 active:scale-75 transition-transform"
+            className="w-9 h-9 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 active:scale-75 transition-transform"
           >
-            <ChevronRight size={18} />
+            <ChevronRight size={16} />
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-y-6 text-center">
+      <div className="grid grid-cols-7 gap-y-4 text-center">
         {['일', '월', '화', '수', '목', '금', '토'].map((d, i) => (
           <span key={d} className={cn(
-            "text-[10px] font-black uppercase tracking-[0.2em] mb-2",
+            "text-[10px] font-black uppercase tracking-[0.2em] mb-1.5",
             i === 0 ? "text-rose-500" : i === 6 ? "text-blue-500" : "text-slate-900 opacity-30"
           )}>{d}</span>
         ))}
@@ -129,34 +127,22 @@ export function LedgerCalendar({
         })}
       </div>
 
-      <div className="mt-6 p-4 rounded-[32px] bg-slate-50/50 border border-slate-100/50 flex items-center justify-between gap-3 overflow-hidden">
-        <div className="flex flex-col min-w-0 flex-1">
-          <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-1.5 ml-0.5">선택 일자 요약</p>
-          <div className="flex items-center gap-3 whitespace-nowrap overflow-hidden">
-            <div className="flex items-center gap-1.5 min-w-0">
-              <div className="w-1.5 h-1.5 rounded-full bg-rose-400 shrink-0" />
-              <span className="text-[14px] font-black text-slate-800 tracking-tighter truncate">
-                {selectedSummary.expense.toLocaleString()}
-                <span className="text-[9px] text-slate-400 ml-0.5 font-bold">원</span>
-              </span>
-            </div>
-            <div className="w-px h-3 bg-slate-200 shrink-0" />
-            <div className="flex items-center gap-1.5 min-w-0">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
-              <span className="text-[14px] font-black text-slate-800 tracking-tighter truncate">
-                {selectedSummary.income.toLocaleString()}
-                <span className="text-[9px] text-slate-400 ml-0.5 font-bold">원</span>
-              </span>
-            </div>
+      <div className="mt-1 px-4 py-1.5 rounded-[22px] bg-slate-50/10 border border-slate-100/30 flex flex-col items-center">
+        <div className="flex items-center gap-5">
+          <div className="flex items-center gap-1.5">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.3)]" />
+            <span className="text-[13px] font-black text-slate-700 tracking-tighter">
+              수입 <span className="text-emerald-500 font-display ml-0.5">{selectedSummary.income.toLocaleString()}원</span>
+            </span>
+          </div>
+          <div className="w-px h-3 bg-slate-200" />
+          <div className="flex items-center gap-1.5">
+            <div className="w-1.5 h-1.5 rounded-full bg-rose-400 shadow-[0_0_6px_rgba(251,113,133,0.3)]" />
+            <span className="text-[13px] font-black text-slate-700 tracking-tighter">
+              지출 <span className="text-rose-500 font-display ml-0.5">{selectedSummary.expense.toLocaleString()}원</span>
+            </span>
           </div>
         </div>
-
-        <button 
-          onClick={onViewDetail}
-          className="h-10 w-10 min-w-10 rounded-2xl bg-slate-900 active:scale-90 transition-all shadow-lg shadow-slate-200 group flex items-center justify-center"
-        >
-           <ChevronRight size={18} className="text-white group-hover:translate-x-0.5 transition-transform" />
-        </button>
       </div>
     </div>
   );

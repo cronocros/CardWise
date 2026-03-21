@@ -5,6 +5,13 @@ import jakarta.validation.constraints.NotNull
 import java.time.OffsetDateTime
 import java.util.UUID
 
+data class AuthorResponse(
+    val accountId: UUID,
+    val displayName: String?,
+    val level: Int,
+    val tierName: String?
+)
+
 data class CreatePostRequest(
     @field:NotBlank
     val category: String,
@@ -38,13 +45,15 @@ data class PostResponse(
     val commentCount: Long,
     val isLiked: Boolean = false,
     val isBookmarked: Boolean = false,
+    val author: AuthorResponse? = null,
     val createdAt: OffsetDateTime?,
     val updatedAt: OffsetDateTime?
 )
 
 data class CreateCommentRequest(
     @field:NotBlank
-    val content: String
+    val content: String,
+    val parentId: Long? = null
 )
 
 data class CommentResponse(
@@ -52,6 +61,9 @@ data class CommentResponse(
     val postId: Long,
     val accountId: UUID,
     val content: String,
+    val parentId: Long? = null,
+    val author: AuthorResponse? = null,
+    val replies: List<CommentResponse> = emptyList(),
     val createdAt: OffsetDateTime?,
     val updatedAt: OffsetDateTime?
 )

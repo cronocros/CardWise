@@ -1,15 +1,13 @@
 'use client';
 
 import React from 'react';
-import { Plus, ChevronLeft, ChevronRight, FileUp, Calendar } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, FileUp, Calendar, Sparkles } from 'lucide-react';
 import { AreaTrendChart, SimplePieChart } from '@/components/mobile/charts';
 import { LedgerCalendar } from '@/components/mobile/calendar';
 import { TransactionItem } from '@/components/mobile/cards';
 import { GroupLedgerView } from '@/components/mobile/group-ledger';
 import { Transaction, CategoryData } from '@/types/mobile';
 import { Mascot } from '@/components/mobile/mascot';
-import { Sparkles } from 'lucide-react';
-
 interface LedgerViewProps {
   selectedLedgerDate: Date;
   setSelectedLedgerDate: (val: Date) => void;
@@ -52,62 +50,67 @@ export function LedgerView({
   };
 
   return (
-    <div className="animate-spring space-y-4 pt-5 pb-20">
-      <div className="flex items-center justify-between mb-2 px-1">
-        <div>
-          <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Personal Budgeting</p>
-          <h2 className="text-[26px] font-black text-gray-800 tracking-tighter">가계부</h2>
+    <div className="animate-spring space-y-3 pt-3 pb-20">
+      <div className="flex items-center gap-2 mb-1">
+         <div className="flex-1 p-1 bg-gray-50/50 rounded-[22px] border border-gray-100 flex items-center">
+          {['calendar', 'history', 'group'].map(id => (
+            <button key={id} onClick={() => setViewMode(id as 'calendar' | 'history' | 'group')}
+              className={`flex-1 py-2.5 rounded-[18px] font-black font-display text-[13px] tracking-tight transition-all duration-300 ${
+                viewMode === id ? 'bg-white shadow-sm text-gray-800' : 'text-gray-400'
+              }`}>
+              {id === 'calendar' ? '달력' : id === 'history' ? '목록' : '공동'}
+            </button>
+          ))}
         </div>
-        <div className="flex items-center gap-2">
-          <button className="w-11 h-11 rounded-[16px] flex items-center justify-center bg-gray-50 text-gray-400 active:scale-90 transition-all border border-gray-100/50">
-            <FileUp size={20} />
-          </button>
-          <button onClick={() => router.push('/mobile/ledger-entry')}
-            className="w-11 h-11 rounded-[16px] flex items-center justify-center bg-gray-50 text-gray-400 active:scale-90 transition-all border border-gray-100/50">
-            <Plus size={20} />
-          </button>
+        <div className="flex items-center gap-1.5">
+           <button className="w-10 h-10 rounded-2xl flex items-center justify-center bg-white text-gray-400 active:scale-90 transition-all border border-gray-100 shadow-sm">
+             <FileUp size={16} />
+           </button>
+           <button onClick={() => router.push('/mobile/ledger-entry')}
+             className="w-10 h-10 rounded-2xl flex items-center justify-center bg-slate-900 text-white active:scale-95 transition-all shadow-[0_10px_20px_-5px_rgba(15,23,42,0.3)]">
+             <Plus size={22} strokeWidth={2.5} />
+           </button>
         </div>
-      </div>
-
-      <div className="flex p-1.5 bg-gray-50 rounded-[28px] border border-gray-100 mb-6">
-        {[
-          {id: 'calendar', label: '달력'}, 
-          {id: 'history', label: '목록'},
-          {id: 'group', label: '공동'}
-        ].map(tab => (
-          <button key={tab.id} onClick={() => setViewMode(tab.id as 'calendar' | 'history' | 'group')}
-            className={`flex-1 py-3.5 rounded-[22px] font-black text-[13px] transition-all duration-300 ${
-              viewMode === tab.id ? 'bg-white shadow-md text-gray-800' : 'text-gray-400 font-bold'
-            }`}>
-            {tab.label}
-          </button>
-        ))}
       </div>
 
       {viewMode === 'group' ? (
         <GroupLedgerView />
       ) : viewMode === 'calendar' ? (
-        <div className="animate-fade-in space-y-4">
-           <div className="flex items-center justify-between p-7 rounded-[40px] bg-white border border-gray-50 shadow-xl">
-             <button className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-50 text-gray-800 active:scale-75 transition-transform"><ChevronLeft size={20} /></button>
-             <div className="text-center">
-                <h3 className="text-xl font-black text-gray-800 tracking-tighter">2026년 3월</h3>
-                <p className="text-[11px] font-black text-rose-500 mt-1 tracking-tight">지출 계: ₩{totalExpense.toLocaleString()}</p>
+        <div className="animate-fade-in space-y-3">
+           <div className="px-4 py-2.5 rounded-[32px] bg-white border border-gray-50 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)] flex items-center justify-between gap-3">
+             <button className="w-8 h-8 rounded-lg flex items-center justify-center bg-gray-50 text-gray-400 active:scale-75 transition-transform"><ChevronLeft size={16} /></button>
+             
+             <div className="flex-1 text-center">
+                <h3 className="text-[16px] font-black text-slate-800 tracking-tighter mb-0.5">2026년 3월</h3>
+                <div className="flex items-center justify-center gap-4">
+                   <div className="flex items-center gap-1">
+                      <span className="text-[8px] font-black text-gray-400">수입</span>
+                      <span className="text-[14px] font-black text-emerald-500 tracking-tighter leading-none">₩{totalIncome.toLocaleString()}</span>
+                   </div>
+                   <div className="w-px h-3 bg-gray-100" />
+                   <div className="flex items-center gap-1">
+                      <span className="text-[8px] font-black text-gray-400">지출</span>
+                      <span className="text-[14px] font-black text-rose-500 tracking-tighter leading-none">₩{totalExpense.toLocaleString()}</span>
+                   </div>
+                </div>
              </div>
-             <button className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-50 text-gray-800 active:scale-75 transition-transform"><ChevronRight size={20} /></button>
+
+             <button className="w-8 h-8 rounded-lg flex items-center justify-center bg-gray-50 text-gray-400 active:scale-75 transition-transform"><ChevronRight size={16} /></button>
            </div>
 
-           <section className="p-8 rounded-[48px] bg-white border border-gray-50 shadow-xl relative overflow-hidden group">
-              <div className="flex items-center justify-between mb-8">
-                 <h3 className="text-[16px] font-black text-gray-800 tracking-tight">지출 트렌드</h3>
-                 <span className="text-[10px] font-black text-gray-400 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100 uppercase tracking-widest">최근 6개월</span>
+           <section className="p-5 rounded-[36px] bg-white border border-gray-50 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)] relative overflow-hidden group">
+              <div className="flex items-center justify-between mb-4">
+                 <div className="flex items-center gap-1.5">
+                    <div className="w-1 h-2.5 bg-rose-500 rounded-full" />
+                    <h3 className="text-[14px] font-black text-gray-800 tracking-tight">지출 트렌드</h3><button onClick={() => setViewMode("history")} className="flex items-center gap-0.5 text-[12px] font-black text-slate-400 active:scale-95 transition-all">상세보기 <ChevronRight size={14} /></button></div>
+                 <span className="text-[9px] font-black text-gray-400">최근 6개월</span>
               </div>
-              <AreaTrendChart />
-              <div className="mt-10 flex items-center gap-6">
+              <div className="scale-y-90 origin-top -mb-4">
+                <AreaTrendChart />
+              </div>
+              <div className="mt-4 flex items-center gap-6">
                  <div className="flex-[1.5]">
-                    <h4 className="text-[13px] font-black text-gray-400 uppercase tracking-widest opacity-60 mb-1">카테고리 비율</h4>
-                    <p className="text-[17px] font-black text-gray-800 tracking-tight">가장 많이 쓴 카테고리</p>
-                    <p className="text-[22px] font-black text-rose-500 tracking-tighter">식사 (30%)</p>
+                    <p className="text-[16px] font-black text-rose-500 tracking-tighter">식사 (30%)</p>
                  </div>
                  <div className="flex-1 flex justify-end">
                     <SimplePieChart data={categories} />
@@ -118,17 +121,15 @@ export function LedgerView({
            <LedgerCalendar 
              selectedDate={selectedLedgerDate}
              onDateSelect={setSelectedLedgerDate}
-             onViewDetail={() => setViewMode('history')}
              transactions={transactions}
            />
 
-           <section className="mt-8">
+           <section className="mt-4">
               <div className="flex items-center justify-between mb-4 px-4">
-                <h3 className="text-[17px] font-black text-gray-800 tracking-tighter">
-                  {selectedLedgerDate.getDate()}일 소비 현황
-                </h3>
-              </div>
-              <div className="bg-white rounded-[44px] border border-gray-100 shadow-xl overflow-hidden divide-y divide-gray-50">
+                <h3 className="text-[16px] font-black text-slate-800 tracking-tighter">
+                  {String(selectedLedgerDate.getMonth() + 1).padStart(2, "0")}월 {String(selectedLedgerDate.getDate()).padStart(2, "0")}일 ({["일","월","화","수","목","금","토"][selectedLedgerDate.getDay()]}) 소비 현황
+                </h3><button onClick={() => setViewMode("history")} className="flex items-center gap-0.5 text-[12px] font-black text-slate-400 active:scale-95 transition-all">상세보기 <ChevronRight size={14} /></button></div>
+              <div className="bg-white rounded-[38px] border border-gray-100 shadow-[0_15px_40px_-10px_rgba(0,0,0,0.06)] overflow-hidden divide-y divide-gray-50 px-3 py-1">
                 {transactions
                   .filter(tx => {
                     const txDate = new Date(tx.date);
@@ -153,7 +154,7 @@ export function LedgerView({
         </div>
       ) : (
         <div className="animate-fade-in space-y-6">
-          <div className="flex flex-col gap-4 p-8 rounded-[48px] bg-slate-900 text-white shadow-2xl relative overflow-hidden">
+          <div className="flex flex-col gap-4 p-6 rounded-[32px] bg-slate-900 text-white shadow-2xl relative overflow-hidden">
              <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12">
                 <FileUp size={80} />
              </div>
@@ -161,7 +162,7 @@ export function LedgerView({
                <div className="flex items-center gap-2 mb-3">
                   <div className="px-2.5 py-1 rounded-full bg-rose-500/20 backdrop-blur-md border border-rose-500/30 flex items-center gap-1.5 animate-pulse">
                      <Sparkles size={10} className="text-rose-300" />
-                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-rose-300">Transaction History</p>
+                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-rose-300">소비 내역</p>
                   </div>
                </div>
                <h3 className="text-[34px] font-black tracking-tighter mb-6 leading-none">전체 소비 내역</h3>
@@ -191,7 +192,7 @@ export function LedgerView({
                      {dailyTxs.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0).toLocaleString()}원 지출
                    </span>
                 </div>
-                <div className="bg-white rounded-[44px] border border-gray-100 shadow-xl overflow-hidden divide-y divide-gray-50">
+                <div className="bg-white rounded-[38px] border border-gray-100 shadow-[0_15px_40px_-10px_rgba(0,0,0,0.06)] overflow-hidden divide-y divide-gray-50 px-3 py-1">
                   {dailyTxs.map(tx => (
                     <TransactionItem 
                       key={tx.id} 
@@ -235,3 +236,5 @@ export function LedgerView({
     </div>
   );
 }
+
+

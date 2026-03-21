@@ -40,7 +40,9 @@ async function getSupabaseSession(request: NextRequest) {
     });
 
     const { data: { session } } = await supabase.auth.getSession();
-    return session;
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    return { session, user };
   } catch {
     return null;
   }
@@ -63,13 +65,16 @@ export async function proxyToBackend(
   });
 
   // Inject Supabase JWT and accountId from session
-  const session = await getSupabaseSession(request);
+  const authData = await getSupabaseSession(request);
+  const session = authData?.session;
+  const user = authData?.user;
 
   if (session?.access_token) {
     // Pass JWT to backend for verification
     headers.set("Authorization", `Bearer ${session.access_token}`);
     // Extract accountId (sub) from JWT and inject as X-Account-Id
-    const accountId = session.user?.id;
+    // Use user.id from getUser() to be secure and avoid Supabase session.user warnings
+    const accountId = user?.id || session.user?.id;
     if (accountId) {
       headers.set("X-Account-Id", accountId);
     }
