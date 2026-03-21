@@ -76,6 +76,7 @@ class CardManagementRepository(
             this.isMain = request.isMain
             this.isPinned = request.isPinned
             this.features = objectMapper.writeValueAsString(request.features)
+            this.imageUrl = request.imageUrl
             this.issuedAt = LocalDate.now()
             this.isActive = true
         }

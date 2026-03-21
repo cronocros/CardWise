@@ -445,6 +445,7 @@ export interface UserCardSummaryResponse {
   cardNickname: string | null;
   issuedAt: string;
   isActive: boolean;
+  imageUrl?: string;
 }
 
 export interface UserCardsResponse {
@@ -465,6 +466,7 @@ export interface CardSummaryDto {
   brandId: string;
   cardType: 'CREDIT' | 'DEBIT';
   features: string[];
+  imageUrl?: string;
 }
 
 export interface CardsResponse {
@@ -486,6 +488,7 @@ export interface RegisterCardDetailedRequest {
   isNotificationEnabled: boolean;
   isMain: boolean;
   isPinned: boolean;
+  imageUrl?: string;
 }
 
 export interface RegisterCardRequest {

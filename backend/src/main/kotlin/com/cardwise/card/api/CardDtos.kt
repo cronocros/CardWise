@@ -22,7 +22,8 @@ data class RegisterCardDetailedRequest(
     val features: List<String>,
     val isNotificationEnabled: Boolean,
     val isMain: Boolean,
-    val isPinned: Boolean
+    val isPinned: Boolean,
+    val imageUrl: String? = null
 )
 
 data class CardMetadataResponse(
@@ -48,7 +49,8 @@ data class CardSummaryDto(
     val issuerId: String,
     val brandId: String,
     val cardType: String,
-    val features: List<String> = emptyList()
+    val features: List<String> = emptyList(),
+    val imageUrl: String? = null
 )
 
 data class UpdateCardRequest(
@@ -63,6 +65,7 @@ data class UserCardSummaryResponse(
     val cardNickname: String?,
     val issuedAt: LocalDate,
     val isActive: Boolean,
+    val imageUrl: String? = null
 )
 
 data class UserCardDetailResponse(

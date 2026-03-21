@@ -6,6 +6,8 @@ import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import org.hibernate.annotations.JdbcTypeCode
@@ -83,7 +85,10 @@ open class CardEntity(
     var hasPerformanceTier: Boolean = true,
 
     @Column(name = "is_active")
-    var isActive: Boolean = true
+    var isActive: Boolean = true,
+
+    @Column(name = "image_url")
+    var imageUrl: String? = null
 )
 
 enum class CardType { CREDIT, DEBIT }
@@ -92,6 +97,7 @@ enum class CardType { CREDIT, DEBIT }
 @Table(name = "user_card")
 open class UserCardEntity(
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_card_id")
     var userCardId: Long? = null,
 
@@ -146,6 +152,9 @@ open class UserCardEntity(
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "features", columnDefinition = "jsonb")
     var features: String? = null,
+
+    @Column(name = "image_url")
+    var imageUrl: String? = null,
 
     @Column(name = "is_active")
     var isActive: Boolean = true

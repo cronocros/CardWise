@@ -66,6 +66,8 @@ export default function AddCardPage() {
     target: 300000,
     annualTarget: 10000000,
     features: [] as string[],
+    imageUrl: null as string | null,
+    useActualImage: true,
     isNotificationEnabled: true,
     isMain: false,
     isPinned: false
@@ -118,6 +120,13 @@ export default function AddCardPage() {
   }, [searchKeyword]);
 
   const selectProduct = (p: CardSummaryDto) => {
+    // Backend API might not return imageUrl if not rebuilt/restarted.
+    // Force fallback for Deep Dream during migration.
+    let finalImageUrl = p.imageUrl || null;
+    if (!finalImageUrl && p.cardName.includes('Deep Dream')) {
+      finalImageUrl = '/images/cards/shinhan_deepdream.png';
+    }
+
     setFormData(prev => ({
       ...prev,
       name: p.cardName,
@@ -125,7 +134,8 @@ export default function AddCardPage() {
       brandId: p.brandId,
       cardId: p.cardId,
       type: p.cardType as 'CREDIT' | 'DEBIT',
-      features: p.features
+      features: p.features,
+      imageUrl: finalImageUrl
     }));
     setSearchKeyword('');
     setShowSearchResults(false);
@@ -175,7 +185,8 @@ export default function AddCardPage() {
         features: formData.features,
         isNotificationEnabled: formData.isNotificationEnabled,
         isMain: formData.isMain,
-        isPinned: formData.isPinned
+        isPinned: formData.isPinned,
+        imageUrl: formData.useActualImage ? formData.imageUrl || undefined : undefined
       });
 
       // Simple local sync
@@ -231,47 +242,102 @@ export default function AddCardPage() {
         <section className="space-y-3">
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">디자인 미리보기</p>
           <div 
-            className="w-full h-44 rounded-[28px] p-6 flex flex-col justify-between text-white shadow-xl relative overflow-hidden transition-all duration-500"
-            style={{ background: formData.type === 'CREDIT' ? 'linear-gradient(135deg, #1e293b, #0f172a)' : 'linear-gradient(135deg, #f43f5e, #e11d48)' }}
+            className="w-full h-[176px] rounded-[32px] p-6 flex flex-col justify-between text-white shadow-xl relative overflow-hidden transition-all duration-500"
+            style={{ 
+              background: (formData.useActualImage && formData.imageUrl) 
+                ? 'none' 
+                : (formData.type === 'CREDIT' ? 'linear-gradient(135deg, #1e293b, #0f172a)' : 'linear-gradient(135deg, #f43f5e, #e11d48)') 
+            }}
           >
+            {formData.useActualImage && formData.imageUrl && (
+              <>
+                <img 
+                  src={formData.imageUrl} 
+                  alt="Card Design" 
+                  className="absolute inset-0 w-full h-full object-cover z-0 animate-fade-in"
+                />
+                <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px] z-[5]" />
+              </>
+            )}
             <div className="flex justify-between items-start relative z-10">
-              <div className="flex flex-col">
-                <span className="text-[9px] font-bold tracking-widest uppercase opacity-60">
-                   {metadata?.issuers.find(i => i.id === formData.issuerId)?.name || 'issuer'}
-                </span>
-                <p className="text-[15px] font-black tracking-tight mt-0.5">{formData.name || '상품을 선택하세요'}</p>
-              </div>
-              <div className="flex gap-1.5 h-6 items-center">
-                <span className="text-[12px] font-black italic tracking-tighter opacity-80 mr-2 uppercase">
-                  {metadata?.brands.find(b => b.id === formData.brandId)?.name || ''}
-                </span>
-                {formData.isMain && <Star size={14} fill="currentColor" className="text-amber-300" />}
-                {formData.isPinned && <Pin size={14} fill="currentColor" className="text-white rotate-45" />}
-              </div>
+               <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="px-2 py-0.5 rounded-full bg-black/20 backdrop-blur-md border border-white/10 shadow-sm flex items-center justify-center">
+                      <span className="text-[8px] font-black uppercase tracking-widest text-white/60 drop-shadow-md">
+                        {formData.type === 'CREDIT' ? 'CREDIT' : 'DEBIT'}
+                      </span>
+                    </div>
+                    <div className="w-1 h-1 rounded-full bg-white/30" />
+                    <span className="text-[11px] font-black italic tracking-tighter text-white drop-shadow-sm uppercase">
+                      {metadata?.brands.find(b => b.id === formData.brandId)?.name || 'VISA'}
+                    </span>
+                  </div>
+                  <h4 className="text-[14px] font-black text-white tracking-tight drop-shadow-md">
+                    {formData.name || '상품을 선택하세요'}
+                  </h4>
+               </div>
+               <div className="flex flex-col items-end pt-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    {formData.isPinned && <Pin size={16} fill="white" className="text-white drop-shadow-lg rotate-45" />}
+                    {formData.isMain && <Star size={18} fill="#fbbf24" className="text-amber-400 drop-shadow-lg" />}
+                    <span className="text-[7px] font-black text-white/30 uppercase tracking-[0.2em] leading-none ml-1">Valid Thru</span>
+                  </div>
+                  <span className="text-[11px] font-black text-white/70 font-mono tracking-widest leading-none">
+                    {formData.expiry || '12/28'}
+                  </span>
+               </div>
             </div>
-            <div className="space-y-3 relative z-10">
-              <div className="flex items-center gap-3 text-[16px] font-mono tracking-[3px] font-black">
-                <span>{formData.firstFour || '0000'}</span>
-                <span className="opacity-30 tracking-[1px] text-[13px]">••••</span>
-                <span className="opacity-30 tracking-[1px] text-[13px]">••••</span>
-                <span>{formData.lastFour || '0000'}</span>
-              </div>
-              <div className="flex justify-between items-end">
-                 <div className="flex flex-col">
-                    <span className="text-[7px] font-bold opacity-40 uppercase tracking-widest">Valid Thru</span>
-                    <span className="text-[11px] font-black font-mono tracking-widest">{formData.expiry || 'MM/YY'}</span>
+            <div className="relative z-10 -mt-2">
+               <div className="flex items-center gap-4 opacity-40">
+                  <span className="text-[18px] font-black text-white tracking-[0.1em] font-mono leading-none">
+                    {formData.firstFour || '4521'}
+                  </span>
+                  <div className="flex gap-2">
+                    {[1, 2].map(i => (
+                      <div key={i} className="flex gap-1.5">
+                        {[1, 2, 3, 4].map(j => <div key={j} className="w-1 h-1 rounded-full bg-white" />)}
+                      </div>
+                    ))}
+                  </div>
+                  <span className="text-[18px] font-black text-white tracking-[0.1em] font-mono leading-none">
+                    {formData.lastFour || '8888'}
+                  </span>
+               </div>
+            </div>
+             <div className="flex items-center justify-between w-full relative z-10">
+               <div className="flex items-center gap-2.5">
+                 <div className="w-7 h-7 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center">
+                   <div className="w-4 h-3 bg-amber-400/80 rounded-[2px]" />
                  </div>
-                 <div className="flex gap-1.5 bg-white/10 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10 max-h-[26px]">
-                    {formData.features.map(fid => {
-                      const f = FEATURES.find(x => x.id === fid);
-                      return f ? <f.icon key={fid} size={10} className="text-white/80" /> : null;
-                    })}
-                    {formData.isNotificationEnabled && <Bell size={10} className="text-white/80" />}
+                 <div className="text-[10px] text-white/60 font-[900] tracking-widest uppercase">
+                    {formData.issuerId ? (metadata?.issuers.find(i => i.id === formData.issuerId)?.name) : 'CARDWISE'}
                  </div>
-              </div>
+               </div>
+               <div className="flex items-center gap-3 bg-black/20 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-sm max-h-[32px]">
+                {formData.features.map(fid => {
+                  const f = FEATURES.find(x => x.id === fid);
+                  return f ? <f.icon key={fid} size={12} className="text-white/60" /> : null;
+                })}
+                {formData.isNotificationEnabled && <Bell size={12} className="text-white/60" />}
+               </div>
             </div>
           </div>
         </section>
+        
+        <div className="flex items-center justify-between p-4 rounded-[22px] bg-white border border-gray-100 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${formData.useActualImage ? 'bg-rose-500 text-white' : 'bg-gray-200 text-gray-400'}`}>
+              <CreditCard size={14} />
+            </div>
+            <div>
+              <p className="text-[12px] font-black text-slate-800">카드 디자인 적용</p>
+              <p className="text-[10px] font-bold text-slate-400 mt-0.5">{formData.useActualImage ? '공식 이미지 사용 중' : '기본 색상 사용 중'}</p>
+            </div>
+          </div>
+          <button type="button" onClick={() => setFormData({...formData, useActualImage: !formData.useActualImage})} className={`w-12 h-6 rounded-full relative transition-all duration-300 ${formData.useActualImage ? 'bg-rose-500' : 'bg-gray-300'}`}>
+            <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 ${formData.useActualImage ? 'left-7' : 'left-1'}`} />
+          </button>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-4">
@@ -305,11 +371,20 @@ export default function AddCardPage() {
                       <div className="p-4 text-center"><Loader2 size={16} className="animate-spin inline mr-2" /> 검색 중...</div>
                     ) : searchResults.length > 0 ? (
                       searchResults.map(p => (
-                        <button key={p.cardId} type="button" onClick={() => selectProduct(p)} className="w-full p-4 flex flex-col items-start hover:bg-gray-50 rounded-[16px] transition-colors border-b border-gray-50 last:border-0">
-                          <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest">
-                            {metadata?.issuers.find(i => i.id === p.issuerId)?.name} / {p.brandId}
-                          </span>
-                          <span className="text-[14px] font-black text-slate-800">{p.cardName}</span>
+                        <button key={p.cardId} type="button" onClick={() => selectProduct(p)} className="w-full p-4 flex items-center justify-between hover:bg-gray-50 rounded-[16px] transition-colors border-b border-gray-50 last:border-0 text-left">
+                          <div className="flex flex-col">
+                            <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest">
+                              {metadata?.issuers.find(i => i.id === p.issuerId)?.name} / {p.brandId}
+                            </span>
+                            <span className="text-[14px] font-black text-slate-800">{p.cardName}</span>
+                          </div>
+                          {(p.imageUrl || p.cardName.includes('Deep Dream')) && (
+                            <img 
+                              src={p.imageUrl || '/images/cards/shinhan_deepdream.png'} 
+                              alt="" 
+                              className="w-12 h-7 rounded-sm object-cover shadow-sm ml-2" 
+                            />
+                          )}
                         </button>
                       ))
                     ) : (

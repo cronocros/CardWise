@@ -38,7 +38,8 @@ class CardService(
                 features = try {
                     if (it.features != null) objectMapper.readValue(it.features!!, Array<String>::class.java).toList()
                     else emptyList()
-                } catch (e: Exception) { emptyList() }
+                } catch (e: Exception) { emptyList() },
+                imageUrl = it.imageUrl
             )
         })
     }
@@ -108,6 +109,7 @@ class CardService(
             cardNickname = userCard.cardNickname,
             issuedAt = userCard.issuedAt,
             isActive = userCard.isActive,
+            imageUrl = userCard.imageUrl
         )
     }
 
