@@ -4,20 +4,24 @@ import com.cardwise.benefit.api.BenefitCategoryResponse
 import com.cardwise.benefit.api.BenefitRecommendationResponse
 import com.cardwise.benefit.api.BenefitSearchItemResponse
 import com.cardwise.benefit.api.CardBenefitDetailResponse
-import com.cardwise.benefit.infrastructure.BenefitReadRepository
+import com.cardwise.benefit.application.port.`in`.BenefitQueryUseCase
+import com.cardwise.benefit.application.port.out.BenefitReadPort
 import com.cardwise.benefit.infrastructure.BenefitSearchRow
 import com.cardwise.common.exception.NotFoundException
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.util.UUID
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
-class BenefitService(
-    private val benefitReadRepository: BenefitReadRepository,
-) {
-    fun getCategories(limit: Int): List<BenefitCategoryResponse> {
-        return benefitReadRepository.findCategories(limit).map { row ->
+@Transactional(readOnly = true)
+class BenefitQueryService(
+    private val benefitReadPort: BenefitReadPort,
+) : BenefitQueryUseCase {
+
+    override fun getCategories(limit: Int): List<BenefitCategoryResponse> {
+        return benefitReadPort.findCategories(limit).map { row ->
             BenefitCategoryResponse(
                 categoryId = row.categoryId,
                 categoryName = row.categoryName,
@@ -26,7 +30,7 @@ class BenefitService(
         }
     }
 
-    fun searchBenefits(
+    override fun searchBenefits(
         accountId: UUID,
         query: String?,
         categoryId: Long?,
@@ -34,7 +38,7 @@ class BenefitService(
         myCardsOnly: Boolean,
         limit: Int,
     ): List<BenefitSearchItemResponse> {
-        return benefitReadRepository.searchBenefits(
+        return benefitReadPort.searchBenefits(
             accountId = accountId,
             query = query,
             categoryId = categoryId,
@@ -44,7 +48,7 @@ class BenefitService(
         ).map(::toSearchItemResponse)
     }
 
-    fun getRecommendation(
+    override fun getRecommendation(
         accountId: UUID,
         query: String?,
         categoryId: Long?,
@@ -96,10 +100,10 @@ class BenefitService(
         )
     }
 
-    fun getCardBenefits(accountId: UUID, cardId: Long): CardBenefitDetailResponse {
-        val header = benefitReadRepository.findCardBenefitHeader(accountId, cardId)
+    override fun getCardBenefits(accountId: UUID, cardId: Long): CardBenefitDetailResponse {
+        val header = benefitReadPort.findCardBenefitHeader(accountId, cardId)
             ?: throw NotFoundException("카드를 찾을 수 없습니다. id=$cardId")
-        val benefits = benefitReadRepository.findCardBenefits(accountId, cardId).map(::toSearchItemResponse)
+        val benefits = benefitReadPort.findCardBenefits(accountId, cardId).map(::toSearchItemResponse)
 
         return CardBenefitDetailResponse(
             cardId = header.cardId,
@@ -163,41 +167,29 @@ class BenefitService(
 
     private fun computeMatchScore(row: BenefitSearchRow): Int {
         var score = 52
-        if (row.userCardId != null) {
-            score += 18
-        }
-        if (row.userCardId != null && row.isEligible) {
-            score += 15
-        }
+        if (row.userCardId != null) score += 18
+        if (row.userCardId != null && row.isEligible) score += 15
 
         val discountWeight = when (row.discountType) {
             "RATE" -> row.discountValue.multiply(BigDecimal("2.8"))
             else -> row.discountValue.divide(BigDecimal("2500"), 2, RoundingMode.HALF_UP)
         }
         score += discountWeight.toInt().coerceIn(4, 22)
-        if (row.performanceTierId == null) {
-            score += 4
-        }
+        if (row.performanceTierId == null) score += 4
 
         return score.coerceIn(45, 99)
     }
 
-    private fun benefitTypeLabel(benefitType: String): String {
-        return when (benefitType) {
-            "DISCOUNT" -> "할인"
-            "POINT" -> "적립"
-            "CASHBACK" -> "캐시백"
-            "MILEAGE" -> "마일리지"
-            "INTEREST_FREE" -> "무이자"
-            else -> benefitType
-        }
+    private fun benefitTypeLabel(benefitType: String): String = when (benefitType) {
+        "DISCOUNT" -> "할인"
+        "POINT" -> "적립"
+        "CASHBACK" -> "캐시백"
+        "MILEAGE" -> "마일리지"
+        "INTEREST_FREE" -> "무이자"
+        else -> benefitType
     }
 
-    private fun benefitLabel(
-        benefitType: String,
-        discountType: String,
-        discountValue: BigDecimal,
-    ): String {
+    private fun benefitLabel(benefitType: String, discountType: String, discountValue: BigDecimal): String {
         val compactValue = discountValue.stripTrailingZeros().toPlainString()
         return when {
             benefitType == "INTEREST_FREE" && discountType == "FIXED" -> "무이자 ${compactValue}개월"
@@ -210,21 +202,10 @@ class BenefitService(
     }
 
     private fun eligibilityLabel(row: BenefitSearchRow): String {
-        if (row.userCardId == null) {
-            return "전체 카드 기준"
-        }
-        if (row.performanceTierId == null) {
-            return "실적 조건 없음"
-        }
-        if (row.isEligible) {
-            return "적용 가능"
-        }
-
+        if (row.userCardId == null) return "전체 카드 기준"
+        if (row.performanceTierId == null) return "실적 조건 없음"
+        if (row.isEligible) return "적용 가능"
         val remaining = row.remainingToEligible ?: row.requiredPerformanceAmount
-        return if (remaining != null && remaining > 0) {
-            "${remaining}원 더 필요"
-        } else {
-            "실적 미달"
-        }
+        return if (remaining != null && remaining > 0) "${remaining}원 더 필요" else "실적 미달"
     }
 }

@@ -29,6 +29,7 @@ import com.cardwise.performance.infrastructure.UserVoucherEntity
 import com.cardwise.performance.infrastructure.UserVoucherRepository
 import com.cardwise.performance.infrastructure.UserPerformanceEntity
 import com.cardwise.performance.infrastructure.UserPerformanceRepository
+import com.cardwise.performance.application.port.`in`.PerformanceQueryUseCase
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.http.HttpStatus
@@ -61,8 +62,8 @@ class PerformanceService(
     private val userVoucherRepository: UserVoucherRepository,
     private val objectMapper: ObjectMapper,
     private val clock: Clock
-) {
-    fun getPerformance(userCardId: Long, accountId: java.util.UUID): PerformanceResponse {
+) : PerformanceQueryUseCase {
+    override fun getPerformance(userCardId: Long, accountId: java.util.UUID): PerformanceResponse {
         val userCard = userCardRepository.findByUserCardIdAndAccountIdAndIsActiveTrue(userCardId, accountId)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User card not found")
 

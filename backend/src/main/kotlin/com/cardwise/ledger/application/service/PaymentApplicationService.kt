@@ -8,7 +8,7 @@ import com.cardwise.ledger.application.port.out.PaymentPersistencePort
 import com.cardwise.ledger.domain.model.Payment
 import com.cardwise.ledger.domain.model.TransactionType
 import com.cardwise.ledger.dto.*
-import com.cardwise.notification.application.NotificationService
+import com.cardwise.notification.application.port.`in`.NotificationUseCase
 import com.cardwise.notification.infrastructure.NotificationInsertCommand
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
@@ -20,7 +20,7 @@ import java.util.*
 @Transactional(readOnly = true)
 class PaymentApplicationService(
     private val persistencePort: PaymentPersistencePort,
-    private val notificationService: NotificationService,
+    private val notificationUseCase: NotificationUseCase,
     private val eventPublisher: ApplicationEventPublisher
 ) : PaymentUseCase {
 
@@ -53,7 +53,7 @@ class PaymentApplicationService(
         val saved = persistencePort.save(payment)
 
         // Notification Integration
-        notificationService.createNotification(
+        notificationUseCase.createNotification(
             NotificationInsertCommand(
                 accountId = accountId,
                 notificationType = "SYSTEM",

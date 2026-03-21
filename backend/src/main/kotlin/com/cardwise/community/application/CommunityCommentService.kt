@@ -3,6 +3,7 @@ package com.cardwise.community.application
 import com.cardwise.common.api.ApiResponse
 import com.cardwise.common.exception.ForbiddenException
 import com.cardwise.common.exception.NotFoundException
+import com.cardwise.community.application.port.`in`.CommunityCommentUseCase
 import com.cardwise.community.dto.CommentResponse
 import com.cardwise.community.dto.CreateCommentRequest
 import com.cardwise.community.entity.CommunityCommentEntity
@@ -21,8 +22,8 @@ class CommunityCommentService(
     private val commentRepository: CommunityCommentRepository,
     private val postRepository: CommunityPostRepository,
     private val accountRepository: CommunityAccountRepository
-) {
-    fun listComments(postId: Long): ApiResponse<List<CommentResponse>> {
+) : CommunityCommentUseCase {
+    override fun listComments(postId: Long): ApiResponse<List<CommentResponse>> {
         val comments = commentRepository.findAllByPostIdAndDeletedAtIsNullOrderByCreatedAtAsc(postId)
         val authorIds = comments.mapNotNull { it.accountId }.distinct()
         val authorMap = accountRepository.findAuthorProfiles(authorIds)
@@ -43,7 +44,7 @@ class CommunityCommentService(
     }
 
     @Transactional
-    fun createComment(postId: Long, accountId: UUID, request: CreateCommentRequest): ApiResponse<CommentResponse> {
+    override fun createComment(postId: Long, accountId: UUID, request: CreateCommentRequest): ApiResponse<CommentResponse> {
         val post = postRepository.findById(postId).orElseThrow { NotFoundException("Post not found") }
         if (post.deletedAt != null) throw NotFoundException("Post deleted")
 
@@ -62,7 +63,7 @@ class CommunityCommentService(
     }
 
     @Transactional
-    fun deleteComment(commentId: Long, accountId: UUID): ApiResponse<Unit> {
+    override fun deleteComment(commentId: Long, accountId: UUID): ApiResponse<Unit> {
         val comment = commentRepository.findById(commentId).orElseThrow { NotFoundException("Comment not found") }
         if (comment.accountId != accountId) throw ForbiddenException("Only author can delete")
 

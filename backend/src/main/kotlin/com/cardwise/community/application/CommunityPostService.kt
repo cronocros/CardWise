@@ -3,6 +3,7 @@ package com.cardwise.community.application
 import com.cardwise.common.api.ApiResponse
 import com.cardwise.common.exception.ForbiddenException
 import com.cardwise.common.exception.NotFoundException
+import com.cardwise.community.application.port.`in`.CommunityPostUseCase
 import com.cardwise.community.dto.*
 import com.cardwise.community.entity.CommunityCommentEntity
 import com.cardwise.community.entity.CommunityPostBookmarkEntity
@@ -30,8 +31,8 @@ class CommunityPostService(
     private val bookmarkRepository: CommunityPostBookmarkRepository,
     private val accountRepository: CommunityAccountRepository,
     private val objectMapper: ObjectMapper
-) {
-    fun listPosts(accountId: UUID, category: String?, page: Int, limit: Int): ApiResponse<List<PostResponse>> {
+) : CommunityPostUseCase {
+    override fun listPosts(accountId: UUID?, category: String?, page: Int, limit: Int): ApiResponse<List<PostResponse>> {
         val pageable = PageRequest.of((page - 1).coerceAtLeast(0), limit, Sort.by("createdAt").descending())
         val postsPage = if (category != null) {
             postRepository.findAllByCategoryAndDeletedAtIsNull(category, pageable)
@@ -47,7 +48,7 @@ class CommunityPostService(
     }
 
     @Transactional
-    fun getPost(postId: Long, accountId: UUID): ApiResponse<PostResponse> {
+    override fun getPost(postId: Long, accountId: UUID?): ApiResponse<PostResponse> {
         val post = postRepository.findById(postId).orElseThrow { NotFoundException("Post not found") }
         if (post.deletedAt != null) throw NotFoundException("Post deleted")
         
@@ -59,7 +60,7 @@ class CommunityPostService(
     }
 
     @Transactional
-    fun createPost(accountId: UUID, request: CreatePostRequest): ApiResponse<PostResponse> {
+    override fun createPost(accountId: UUID, request: CreatePostRequest): ApiResponse<PostResponse> {
         val post = CommunityPostEntity().apply {
             this.accountId = accountId
             category = request.category
@@ -76,7 +77,7 @@ class CommunityPostService(
     }
 
     @Transactional
-    fun updatePost(postId: Long, accountId: UUID, request: UpdatePostRequest): ApiResponse<PostResponse> {
+    override fun updatePost(postId: Long, accountId: UUID, request: UpdatePostRequest): ApiResponse<PostResponse> {
         val post = postRepository.findById(postId).orElseThrow { NotFoundException("Post not found") }
         if (post.accountId != accountId) throw ForbiddenException("Only author can update")
         
@@ -92,7 +93,7 @@ class CommunityPostService(
     }
 
     @Transactional
-    fun deletePost(postId: Long, accountId: UUID): ApiResponse<Unit> {
+    override fun deletePost(postId: Long, accountId: UUID): ApiResponse<Unit> {
         val post = postRepository.findById(postId).orElseThrow { NotFoundException("Post not found") }
         if (post.accountId != accountId) throw ForbiddenException("Only author can delete")
         
@@ -102,7 +103,7 @@ class CommunityPostService(
     }
 
     @Transactional
-    fun toggleLike(postId: Long, accountId: UUID): ApiResponse<ReactionResponse> {
+    override fun toggleLike(postId: Long, accountId: UUID): ApiResponse<ReactionResponse> {
         val post = postRepository.findById(postId).orElseThrow { NotFoundException("Post not found") }
         val existing = likeRepository.findByPostIdAndAccountId(postId, accountId)
         
@@ -122,7 +123,7 @@ class CommunityPostService(
     }
 
     @Transactional
-    fun toggleBookmark(postId: Long, accountId: UUID): ApiResponse<ReactionResponse> {
+    override fun toggleBookmark(postId: Long, accountId: UUID): ApiResponse<ReactionResponse> {
         val post = postRepository.findById(postId).orElseThrow { NotFoundException("Post not found") }
         val existing = bookmarkRepository.findByPostIdAndAccountId(postId, accountId)
         
@@ -141,7 +142,7 @@ class CommunityPostService(
         return ApiResponse(data = ReactionResponse(postId, active, bookmarkRepository.countByPostId(postId)))
     }
 
-    fun toPostResponse(entity: CommunityPostEntity, accountId: UUID, author: com.cardwise.community.dto.AuthorResponse?): PostResponse {
+    fun toPostResponse(entity: CommunityPostEntity, accountId: UUID?, author: com.cardwise.community.dto.AuthorResponse?): PostResponse {
         val tagsNode = entity.tags
         val tags = if (tagsNode != null && tagsNode.isArray) {
             tagsNode.map { it.asText() }
@@ -158,8 +159,8 @@ class CommunityPostService(
             viewCount = entity.viewCount,
             likeCount = likeRepository.countByPostId(entity.postId!!),
             commentCount = commentRepository.findAllByPostIdAndDeletedAtIsNullOrderByCreatedAtAsc(entity.postId!!).size.toLong(),
-            isLiked = likeRepository.findByPostIdAndAccountId(entity.postId!!, accountId) != null,
-            isBookmarked = bookmarkRepository.findByPostIdAndAccountId(entity.postId!!, accountId) != null,
+            isLiked = accountId?.let { likeRepository.findByPostIdAndAccountId(entity.postId!!, it) } != null,
+            isBookmarked = accountId?.let { bookmarkRepository.findByPostIdAndAccountId(entity.postId!!, it) } != null,
             author = author,
             createdAt = entity.createdAt,
             updatedAt = entity.updatedAt
