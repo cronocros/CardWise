@@ -86,7 +86,7 @@ export function BottomNavigation({ activeTab, onTabChange }: BottomNavProps) {
               <span className={`text-[10px] ${isActive ? 'font-bold' : 'font-medium'}`}>
                 {tab.label}
               </span>
-              {isActive && <div className="w-1 h-1 rounded-full bg-var(--primary-400) mt-px animate-pulse" />}
+              {isActive && <div className="w-1 h-1 rounded-full bg-var(--primary-400) mt-px" />}
             </button>
           );
         })}

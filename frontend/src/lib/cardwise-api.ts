@@ -65,6 +65,7 @@ export type PaymentRecord = {
   krwAmount: number;
   finalKrwAmount?: number;
   paidAt: string;
+  transactionType: "INCOME" | "EXPENSE" | string;
   isAdjusted: boolean;
   tierChanged?: boolean;
   newTierName?: string;
@@ -75,13 +76,46 @@ export interface CreatePaymentRequest {
   merchantName: string;
   krwAmount: number;
   paidAt: string;
+  transactionType: "INCOME" | "EXPENSE" | string;
 }
 
 export interface PaymentListResponse {
   data: PaymentRecord[];
-  meta?: {
-    pagination?: PaginationMeta;
-  };
+  pagination?: PaginationMeta;
+}
+
+export interface UpdatePaymentRequest {
+  userCardId: number;
+  merchantName: string;
+  krwAmount: number;
+  paidAt: string;
+  transactionType: "INCOME" | "EXPENSE" | string;
+}
+
+export async function getPayments(limit = 100) {
+  return tryFetchBackendJson<PaymentListResponse>(`/payments?limit=${limit}`);
+}
+
+export async function updatePayment(paymentId: number, request: UpdatePaymentRequest) {
+  return tryFetchBackendJson<PaymentRecord>(`/payments/${paymentId}`, {
+    method: "PATCH",
+    body: JSON.stringify(request),
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+export async function deletePayment(paymentId: number) {
+  return tryFetchBackendJson<{ success: boolean; message?: string }>(`/payments/${paymentId}`, {
+    method: "DELETE",
+  });
+}
+
+export async function createPayment(request: CreatePaymentRequest) {
+  return tryFetchBackendJson<PaymentRecord>("/payments", {
+    method: "POST",
+    body: JSON.stringify(request),
+    headers: { "Content-Type": "application/json" },
+  });
 }
 
 export interface PerformanceResponse {
@@ -419,6 +453,43 @@ export interface UserCardSummaryResponse {
 
 export interface UserCardsResponse {
   data: UserCardSummaryResponse[];
+}
+
+export interface RegisterCardRequest {
+  cardId: number;
+  issuedAt: string; // ISO Date YYYY-MM-DD
+  cardNickname?: string;
+}
+
+export interface UpdateCardRequest {
+  cardNickname?: string;
+  issuedAt?: string;
+}
+
+export async function getMyCards() {
+  return tryFetchBackendJson<UserCardsResponse>("/my-cards");
+}
+
+export async function registerCard(request: RegisterCardRequest) {
+  return tryFetchBackendJson<UserCardSummaryResponse>("/my-cards", {
+    method: "POST",
+    body: JSON.stringify(request),
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+export async function updateCard(userCardId: number, request: UpdateCardRequest) {
+  return tryFetchBackendJson<UserCardSummaryResponse>(`/my-cards/${userCardId}`, {
+    method: "PATCH",
+    body: JSON.stringify(request),
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+export async function deleteCard(userCardId: number) {
+  return tryFetchBackendJson<DeleteCardResponse>(`/my-cards/${userCardId}`, {
+    method: "DELETE"
+  });
 }
 
 export interface NotificationItemResponse {

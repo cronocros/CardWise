@@ -43,7 +43,7 @@ export function HomeView({
             <div className="flex justify-between items-end mb-2 relative z-10 transition-all">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-4">
-                  <div className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-ping" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-rose-400" />
                   <p className="text-[14px] font-black text-white uppercase tracking-[0.1em] drop-shadow-sm">종합 지출 내역</p>
                 </div>
                 <h2 className="text-[42px] font-black text-white tracking-tighter drop-shadow-2xl leading-none mb-4">

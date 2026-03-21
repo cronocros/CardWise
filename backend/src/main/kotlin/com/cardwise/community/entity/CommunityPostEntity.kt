@@ -35,7 +35,7 @@ open class CommunityPostEntity {
     @Column(name = "image_url")
     var imageUrl: String? = null
 
-    @Column(name = "tags")
+    @Column(name = "tags", columnDefinition = "jsonb")
     @Convert(converter = JsonNodeConverter::class)
     var tags: JsonNode? = null
 

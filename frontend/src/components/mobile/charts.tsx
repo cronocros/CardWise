@@ -71,7 +71,7 @@ export function DonutChart({ data, totalAmountText = '31만 2천원', subText = 
           })}
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none translate-y-2">
-           <div className="w-2.5 h-2.5 bg-rose-500 rounded-full animate-ping mb-2" />
+           <div className="w-2.5 h-2.5 bg-rose-500 rounded-full mb-2" />
            <span className="text-[20px] font-black text-var(--text-strong) tracking-tighter leading-none">{totalAmountText}</span>
            <span className="text-[10px] font-black text-var(--text-soft) uppercase tracking-[0.2em] mt-2 opacity-50">{subText}</span>
         </div>
@@ -350,7 +350,7 @@ export function AreaTrendChart() {
         ].map((p, i) => (
           <g key={i} className="animate-fade-in" style={{ animationDelay: `${1.5 + i * 0.3}s` }}>
             <circle cx={p.x} cy={p.y} r="8" fill="white" className="shadow-lg" />
-            <circle cx={p.x} cy={p.y} r="4" fill={p.color} className="animate-ping" />
+            <circle cx={p.x} cy={p.y} r="4" fill={p.color} />
             
             <foreignObject x={p.x - 40} y={p.up ? p.y - 45 : p.y + 15} width="80" height="30">
               <div className="flex flex-col items-center">
@@ -379,6 +379,7 @@ export function AreaTrendChart() {
 // ─────────────────────────────────────────────────────────────
 export function SimplePieChart({ data }: { data: DonutData[] }) {
   const [animated, setAnimated] = useState(false);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const radius = 38;
   const circumference = 2 * Math.PI * radius;
 
@@ -390,11 +391,12 @@ export function SimplePieChart({ data }: { data: DonutData[] }) {
   return (
     <div className="flex flex-col items-center group">
       <div className="relative">
-        <svg width="160" height="160" viewBox="0 0 100 100" className="transform -rotate-90 drop-shadow-2xl">
+        <svg width="160" height="160" viewBox="0 0 100 100" className="transform -rotate-90 drop-shadow-2xl overflow-visible">
           {data.map((item, i) => {
             const prevSum = data.slice(0, i).reduce((sum, d) => sum + d.percent, 0);
             const dashArray = `${(item.percent / 100) * circumference} ${circumference}`;
             const dashOffset = -((prevSum / 100) * circumference);
+            const isHovered = hoveredIndex === i;
 
             return (
               <circle
@@ -404,19 +406,33 @@ export function SimplePieChart({ data }: { data: DonutData[] }) {
                 r={radius}
                 fill="none"
                 stroke={item.color}
-                strokeWidth="24"
+                strokeWidth={isHovered ? "30" : "24"}
                 strokeDasharray={dashArray}
                 strokeDashoffset={animated ? dashOffset : 0}
                 strokeLinecap="butt"
-                className="transition-all duration-[1500ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-[1.05] origin-center cursor-pointer"
-                style={{ animationDelay: `${i * 0.1}s` }}
+                onMouseEnter={() => setHoveredIndex(i)}
+                onMouseLeave={() => setHoveredIndex(null)}
+                onTouchStart={() => setHoveredIndex(i)}
+                className="transition-all duration-300 ease-out origin-center cursor-pointer"
+                style={{ 
+                  animationDelay: `${i * 0.1}s`,
+                  filter: isHovered ? 'brightness(1.1) drop-shadow(0 0 8px rgba(0,0,0,0.1))' : 'none',
+                  transform: isHovered ? 'scale(1.05)' : 'scale(1)'
+                }}
               />
             );
           })}
         </svg>
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-           <div className="w-12 h-12 bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center shadow-lg border border-white/50">
-              <span className="text-[12px] font-black text-rose-500">Analysis</span>
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+           <div className={`w-20 h-20 bg-white/90 backdrop-blur-lg rounded-full flex flex-col items-center justify-center shadow-2xl border border-white/50 transition-all duration-500 ${hoveredIndex !== null ? 'opacity-100 scale-110' : 'opacity-100 scale-100'}`}>
+              {hoveredIndex !== null ? (
+                <>
+                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">{data[hoveredIndex].name}</span>
+                  <span className="text-[16px] font-black text-rose-500 tracking-tighter leading-none">{data[hoveredIndex].percent}%</span>
+                </>
+              ) : (
+                <span className="text-[13px] font-black text-rose-500 tracking-widest">분석</span>
+              )}
            </div>
         </div>
       </div>

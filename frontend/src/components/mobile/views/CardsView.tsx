@@ -30,7 +30,7 @@ export function CardsView({ cards, setShowAddCard, router }: CardsViewProps) {
         </div>
         <div className="text-center">
            <p className="text-[15px] font-black text-gray-700">새로운 카드 등록</p>
-           <p className="text-[11px] font-bold text-gray-400 mt-1 uppercase tracking-widest">Register New Card</p>
+           <p className="text-[11px] font-bold text-gray-400 mt-1 uppercase tracking-widest">새로운 카드 추가하기</p>
         </div>
       </button>
     </div>

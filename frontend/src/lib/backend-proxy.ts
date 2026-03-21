@@ -1,8 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { backendUrl } from "./cardwise-api";
-
-const DEV_FALLBACK_ACCOUNT_ID = "00000000-0000-0000-0000-000000000001";
+const DEV_FALLBACK_ACCOUNT_ID = "11111111-1111-1111-1111-111111111111"; // TEST_ACCOUNTS.ADMIN
 
 function copyHeaders(source: Headers) {
   const headers = new Headers();

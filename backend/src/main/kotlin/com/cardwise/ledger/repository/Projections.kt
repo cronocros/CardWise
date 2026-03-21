@@ -12,6 +12,7 @@ interface PaymentProjection {
     val krwAmount: Long
     val finalKrwAmount: Long?
     val paidAt: OffsetDateTime
+    val transactionType: String
     val isAdjusted: Boolean
 }
 

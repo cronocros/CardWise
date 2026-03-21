@@ -69,6 +69,7 @@ data class CreatePaymentRequest(
     val krwAmount: Long,
     @field:NotNull
     val paidAt: OffsetDateTime,
+    val transactionType: String = "EXPENSE",
 )
 
 data class UpdatePaymentRequest(
@@ -80,6 +81,7 @@ data class UpdatePaymentRequest(
     val krwAmount: Long,
     @field:NotNull
     val paidAt: OffsetDateTime,
+    val transactionType: String = "EXPENSE",
 )
 
 data class AdjustmentResponse(
@@ -140,6 +142,7 @@ data class PaymentResponse(
     val krwAmount: Long,
     val finalKrwAmount: Long?,
     val paidAt: OffsetDateTime,
+    val transactionType: String = "EXPENSE",
     val isAdjusted: Boolean,
     val createdAt: OffsetDateTime? = null,
     val tierChanged: Boolean? = null,

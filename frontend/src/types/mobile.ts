@@ -13,6 +13,10 @@ export interface Transaction {
   currency: 'KRW' | 'USD';
   exchangeRate?: number;
   benefitInfo?: string; // e.g., "스타벅스 50% 할인"
+  benefitAmount?: number; // amount of benefit received
+  paymentMethod?: string; // "신한카드 (1234)", "카카오페이"
+  items?: string;       // e.g., "로켓배송 외 2건"
+  description?: string; 
 }
 
 export interface Card {

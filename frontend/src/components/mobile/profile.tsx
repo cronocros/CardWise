@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import {
   Settings, Shield, Bell, HelpCircle, LogOut, ChevronRight,
   Camera, Award, Star, Zap,
   Crown, CreditCard, Gift, Globe, FileText, Trash2, MessageCircle
 } from 'lucide-react';
 import { SettingsDetailModal } from './modals';
+import { logout } from '@/app/login/actions';
 
 const BADGES = [
   { id: 'pioneer', label: '초기 개척자', emoji: '🥇', description: 'CardWise 첫 번째 가입자 1000명 내 가입', achieved: true, cat: '금융 & 자산' },
@@ -65,13 +65,18 @@ const MENU_GROUPS = [
   },
 ];
 
-export function ProfileView({ onSeeMoreBadges }: { onSeeMoreBadges: () => void }) {
-  const router = useRouter();
+export function ProfileView({ 
+  onSeeMoreBadges, 
+  user 
+}: { 
+  onSeeMoreBadges: () => void;
+  user: { displayName: string, email: string, level: number, exp: number, tierName: string } | null;
+}) {
   const [selectedSetting, setSelectedSetting] = useState<string | null>(null);
   
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if (confirm('로그아웃 하시겠습니까?')) {
-      router.push('/mobile/login');
+      await logout();
     }
   };
 
@@ -103,21 +108,22 @@ export function ProfileView({ onSeeMoreBadges }: { onSeeMoreBadges: () => void }
 
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                <h3 className="text-[26px] font-black text-slate-900 tracking-tighter leading-none">크로노 님</h3>
+                <h3 className="text-[26px] font-black text-slate-900 tracking-tighter leading-none">{user?.displayName || 'Loading...'} 님</h3>
                 <div className="px-2.5 py-1 rounded-lg text-[9px] font-black text-amber-600 bg-amber-50 border border-amber-100 shadow-sm flex items-center gap-1 uppercase tracking-tighter">
-                  <Crown size={10} strokeWidth={3} /> PLATINUM
+                  <Crown size={10} strokeWidth={3} /> {user?.tierName || '플래티넘'}
                 </div>
               </div>
-              <p className="text-[13px] text-slate-400 font-bold tracking-tight opacity-60">chrono-user@cardwise.com</p>
+              <p className="text-[13px] text-slate-400 font-bold tracking-tight opacity-60">{user?.email || 'Loading...'}</p>
               
               <div className="mt-4 flex flex-col gap-2">
-                 <div className="flex items-center justify-between px-1">
-                   <span className="text-[9px] font-black text-rose-500 uppercase tracking-widest leading-none">레벨 24 엘리트</span>
-                   <span className="text-[9px] font-black text-slate-300 leading-none">840 / 1000 경험치</span>
-                 </div>
-                 <div className="h-2 w-full bg-slate-50 rounded-full overflow-hidden p-0.5 border border-slate-100">
-                    <div className="h-full w-[84%] bg-gradient-to-r from-rose-500 to-indigo-500 rounded-full shadow-[0_0_10px_rgba(244,63,94,0.3)] transition-all duration-1000" />
-                 </div>
+                  <div className="flex items-center justify-between px-1">
+                    <span className="text-[9px] font-black text-rose-500 uppercase tracking-widest leading-none">레벨 {user?.level || 1}</span>
+                    <span className="text-[9px] font-black text-slate-300 leading-none">{user?.exp || 0} / 1000 경험치</span>
+                  </div>
+                  <div className="h-2 w-full bg-slate-50 rounded-full overflow-hidden p-0.5 border border-slate-100">
+                     <div className="h-full bg-gradient-to-r from-rose-500 to-indigo-500 rounded-full shadow-[0_0_10px_rgba(244,63,94,0.3)] transition-all duration-1000" 
+                          style={{ width: `${Math.min(100, (user?.exp || 0) / 10)}%` }} />
+                  </div>
               </div>
             </div>
           </div>
@@ -155,7 +161,7 @@ export function ProfileView({ onSeeMoreBadges }: { onSeeMoreBadges: () => void }
             </div>
             <div>
                <h4 className="text-[17px] font-black text-slate-800 tracking-tight">수집한 뱃지</h4>
-               <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mt-0.5">Achievements</p>
+               <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mt-0.5">업적</p>
             </div>
           </div>
           <span className="text-[13px] font-black text-rose-500 bg-rose-50 px-3 py-1 rounded-full">{achievedCount} / {BADGES.length}</span>

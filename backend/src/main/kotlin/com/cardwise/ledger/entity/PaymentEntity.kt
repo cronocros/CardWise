@@ -38,6 +38,9 @@ open class PaymentEntity {
     @Column(name = "is_adjusted", nullable = false)
     var isAdjusted: Boolean = false
 
+    @Column(name = "transaction_type", nullable = false)
+    var transactionType: String = "EXPENSE"
+
     @Column(name = "deleted_at")
     var deletedAt: OffsetDateTime? = null
 

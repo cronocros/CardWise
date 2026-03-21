@@ -19,9 +19,11 @@ const TEMPLATES: CardTemplate[] = [
 ];
 
 import { Card } from '@/types/mobile';
+import { registerCard } from '@/lib/cardwise-api';
 
 export function CardRegistrationModal({ isOpen, onClose, onAdd }: { isOpen: boolean, onClose: () => void, onAdd: (card: Card) => void }) {
   const [step, setStep] = useState<'type' | 'template' | 'manual' | 'success'>('type');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     firstFour: '',
@@ -35,19 +37,39 @@ export function CardRegistrationModal({ isOpen, onClose, onAdd }: { isOpen: bool
 
   if (!isOpen) return null;
 
-  const handleManualSubmit = (e: React.FormEvent) => {
+  const handleManualSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setStep('success');
-    setTimeout(() => {
-      onAdd({
-        ...formData,
-        id: Date.now().toString(),
-        gradient: 'linear-gradient(135deg, #f43f5e, #fb7185)',
-        current: 0,
-        target: 300000
-      });
-      onClose();
-    }, 1500);
+    setIsSubmitting(true);
+    
+    // In a real app, we'd map template/issuer to a real cardId from the DB
+    // For now, we use a dummy cardId: 1
+    const res = await registerCard({
+      cardId: 1, 
+      issuedAt: new Date().toISOString().split('T')[0],
+      cardNickname: formData.name
+    });
+
+    if (res) {
+      setStep('success');
+      setTimeout(() => {
+        onAdd({
+          ...formData,
+          id: (res.userCardId || Date.now()).toString(),
+          gradient: 'linear-gradient(135deg, #f43f5e, #fb7185)',
+          current: 0,
+          target: 300000,
+          brand: 'visa',
+          tier: 'classic',
+          color: '#f43f5e',
+          currency: 'KRW'
+        } as Card);
+        onClose();
+        window.location.reload(); // Refresh to fetch from backend
+      }, 1500);
+    } else {
+      alert('카드 등록에 실패했습니다. 다시 시도해주세요.');
+      setIsSubmitting(false);
+    }
   };
 
   const handleTemplateSelect = (template: CardTemplate) => {
@@ -195,9 +217,10 @@ export function CardRegistrationModal({ isOpen, onClose, onAdd }: { isOpen: bool
 
             <button 
               type="submit"
-              className="w-full p-6 rounded-[28px] bg-rose-500 text-white font-black text-[17px] shadow-lg shadow-rose-500/30 active:scale-95 transition-all mt-4"
+              disabled={isSubmitting}
+              className="w-full p-6 rounded-[28px] bg-rose-500 text-white font-black text-[17px] shadow-lg shadow-rose-500/30 active:scale-95 transition-all mt-4 disabled:opacity-50"
             >
-              카드 등록 완료
+              {isSubmitting ? '등록 중...' : '카드 등록 완료'}
             </button>
           </form>
         )}

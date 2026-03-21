@@ -30,7 +30,7 @@ class CategoryService(
 }
 
 @RestController
-@RequestMapping("/api/v1/categories")
+@RequestMapping("/api/v1/ledger/categories")
 class CategoryController(
     private val categoryService: CategoryService,
 ) {

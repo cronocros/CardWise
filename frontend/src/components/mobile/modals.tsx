@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { X, Home, CreditCard, Gift, LineChart, Users, Settings, User, Sparkles } from 'lucide-react';
+import { X, Home, CreditCard, Gift, LineChart, Users, Settings, User, Sparkles, Pencil, Trash2, MapPin, Tag, Smartphone, ShoppingBag } from 'lucide-react';
 import { Mascot } from './mascot';
 import { Transaction, Card, CommunityPost, CommunityComment } from '@/types/mobile';
 
@@ -151,11 +151,40 @@ interface AddTransactionModalProps {
 
 export function AddTransactionModal({ isOpen, onClose, cards }: AddTransactionModalProps) {
   const [visible, setVisible] = useState(false);
+  const [transactionType, setTransactionType] = useState<'EXPENSE' | 'INCOME'>('EXPENSE');
+  const [amount, setAmount] = useState('');
+  const [merchantName, setMerchantName] = useState('');
+  const [selectedCardId, setSelectedCardId] = useState<number>(Number(cards[0]?.id) || 0);
 
   useEffect(() => {
     const timer = setTimeout(() => setVisible(isOpen), 25);
     return () => clearTimeout(timer);
   }, [isOpen]);
+
+  const handleSave = async () => {
+    if (!amount || !merchantName) {
+       alert('금액과 사용처를 입력해주세요.');
+       return;
+    }
+
+    const { createPayment } = await import('@/lib/cardwise-api');
+    const result = await createPayment({
+       userCardId: selectedCardId,
+       merchantName,
+       krwAmount: parseInt(amount.replace(/,/g, '')),
+       paidAt: new Date().toISOString(),
+       transactionType
+    });
+
+    if (result) {
+       alert(`${transactionType === 'INCOME' ? '수입' : '지출'} 내역이 저장되었습니다.`);
+       onClose();
+       // Refresh page or update state in parent
+       window.location.reload(); 
+    } else {
+       alert('저장에 실패했습니다.');
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -166,9 +195,26 @@ export function AddTransactionModal({ isOpen, onClose, cards }: AddTransactionMo
        <div className={`relative w-full max-w-[430px] bg-white rounded-t-[50px] p-9 pb-14 shadow-2xl transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${visible ? 'translate-y-0' : 'translate-y-full'}`}>
           <div className="w-14 h-1.5 bg-gray-200/60 rounded-full mx-auto mb-10" />
           
-          <div className="flex items-center justify-between mb-10">
-             <h2 className="text-[26px] font-black text-var(--text-strong) tracking-tighter">소비 내역 추가</h2>
+          <div className="flex items-center justify-between mb-8">
+             <h2 className="text-[26px] font-black text-var(--text-strong) tracking-tighter">
+                {transactionType === 'EXPENSE' ? '소비 내역 추가' : '수입 내역 추가'}
+             </h2>
              <button onClick={onClose} className="w-11 h-11 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 active:scale-75 transition-transform"><X size={22} /></button>
+          </div>
+
+          <div className="flex p-1.5 bg-gray-50 rounded-[22px] mb-8 border border-gray-100">
+             <button 
+               onClick={() => setTransactionType('EXPENSE')}
+               className={`flex-1 py-3 rounded-[18px] text-[13px] font-black transition-all ${transactionType === 'EXPENSE' ? 'bg-white shadow-md text-rose-500' : 'text-gray-400'}`}
+             >
+                지출
+             </button>
+             <button 
+               onClick={() => setTransactionType('INCOME')}
+               className={`flex-1 py-3 rounded-[18px] text-[13px] font-black transition-all ${transactionType === 'INCOME' ? 'bg-white shadow-md text-emerald-500' : 'text-gray-400'}`}
+             >
+                수입
+             </button>
           </div>
 
           <div className="space-y-8">
@@ -178,9 +224,13 @@ export function AddTransactionModal({ isOpen, onClose, cards }: AddTransactionMo
                   <span className="text-[10px] font-black text-var(--primary-400)">+ 카드 추가</span>
                 </div>
                 <div className="flex gap-4 overflow-x-auto pb-5 -mx-2 px-2 scrollbar-hide">
-                   {cards.map((card, i) => (
-                      <div key={i} className={`flex-shrink-0 p-5 rounded-[28px] border-2 transition-all cursor-pointer min-w-[130px] active:scale-95 ${i === 0 ? 'border-var(--primary-400) bg-var(--primary-50) shadow-lg shadow-rose-100' : 'border-gray-50 bg-white'}`}>
-                         <div className="w-10 h-6 rounded-lg mb-3 shadow-sm" style={{ background: card.gradient }} />
+                   {cards.map((card) => (
+                      <div 
+                         key={card.id} 
+                         onClick={() => setSelectedCardId(Number(card.id))}
+                         className={`flex-shrink-0 p-5 rounded-[28px] border-2 transition-all cursor-pointer min-w-[130px] active:scale-95 ${selectedCardId === Number(card.id) ? 'border-var(--primary-400) bg-var(--primary-50) shadow-lg shadow-rose-100' : 'border-gray-50 bg-white'}`}
+                      >
+                         <div className="w-10 h-6 rounded-lg mb-3 shadow-sm" style={{ background: card.gradient || card.color }} />
                          <p className="text-[12px] font-black text-var(--text-strong) whitespace-nowrap tracking-tight">{card.name}</p>
                       </div>
                    ))}
@@ -189,20 +239,38 @@ export function AddTransactionModal({ isOpen, onClose, cards }: AddTransactionMo
 
              <div className="space-y-6">
                 <div className="p-7 rounded-[32px] bg-gray-50/70 border border-gray-100/50 shadow-inner group focus-within:bg-white focus-within:border-var(--primary-100) transition-all">
-                   <p className="text-[11px] font-black text-var(--text-soft) uppercase tracking-widest mb-2 opacity-60 group-focus-within:text-var(--primary-400) group-focus-within:opacity-100">사용 금액</p>
+                   <p className="text-[11px] font-black text-var(--text-soft) uppercase tracking-widest mb-2 opacity-60 group-focus-within:text-var(--primary-400) group-focus-within:opacity-100">금액</p>
                    <div className="flex items-baseline gap-2">
-                      <input type="text" placeholder="0" className="bg-transparent text-[42px] font-display font-black text-var(--text-strong) w-full outline-none placeholder:opacity-20 translate-y-1" autoFocus />
+                      <input 
+                         type="text" 
+                         value={amount}
+                         onChange={(e) => setAmount(e.target.value.replace(/[^0-9]/g, ''))}
+                         placeholder="0" 
+                         className="bg-transparent text-[42px] font-display font-black text-var(--text-strong) w-full outline-none placeholder:opacity-20 translate-y-1" 
+                         autoFocus 
+                      />
                       <span className="text-xl font-black text-var(--text-soft)">원</span>
                    </div>
                 </div>
 
                 <div className="p-7 rounded-[32px] bg-gray-50/70 border border-gray-100/50 shadow-inner group focus-within:bg-white focus-within:border-var(--primary-100) transition-all">
-                   <p className="text-[11px] font-black text-var(--text-soft) uppercase tracking-widest mb-2 opacity-60 group-focus-within:text-var(--primary-400) group-focus-within:opacity-100">사용처</p>
-                   <input type="text" placeholder="예: 스타벅스 강남역점" className="bg-transparent text-[18px] font-black text-var(--text-strong) w-full outline-none placeholder:opacity-20" />
+                   <p className="text-[11px] font-black text-var(--text-soft) uppercase tracking-widest mb-2 opacity-60 group-focus-within:text-var(--primary-400) group-focus-within:opacity-100">
+                      {transactionType === 'EXPENSE' ? '사용처' : '출처'}
+                   </p>
+                   <input 
+                      type="text" 
+                      value={merchantName}
+                      onChange={(e) => setMerchantName(e.target.value)}
+                      placeholder={transactionType === 'EXPENSE' ? "예: 스타벅스 강남역점" : "예: 월급"} 
+                      className="bg-transparent text-[18px] font-black text-var(--text-strong) w-full outline-none placeholder:opacity-20" 
+                   />
                 </div>
              </div>
 
-             <button className="w-full py-6 rounded-[28px] bg-var(--text-strong) text-white font-black text-[17px] shadow-2xl shadow-gray-400/30 active:scale-95 transition-all mt-6 uppercase tracking-[0.2em] h-20">
+             <button 
+                onClick={handleSave}
+                className="w-full py-6 rounded-[28px] bg-var(--text-strong) text-white font-black text-[17px] shadow-2xl shadow-gray-400/30 active:scale-95 transition-all mt-6 uppercase tracking-[0.2em] h-20"
+             >
                 입력 완료
              </button>
           </div>
@@ -217,11 +285,13 @@ interface TransactionDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   tx: Transaction | null;
+  onRefresh?: () => void;
 }
 
 
-export function TransactionDetailModal({ isOpen, onClose, tx }: TransactionDetailModalProps) {
+export function TransactionDetailModal({ isOpen, onClose, tx, onRefresh }: TransactionDetailModalProps) {
   const [visible, setVisible] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setVisible(isOpen), 30);
@@ -230,47 +300,153 @@ export function TransactionDetailModal({ isOpen, onClose, tx }: TransactionDetai
 
   if (!isOpen || !tx) return null;
 
+  const formattedDate = new Date(tx.date).toLocaleDateString('ko-KR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    weekday: 'long',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+
+  const handleDelete = async () => {
+     if (!window.confirm('정말로 이 내역을 삭제하시겠습니까?')) return;
+     
+     setIsDeleting(true);
+     const { deletePayment } = await import('@/lib/cardwise-api');
+     const res = await deletePayment(parseInt(tx.id.replace('tx-', '')));
+     
+     if (res) {
+        alert('내역이 삭제되었습니다.');
+        onRefresh?.();
+        onClose();
+        window.location.reload(); // Temporary till we have a better state refresh
+     } else {
+        alert('삭제에 실패했습니다. (샘플 데이터인 경우 삭제 불가)');
+        setIsDeleting(false);
+     }
+  };
+
   return (
     <div className={`fixed inset-0 z-[1000] flex items-center justify-center p-6 transition-all duration-300 ${visible ? 'opacity-100' : 'opacity-0'}`}>
-       <div className="absolute inset-0 bg-[#0a0005]/80 backdrop-blur-2xl" onClick={onClose} />
+       <div className="absolute inset-0 bg-[#070110]/80 backdrop-blur-3xl" onClick={onClose} />
        
-       <div className={`relative w-full max-w-sm bg-white rounded-[48px] p-9 shadow-2xl transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${visible ? 'translate-y-0 scale-100' : 'translate-y-24 scale-90'}`}>
-          <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-rose-50 to-transparent rounded-t-[48px] -z-10" />
+       <div className={`relative w-full max-w-[430px] bg-white rounded-[64px] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] overflow-hidden ${visible ? 'translate-y-0 scale-100' : 'translate-y-24 scale-90'}`}>
+          {/* Dynamic Header with Vibrant Gradient */}
+          <div className="absolute top-0 left-0 w-full h-56 bg-gradient-to-br from-indigo-600 via-purple-600 to-rose-500 -z-10 overflow-hidden">
+             <div className="absolute top-0 right-0 w-80 h-80 bg-white/20 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/3" />
+             <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-400/30 blur-[80px] rounded-full translate-y-1/2 -translate-x-1/2" />
+          </div>
           
-          <div className="flex flex-col items-center">
-             <div className="w-24 h-24 rounded-[32px] bg-white border border-gray-100 flex items-center justify-center text-[44px] shadow-xl mb-6 animate-spring">
-                {tx.icon}
+          {/* Actions */}
+          <div className="absolute top-10 right-10 flex items-center gap-4 z-30">
+             <button className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-xl flex items-center justify-center text-white/80 active:scale-75 transition-all border border-white/20 shadow-lg">
+                <Pencil size={20} />
+             </button>
+             <button 
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="w-12 h-12 rounded-2xl bg-rose-500/20 backdrop-blur-xl flex items-center justify-center text-rose-200 active:scale-75 transition-all border border-rose-500/30 shadow-lg disabled:opacity-50"
+             >
+                <Trash2 size={20} />
+             </button>
+          </div>
+
+          <div className="px-10 flex flex-col items-center pt-24 pb-12">
+             <div className="w-28 h-28 rounded-[44px] bg-white shadow-[0_32px_64px_-16px_rgba(0,0,0,0.15)] flex items-center justify-center text-[54px] mb-8 relative z-10 animate-spring border border-white">
+                <span className="relative z-10">{tx.icon}</span>
+                <div className="absolute inset-x-2 -bottom-2 h-4 bg-black/5 blur-xl rounded-full" />
              </div>
              
-             <h2 className="text-[26px] font-black text-var(--text-strong) tracking-tighter mb-2">{tx.name}</h2>
-             <div className="flex items-center gap-2 mb-8">
-                <span className="text-[11px] font-black text-var(--text-soft) bg-gray-50 px-3 py-1 rounded-full uppercase tracking-widest">{tx.category}</span>
-                <span className="text-[11px] font-black text-rose-500 bg-rose-50 px-3 py-1 rounded-full uppercase tracking-widest">{tx.card}</span>
-             </div>
-
-             <div className="w-full space-y-5 mb-10">
-                <div className="flex justify-between items-center py-4 border-b border-gray-50">
-                   <span className="text-[13px] font-black text-var(--text-soft) uppercase tracking-widest opacity-60">결제 금액</span>
-                   <span className="text-[22px] font-display font-black text-var(--text-strong) tracking-tight">{tx.amount.toLocaleString()}원</span>
-                </div>
-                <div className="flex justify-between items-center py-4 border-b border-gray-50 text-rose-500">
-                   <span className="text-[13px] font-black uppercase tracking-widest opacity-60">적용 혜택</span>
-                   <span className="text-[15px] font-black">
-                      {tx.discount ? `${tx.discount}% 청구할인` : tx.reward ? `${tx.reward}% 포인트적립` : '혜택 없음'}
-                   </span>
-                </div>
-                <div className="flex justify-between items-center py-4">
-                   <span className="text-[13px] font-black text-var(--text-soft) uppercase tracking-widest opacity-60">결제 일시</span>
-                   <span className="text-[15px] font-bold text-var(--text-strong)">2026년 3월 18일 14:32</span>
+             <div className="text-center relative z-10 mb-12">
+                <h2 className="text-[32px] font-black text-white tracking-tighter leading-none mb-3 drop-shadow-sm">{tx.name}</h2>
+                <div className="flex items-center justify-center gap-2">
+                   <div className="px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20">
+                      <span className="text-[10px] font-black text-white/80 uppercase tracking-widest">{tx.category}</span>
+                   </div>
+                   <div className="w-1 h-1 rounded-full bg-white/30" />
+                   <span className="text-[13px] font-bold text-white/60 tracking-tight">{tx.description || '카드 결제 완료'}</span>
                 </div>
              </div>
 
-             <div className="w-full grid grid-cols-2 gap-4">
-                <button className="h-18 rounded-[24px] bg-gray-50 text-var(--text-strong) font-black text-[15px] active:scale-95 transition-all">거래 수정</button>
-                <button className="h-18 rounded-[24px] bg-rose-50 text-rose-500 font-black text-[15px] active:scale-95 transition-all">거래 취소</button>
+             <div className="w-full space-y-1 bg-slate-50/70 rounded-[56px] p-3 border border-gray-100 shadow-inner">
+                {/* Main Stats Block */}
+                <div className="bg-white rounded-[44px] p-9 shadow-sm border border-gray-50 mb-1">
+                   <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                      <CreditCard size={14} className="opacity-40" />
+                      Payment Amount
+                   </p>
+                   <div className="flex items-baseline gap-2">
+                      <span className="text-[44px] font-display font-black text-slate-900 tracking-tighter leading-none">{tx.amount.toLocaleString()}</span>
+                      <span className="text-[20px] font-black text-slate-400">{tx.currency === 'USD' ? '$' : '원'}</span>
+                   </div>
+                   {tx.exchangeRate && (
+                     <p className="text-[11px] font-bold text-emerald-500 mt-2 bg-emerald-50 w-fit px-3 py-1 rounded-lg">Applied FX: 1 USD = {tx.exchangeRate} KRW</p>
+                   )}
+                </div>
+
+                {/* Details Section */}
+                <div className="p-8 pt-6 space-y-8">
+                   <div className="grid grid-cols-2 gap-y-8 gap-x-10">
+                      <div className="flex flex-col gap-2">
+                         <div className="flex items-center gap-2 opacity-50">
+                            <Tag size={13} className="text-slate-900" />
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em]">분류</p>
+                         </div>
+                         <p className="text-[15px] font-black text-slate-800 tracking-tight ml-1">{tx.category}</p>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                         <div className="flex items-center gap-2 opacity-50">
+                            <Smartphone size={13} className="text-slate-900" />
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em]">결제 수단</p>
+                         </div>
+                         <p className="text-[15px] font-black text-slate-800 tracking-tight ml-1">{tx.paymentMethod || tx.card}</p>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                         <div className="flex items-center gap-2 opacity-50">
+                            <ShoppingBag size={13} className="text-slate-900" />
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em]">거래 품목</p>
+                         </div>
+                         <p className="text-[15px] font-black text-slate-800 tracking-tight ml-1 truncate">{tx.items || tx.name}</p>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                         <div className="flex items-center gap-2 opacity-50">
+                            <MapPin size={13} className="text-slate-900" />
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em]">결제 시각</p>
+                         </div>
+                         <p className="text-[14px] font-black text-slate-800 tracking-tight ml-1 leading-tight">{formattedDate}</p>
+                      </div>
+                   </div>
+
+                   {/* Tags Pillbox */}
+                   {tx.tags && tx.tags.length > 0 && (
+                     <div className="pt-6 border-t border-gray-100 flex flex-wrap gap-2.5">
+                        {tx.tags.map((tag, i) => (
+                          <span key={i} className="px-4 py-2 bg-white border border-slate-100 rounded-[18px] text-[12px] font-black text-slate-500 shadow-sm transition-all hover:bg-slate-50 cursor-default">#{tag}</span>
+                        ))}
+                     </div>
+                   )}
+
+                   {/* Premium Benefit Badge */}
+                   {(tx.benefitInfo || tx.benefitAmount) && (
+                     <div className="p-6 rounded-[36px] bg-gradient-to-br from-rose-50 to-orange-50 border border-rose-100/50 relative overflow-hidden group">
+                        <div className="absolute -right-4 -top-4 w-24 h-24 bg-rose-200/20 blur-2xl rounded-full" />
+                        <div className="flex justify-between items-center mb-2">
+                           <div className="flex items-center gap-2.5">
+                              <Sparkles size={16} className="text-rose-500" />
+                              <span className="text-[11px] font-black text-rose-400 uppercase tracking-widest">Premium Benefit</span>
+                           </div>
+                           <span className="text-[18px] font-display font-black text-rose-600 tracking-tight">-{tx.benefitAmount?.toLocaleString()}원</span>
+                        </div>
+                        <p className="text-[14px] font-black text-slate-800 tracking-tight opacity-80 leading-snug">{tx.benefitInfo}</p>
+                     </div>
+                   )}
+                </div>
              </div>
-             
-             <button onClick={onClose} className="mt-8 text-[13px] font-black text-var(--text-soft) uppercase tracking-widest opacity-40 hover:opacity-100 transition-opacity">닫기</button>
+
+             <button onClick={onClose} className="w-full py-6 mt-8 rounded-[30px] bg-slate-900 text-white font-black text-[17px] active:scale-95 transition-all shadow-xl shadow-slate-200">
+                닫기
+             </button>
           </div>
        </div>
     </div>
@@ -555,11 +731,14 @@ interface CardSettingsModalProps {
   onUpdate?: (cards: Card[]) => void;
 }
 
+import { deleteCard } from '@/lib/cardwise-api';
+
 export function CardSettingsModal({ isOpen, onClose, cards, onUpdate }: CardSettingsModalProps) {
   const [visible, setVisible] = useState(false);
   const [localCards, setLocalCards] = useState<Card[]>(cards);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState<Card | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   // Swipe state
   const [swipeId, setSwipeId] = useState<string | null>(null);
@@ -568,20 +747,38 @@ export function CardSettingsModal({ isOpen, onClose, cards, onUpdate }: CardSett
   const [isSwiping, setIsSwiping] = useState(false);
 
   useEffect(() => {
-    setVisible(isOpen);
-    if (isOpen) {
-       setLocalCards(cards);
-       setConfirmingDelete(null);
-    }
+    const timer = setTimeout(() => {
+      setVisible(isOpen);
+      if (isOpen) {
+         setLocalCards(cards);
+         setConfirmingDelete(null);
+      }
+    }, 30);
+    return () => clearTimeout(timer);
   }, [isOpen, cards]);
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!confirmingDelete) return;
-    const updated = localCards.filter(c => c.id !== confirmingDelete.id);
-    setLocalCards(updated);
-    setConfirmingDelete(null);
-    setSwipeId(null);
-    setSwipeOffset(0);
+    setIsDeleting(true);
+    try {
+      const res = await deleteCard(parseInt(confirmingDelete.id));
+      if (res) {
+        const updated = localCards.filter(c => c.id !== confirmingDelete.id);
+        setLocalCards(updated);
+        setConfirmingDelete(null);
+        setSwipeId(null);
+        setSwipeOffset(0);
+        // Better to reload to sync with backend if needed, or rely on local state
+        onUpdate?.(updated); 
+      } else {
+        alert('카드 삭제에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('Delete card error:', error);
+      alert('오류가 발생했습니다.');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const handleDragStart = (idx: number) => {
@@ -677,14 +874,30 @@ export function CardSettingsModal({ isOpen, onClose, cards, onUpdate }: CardSett
                <div key={card.id} className="relative group overflow-hidden rounded-[28px]">
                   {/* Swipe Delete Action Layer */}
                   <div className="absolute inset-0 bg-rose-500 flex items-center justify-end px-6">
-                     <button 
-                       onMouseDown={(e) => e.stopPropagation()} 
-                       onClick={(e) => { e.stopPropagation(); setConfirmingDelete(card); }} 
-                       className="text-white font-black text-[13px] uppercase tracking-widest flex items-center gap-2 active:scale-110 transition-transform"
-                     >
-                        <X size={18} strokeWidth={3} />
-                        삭제
-                     </button>
+                     {confirmingDelete && confirmingDelete.id === card.id ? (
+                       <div className="flex gap-2">
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); handleDelete(); }}
+                            disabled={isDeleting}
+                            className="bg-rose-500 text-white px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-tighter shadow-lg shadow-rose-200 disabled:opacity-50"
+                          >
+                            {isDeleting ? 'Deleting...' : 'Confirm'}
+                          </button>
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); setConfirmingDelete(null); }}
+                            className="bg-gray-200 text-gray-500 px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-tighter"
+                          >
+                            Cancel
+                          </button>
+                       </div>
+                     ) : (
+                       <button 
+                         onClick={(e) => { e.stopPropagation(); setConfirmingDelete(card); }}
+                         className="bg-slate-100 text-slate-400 p-2 rounded-xl active:scale-75 transition-transform"
+                       >
+                          <X size={14} />
+                       </button>
+                     )}
                   </div>
                   
                   {/* Main Card Item Layer */}
@@ -823,10 +1036,13 @@ export function CommunityDetailModal({ isOpen, onClose, post }: CommunityDetailM
   }, [post]);
 
   useEffect(() => {
-    setVisible(isOpen);
-    if (isOpen && post) {
-      loadComments();
-    }
+    const timer = setTimeout(() => {
+      setVisible(isOpen);
+      if (isOpen && post) {
+        loadComments();
+      }
+    }, 30);
+    return () => clearTimeout(timer);
   }, [isOpen, post, loadComments]);
 
   const handleCreateComment = async () => {
@@ -909,7 +1125,8 @@ export function SitemapModal({ isOpen, onClose, onNavigate }: SitemapModalProps)
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    setVisible(isOpen);
+    const timer = setTimeout(() => setVisible(isOpen), 30);
+    return () => clearTimeout(timer);
   }, [isOpen]);
 
   if (!isOpen) return null;

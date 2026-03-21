@@ -1,35 +1,21 @@
-package com.cardwise.ledger.api
+package com.cardwise.ledger.adapter.`in`.web
 
 import com.cardwise.common.api.ApiResponse
 import com.cardwise.common.api.CountResponse
 import com.cardwise.common.web.RequestAccountIdResolver
-import com.cardwise.ledger.application.LedgerService
-import com.cardwise.ledger.dto.AdjustmentResponse
-import com.cardwise.ledger.dto.CreatePaymentAdjustmentRequest
-import com.cardwise.ledger.dto.PendingActionResponse
-import com.cardwise.ledger.dto.PendingActionStatus
-import com.cardwise.ledger.dto.Priority
-import com.cardwise.ledger.dto.PendingActionListResponse
-import com.cardwise.ledger.dto.ResolvePendingActionRequest
+import com.cardwise.ledger.application.port.`in`.PaymentUseCase
+import com.cardwise.ledger.application.port.`in`.PendingActionUseCase
+import com.cardwise.ledger.dto.*
 import com.cardwise.performance.application.PerformanceService
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PatchMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestHeader
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.ResponseStatus
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/api/v1")
-class LedgerController(
-    private val ledgerService: LedgerService,
+class LedgerAdapterInWeb(
+    private val paymentUseCase: PaymentUseCase,
+    private val pendingActionUseCase: PendingActionUseCase,
     private val performanceService: PerformanceService,
     private val requestAccountIdResolver: RequestAccountIdResolver,
 ) {
@@ -38,15 +24,15 @@ class LedgerController(
         @PathVariable paymentId: Long,
         @RequestHeader(name = "X-Account-Id", required = false) accountIdHeader: String?,
     ): ApiResponse<List<AdjustmentResponse>> {
-        return ledgerService.listPaymentAdjustments(paymentId, requestAccountIdResolver.resolve(accountIdHeader))
+        return paymentUseCase.listPaymentAdjustments(paymentId, requestAccountIdResolver.resolve(accountIdHeader))
     }
 
     @GetMapping("/payments")
     fun listPayments(
         @RequestHeader(name = "X-Account-Id", required = false) accountIdHeader: String?,
-        @RequestParam(defaultValue = "20") limit: Int,
-    ): ApiResponse<List<com.cardwise.ledger.dto.PaymentResponse>> {
-        return ledgerService.listPayments(
+        @RequestParam(defaultValue = "100") limit: Int,
+    ): ApiResponse<List<PaymentResponse>> {
+        return paymentUseCase.getPayments(
             accountId = requestAccountIdResolver.resolve(accountIdHeader),
             limit = limit
         )
@@ -57,7 +43,7 @@ class LedgerController(
         @PathVariable paymentId: Long,
         @RequestHeader(name = "X-Account-Id", required = false) accountIdHeader: String?,
     ): ApiResponse<Unit> {
-        return ledgerService.deletePayment(
+        return paymentUseCase.deletePayment(
             paymentId = paymentId,
             accountId = requestAccountIdResolver.resolve(accountIdHeader)
         )
@@ -67,14 +53,14 @@ class LedgerController(
     @ResponseStatus(HttpStatus.CREATED)
     fun createPayment(
         @RequestHeader(name = "X-Account-Id", required = false) accountIdHeader: String?,
-        @Valid @RequestBody request: com.cardwise.ledger.dto.CreatePaymentRequest,
-    ): ApiResponse<com.cardwise.ledger.dto.PaymentResponse> {
+        @Valid @RequestBody request: CreatePaymentRequest,
+    ): ApiResponse<PaymentResponse> {
         val accountId = requestAccountIdResolver.resolve(accountIdHeader)
         val oldTier = try {
             performanceService.getPerformance(request.userCardId, accountId).data.annual.currentTier?.tierName
         } catch (e: Exception) { null }
 
-        val res = ledgerService.createPayment(accountId, request)
+        val res = paymentUseCase.createPayment(accountId, request)
 
         val newTier = try {
             performanceService.getPerformance(request.userCardId, accountId).data.annual.currentTier?.tierName
@@ -90,17 +76,17 @@ class LedgerController(
     fun updatePayment(
         @PathVariable paymentId: Long,
         @RequestHeader(name = "X-Account-Id", required = false) accountIdHeader: String?,
-        @Valid @RequestBody request: com.cardwise.ledger.dto.UpdatePaymentRequest,
-    ): ApiResponse<com.cardwise.ledger.dto.PaymentResponse> {
+        @Valid @RequestBody request: UpdatePaymentRequest,
+    ): ApiResponse<PaymentResponse> {
         val accountId = requestAccountIdResolver.resolve(accountIdHeader)
         val oldTier = try {
             performanceService.getPerformance(request.userCardId, accountId).data.annual.currentTier?.tierName
         } catch (e: Exception) { null }
 
-        val res = ledgerService.updatePayment(paymentId, accountId, request)
+        val res = paymentUseCase.updatePayment(paymentId, accountId, request)
 
         val newTier = try {
-            performanceService.getPerformance(request.userCardId, accountId).data.annual.currentTier?.tierName
+            performanceService.getPerformance(request.userCardId, accountId).data.manual.currentTier?.tierName
         } catch (e: Exception) { null }
 
         val changed = oldTier != newTier && newTier != null
@@ -115,7 +101,7 @@ class LedgerController(
         @RequestHeader(name = "X-Account-Id", required = false) accountIdHeader: String?,
         @Valid @RequestBody request: CreatePaymentAdjustmentRequest,
     ): ApiResponse<AdjustmentResponse> {
-        return ledgerService.createPaymentAdjustment(
+        return paymentUseCase.createPaymentAdjustment(
             paymentId = paymentId,
             accountId = requestAccountIdResolver.resolve(accountIdHeader),
             request = request,
@@ -127,9 +113,9 @@ class LedgerController(
         @RequestHeader(name = "X-Account-Id", required = false) accountIdHeader: String?,
         @RequestParam(required = false) status: PendingActionStatus?,
         @RequestParam(required = false) priority: Priority?,
-        @RequestParam(defaultValue = "20") limit: Int,
+        @RequestParam(defaultValue = "100") limit: Int,
     ): ApiResponse<List<PendingActionResponse>> {
-        return ledgerService.listPendingActions(
+        return pendingActionUseCase.listPendingActions(
             accountId = requestAccountIdResolver.resolve(accountIdHeader),
             status = status,
             priority = priority,
@@ -142,7 +128,7 @@ class LedgerController(
         @RequestHeader(name = "X-Account-Id", required = false) accountIdHeader: String?,
         @RequestParam(required = false) status: PendingActionStatus?,
     ): ApiResponse<CountResponse> {
-        return ledgerService.countPendingActions(
+        return pendingActionUseCase.countPendingActions(
             accountId = requestAccountIdResolver.resolve(accountIdHeader),
             status = status,
         )
@@ -154,7 +140,7 @@ class LedgerController(
         @RequestHeader(name = "X-Account-Id", required = false) accountIdHeader: String?,
         @Valid @RequestBody request: ResolvePendingActionRequest,
     ): ApiResponse<PendingActionResponse> {
-        return ledgerService.resolvePendingAction(
+        return pendingActionUseCase.resolvePendingAction(
             pendingActionId = actionId,
             accountId = requestAccountIdResolver.resolve(accountIdHeader),
             request = request,
@@ -166,7 +152,7 @@ class LedgerController(
         @PathVariable actionId: Long,
         @RequestHeader(name = "X-Account-Id", required = false) accountIdHeader: String?,
     ): ApiResponse<PendingActionResponse> {
-        return ledgerService.dismissPendingAction(
+        return pendingActionUseCase.dismissPendingAction(
             pendingActionId = actionId,
             accountId = requestAccountIdResolver.resolve(accountIdHeader),
         )

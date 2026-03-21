@@ -258,7 +258,7 @@ export function TransactionItem({ tx, onClick, delay = 0 }: { tx: Transaction; o
   return (
     <div 
       onClick={onClick}
-      className="flex items-center gap-4 py-5 border-b border-gray-50 last:border-0 group cursor-pointer active:bg-gray-50/50 transition-all rounded-[24px] px-2 -mx-1 animate-fade-in"
+      className="flex items-center gap-4 py-6 border-b border-gray-50 last:border-0 group cursor-pointer active:bg-gray-50/50 transition-all rounded-[32px] px-8 animate-fade-in"
       style={{ animationDelay: `${delay}s` }}
     >
       <div 

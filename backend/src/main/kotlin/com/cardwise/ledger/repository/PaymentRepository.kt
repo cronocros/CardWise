@@ -18,6 +18,7 @@ interface PaymentRepository : JpaRepository<PaymentEntity, Long> {
               p.krw_amount as krwAmount,
               p.final_krw_amount as finalKrwAmount,
               p.paid_at as paidAt,
+              p.transaction_type as transactionType,
               p.is_adjusted as isAdjusted
             from payment p
             where p.payment_id = :paymentId
@@ -44,6 +45,7 @@ interface PaymentRepository : JpaRepository<PaymentEntity, Long> {
               p.krw_amount as krwAmount,
               p.final_krw_amount as finalKrwAmount,
               p.paid_at as paidAt,
+              p.transaction_type as transactionType,
               p.is_adjusted as isAdjusted
             from payment_item pi
             join payment p on p.payment_id = pi.payment_id
@@ -108,6 +110,7 @@ interface PaymentRepository : JpaRepository<PaymentEntity, Long> {
               p.krw_amount as krwAmount,
               p.final_krw_amount as finalKrwAmount,
               p.paid_at as paidAt,
+              p.transaction_type as transactionType,
               p.is_adjusted as isAdjusted
             from payment p
             where p.account_id = :accountId

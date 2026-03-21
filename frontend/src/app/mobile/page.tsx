@@ -23,6 +23,8 @@ import {
   SitemapModal
 } from '@/components/mobile/modals';
 import { CardRegistrationModal } from '@/components/mobile/CardRegistrationModal';
+import { createClient } from '@/utils/supabase/client';
+import { getPayments, PaymentRecord, getMyCards, UserCardSummaryResponse } from '@/lib/cardwise-api';
 
 // Views (Refactored)
 import { HomeView } from '@/components/mobile/views/HomeView';
@@ -66,6 +68,8 @@ export default function MobileHomePage() {
   );
 }
 
+// ... (StatusBar component)
+
 function MobileHomePageContent() {
   const router = useRouter();
   
@@ -80,7 +84,82 @@ function MobileHomePageContent() {
   };
 
   const [cards, setCards] = useState<Card[]>(SAMPLE_CARDS);
-  const [transactions] = useState<Transaction[]>(SAMPLE_TRANSACTIONS);
+  const [transactions, setTransactions] = useState<Transaction[]>(SAMPLE_TRANSACTIONS);
+  
+  // Real Data State
+  const [userData, setUserData] = useState<{ id: string; email: string; displayName: string; level: number; exp: number; tierName: string } | null>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        // Fetch profile
+        const { data: profile } = await supabase
+          .from('account_profile')
+          .select('display_name, level, exp, tier_name')
+          .eq('account_id', user.id)
+          .single();
+          
+        setUserData({
+          id: user.id,
+          email: user.email || '',
+          displayName: profile?.display_name || user.email?.split('@')[0] || '사용자',
+          level: profile?.level || 1,
+          exp: profile?.exp || 0,
+          tierName: profile?.tier_name || 'BRONZE'
+        });
+      }
+    };
+    
+    const fetchTransactionsData = async () => {
+      const response = await getPayments(100);
+      if (response && response.data) {
+        const mapped: Transaction[] = response.data.map((p: PaymentRecord) => ({
+          id: `tx-${p.paymentId}`,
+          icon: p.transactionType === 'INCOME' ? '💰' : (p.merchantName.includes('카페') ? '☕' : p.merchantName.includes('식당') ? '🍱' : '💳'), 
+          name: p.merchantName,
+          category: p.transactionType === 'INCOME' ? '수입' : '생활', 
+          card: 'My Card', 
+          amount: p.finalKrwAmount ?? p.krwAmount,
+          date: p.paidAt,
+          type: (p.transactionType?.toLowerCase() as 'expense' | 'income') || 'expense',
+          currency: 'KRW',
+          isAdjusted: p.isAdjusted
+        }));
+        
+        setTransactions(mapped.length > 0 ? mapped : SAMPLE_TRANSACTIONS);
+      }
+    };
+
+    const fetchCardsData = async () => {
+      const response = await getMyCards();
+      if (response && response.data) {
+        const mapped: Card[] = response.data.map((c: UserCardSummaryResponse) => ({
+          id: c.userCardId.toString(),
+          name: c.cardNickname || c.cardName,
+          firstFour: '****',
+          lastFour: '****',
+          issuer: c.cardName.split(' ')[0] || 'CardWise',
+          gradient: 'linear-gradient(135deg, #111, #444)', // Default dark
+          current: 0,
+          target: 300000,
+          benefitType: 'discount',
+          benefitValue: '상세 정보 확인 필요',
+          brand: 'visa',
+          tier: 'classic',
+          color: '#1a1a1a',
+          currency: 'KRW'
+        }));
+        if (mapped.length > 0) setCards(mapped);
+      }
+    };
+
+    fetchUser();
+    fetchTransactionsData();
+    fetchCardsData();
+  }, []);
   
   // Modal State
   const [showAddTx, setShowAddTx] = useState(false);
@@ -93,7 +172,6 @@ function MobileHomePageContent() {
   const [showSitemap, setShowSitemap] = useState(false);
   
   // View State
-  const [ledgerMode, setLedgerMode] = useState<'personal' | 'group'>('personal');
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
   const [selectedLedgerDate, setSelectedLedgerDate] = useState(new Date());
   const [visibleSections, setVisibleSections] = useState(['balance', 'performance', 'weekly', 'category', 'goal', 'recent']);
@@ -105,9 +183,9 @@ function MobileHomePageContent() {
       timeout = setTimeout(() => {
         if (typeof window !== 'undefined') {
           window.alert('보안을 위해 세션이 만료되었습니다. 다시 로그인해 주세요.');
-          window.location.href = '/mobile/login';
+          window.location.href = '/login';
         }
-      }, 5 * 60 * 1000); 
+      }, 30 * 60 * 1000); // 30 mins instead of 5
     };
     const events = ['mousemove', 'keydown', 'touchstart', 'scroll', 'click'];
     events.forEach(event => window.addEventListener(event, resetTimer));
@@ -156,27 +234,27 @@ function MobileHomePageContent() {
       <header className="px-5 pt-4 pb-4 flex items-center justify-between bg-white/80 backdrop-blur-xl border-b border-gray-50 sticky top-[44px] z-[90]">
           <div className="flex items-center gap-3 active:scale-95 transition-all">
              <div className="w-10 h-10 rounded-2xl bg-gray-100 flex items-center justify-center text-xl shadow-inner border border-gray-100/50">
-               👤
+               {userData?.displayName?.[0] || '👤'}
              </div>
              <div className="flex flex-col">
                <div className="flex items-center gap-1.5">
                   <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-50 border border-slate-100">
-                    <span className="text-[11px] font-black text-slate-600 tracking-tight">크로노 님</span>
-                    <span className="text-[10px] animate-pulse">⚡</span>
+                    <span className="text-[11px] font-black text-slate-600 tracking-tight">{userData?.displayName || 'Loading...'} 님</span>
+                    <span className="text-[10px]">⚡</span>
                   </div>
                   <div className="w-1 h-1 rounded-full bg-slate-300" />
                   <span className="text-[14px] font-black text-slate-800 tracking-tight leading-none opacity-60">
                     {tabTitles[activeTab] || 'CardWise'}
                   </span>
                </div>
-                <div className="flex items-center gap-1 mt-1.5 ml-0.5">
-                  <div className="px-1.5 py-0.5 rounded-md bg-amber-50 border border-amber-100 flex items-center gap-1 shadow-sm">
-                    <span className="text-[7.5px] font-black text-amber-600 uppercase tracking-widest leading-none">PLATINUM</span>
-                  </div>
-                  <div className="px-1.5 py-0.5 rounded-md bg-rose-50 border border-rose-100 flex items-center gap-1 shadow-sm">
-                    <span className="text-[7.5px] font-black text-rose-500 uppercase tracking-widest leading-none">LV.24 ELITE</span>
-                  </div>
-               </div>
+                 <div className="flex items-center gap-1 mt-1.5 ml-0.5">
+                   <div className="px-1.5 py-0.5 rounded-md bg-amber-50 border border-amber-100 flex items-center gap-1 shadow-sm">
+                     <span className="text-[7.5px] font-black text-amber-600 uppercase tracking-widest leading-none">{userData?.tierName || '플래티넘'}</span>
+                   </div>
+                   <div className="px-1.5 py-0.5 rounded-md bg-rose-50 border border-rose-100 flex items-center gap-1 shadow-sm">
+                     <span className="text-[7.5px] font-black text-rose-500 uppercase tracking-widest leading-none">LV.{userData?.level || '24'}</span>
+                   </div>
+                </div>
              </div>
           </div>
 
@@ -221,8 +299,6 @@ function MobileHomePageContent() {
         )}
         {activeTab === 'ledger' && (
           <LedgerView 
-            ledgerMode={ledgerMode}
-            setLedgerMode={setLedgerMode}
             selectedLedgerDate={selectedLedgerDate}
             setSelectedLedgerDate={setSelectedLedgerDate}
             categories={categories}
@@ -235,7 +311,7 @@ function MobileHomePageContent() {
         {activeTab === 'benefits' && (
           <div className="space-y-8 pt-5">
             <div>
-              <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Benefits Hub</p>
+              <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest">혜택 허브</p>
               <h2 className="text-[26px] font-black text-gray-800 tracking-tighter">혜택 센터</h2>
             </div>
             {/* Quick Menu */}
@@ -258,7 +334,7 @@ function MobileHomePageContent() {
             <BenefitsView />
           </div>
         )}
-        {activeTab === 'mypage' && <ProfileView onSeeMoreBadges={() => setActiveTab('all-badges')} />}
+        {activeTab === 'mypage' && <ProfileView onSeeMoreBadges={() => setActiveTab('all-badges')} user={userData} />}
         {activeTab === 'all-badges' && <AllBadgesView onBack={() => setActiveTab('mypage')} />}
         {activeTab === 'settings' && <div className="p-10 text-center text-slate-400 font-bold">환경 설정 준비 중</div>}
         {activeTab === 'insights' && <div className="p-10 text-center text-slate-400 font-bold">AI 소비 분석 준비 중</div>}
