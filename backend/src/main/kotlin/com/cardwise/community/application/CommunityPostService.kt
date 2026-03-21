@@ -13,6 +13,8 @@ import com.cardwise.community.repository.CommunityPostBookmarkRepository
 import com.cardwise.community.repository.CommunityPostLikeRepository
 import com.cardwise.community.repository.CommunityPostRepository
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.OffsetDateTime
@@ -27,15 +29,15 @@ class CommunityPostService(
     private val bookmarkRepository: CommunityPostBookmarkRepository,
     private val objectMapper: ObjectMapper
 ) {
-    fun listPosts(accountId: UUID, category: String?): ApiResponse<List<PostResponse>> {
-        val posts = if (category != null) {
-            // TODO: 필터링 구현 (현재는 전체)
-            postRepository.findAllByDeletedAtIsNullOrderByCreatedAtDesc()
+    fun listPosts(accountId: UUID, category: String?, page: Int, limit: Int): ApiResponse<List<PostResponse>> {
+        val pageable = PageRequest.of((page - 1).coerceAtLeast(0), limit, Sort.by("createdAt").descending())
+        val postsPage = if (category != null) {
+            postRepository.findAllByCategoryAndDeletedAtIsNull(category, pageable)
         } else {
-            postRepository.findAllByDeletedAtIsNullOrderByCreatedAtDesc()
+            postRepository.findAllByDeletedAtIsNull(pageable)
         }
         
-        val data = posts.map { toPostResponse(it, accountId) }
+        val data = postsPage.content.map { toPostResponse(it, accountId) }
         return ApiResponse(data = data)
     }
 

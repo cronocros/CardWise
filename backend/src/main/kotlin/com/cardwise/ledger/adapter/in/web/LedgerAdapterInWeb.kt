@@ -86,7 +86,7 @@ class LedgerAdapterInWeb(
         val res = paymentUseCase.updatePayment(paymentId, accountId, request)
 
         val newTier = try {
-            performanceService.getPerformance(request.userCardId, accountId).data.manual.currentTier?.tierName
+            performanceService.getPerformance(request.userCardId, accountId).data.annual.currentTier?.tierName
         } catch (e: Exception) { null }
 
         val changed = oldTier != newTier && newTier != null

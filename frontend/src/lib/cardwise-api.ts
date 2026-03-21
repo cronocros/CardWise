@@ -650,8 +650,9 @@ export interface CommunityReactionEnvelope {
   data: CommunityReactionResponse;
 }
 
-export async function getCommunityPosts(category?: string) {
-  const query = category ? `?category=${category}` : "";
+export async function getCommunityPosts(category?: string, page = 1, limit = 10) {
+  let query = `?page=${page}&limit=${limit}`;
+  if (category) query += `&category=${category}`;
   return tryFetchBackendJson<CommunityPostsResponse>(`/community/posts${query}`);
 }
 
@@ -683,6 +684,14 @@ export async function createPostComment(postId: number, content: string) {
   });
 }
 
+export async function createCommunityPost(data: { category: string; title: string; content: string; tags: string[]; imageUrl?: string }) {
+  return tryFetchBackendJson<CommunityPostResponse>("/community/posts", {
+    method: "POST",
+    body: JSON.stringify(data),
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
 function normalizeBaseUrl(baseUrl: string) {
   return baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
 }
@@ -703,14 +712,20 @@ export async function fetchBackendJson<T>(
   pathname: string,
   init?: RequestInit,
 ): Promise<T> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
+
   const response = await fetch(backendUrl(pathname), {
     ...init,
+    signal: controller.signal,
     cache: "no-store",
     headers: {
       accept: "application/json",
       ...(init?.headers ?? {}),
     },
   });
+  
+  clearTimeout(timeoutId);
 
   if (!response.ok) {
     const body = await response.text();

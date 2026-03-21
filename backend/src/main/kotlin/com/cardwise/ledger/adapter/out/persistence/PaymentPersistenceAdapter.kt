@@ -143,10 +143,9 @@ class PaymentPersistenceAdapter(
         resolvedAt = this@toEntity.resolvedAt
     }
 
-    // Extension for Projection to Domain mapping if needed, or keep it simple for now
     private fun com.cardwise.ledger.repository.PaymentProjection.toDomain() = Payment(
         paymentId = paymentId,
-        accountId = UUID.randomUUID(), // Logic to handle accountId from projection or use other method
+        accountId = accountId, // Fixed to use projection accountId
         userCardId = userCardId,
         merchantNameRaw = merchantNameRaw,
         paidAt = paidAt,
@@ -154,5 +153,19 @@ class PaymentPersistenceAdapter(
         finalKrwAmount = finalKrwAmount,
         isAdjusted = isAdjusted,
         transactionType = TransactionType.valueOf(transactionType)
+    )
+
+    private fun com.cardwise.ledger.repository.PendingActionProjection.toDomain() = PendingAction(
+        pendingActionId = pendingActionId,
+        accountId = accountId,
+        actionType = actionType,
+        referenceTable = referenceTable,
+        referenceId = referenceId,
+        title = title,
+        description = description,
+        status = com.cardwise.ledger.domain.model.PendingActionStatus.valueOf(status),
+        priority = com.cardwise.ledger.domain.model.Priority.valueOf(priority),
+        createdAt = createdAt,
+        resolvedAt = resolvedAt
     )
 }

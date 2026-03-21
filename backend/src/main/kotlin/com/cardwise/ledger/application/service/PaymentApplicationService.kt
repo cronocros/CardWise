@@ -146,7 +146,7 @@ class PaymentApplicationService(
         adjustedKrwAmount = adjustedKrwAmount,
         differenceAmount = differenceAmount,
         reason = reason,
-        billedAt = billedAt,
+        billedAt = billedAt?.toLocalDate(),
         createdAt = createdAt
     )
 }

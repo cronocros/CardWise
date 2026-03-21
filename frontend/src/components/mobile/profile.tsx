@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Settings, Shield, Bell, HelpCircle, LogOut, ChevronRight,
   Camera, Award, Star, Zap,
@@ -58,8 +59,9 @@ const MENU_GROUPS = [
   {
     title: '고객지원',
     items: [
-      { label: '자주 묻는 질문', icon: <HelpCircle size={17} />, badge: '' },
-      { label: '1:1 문의', icon: <MessageCircle size={17} />, badge: '' },
+      { label: '공지사항', icon: <Bell size={17} />, badge: 'N', route: '/mobile/support' },
+      { label: '자주 묻는 질문', icon: <HelpCircle size={17} />, badge: '', route: '/mobile/support' },
+      { label: '1:1 문의', icon: <MessageCircle size={17} />, badge: '', route: '/mobile/support' },
       { label: '개인정보처리방침', icon: <FileText size={17} />, badge: '' },
     ],
   },
@@ -72,6 +74,7 @@ export function ProfileView({
   onSeeMoreBadges: () => void;
   user: { displayName: string, email: string, level: number, exp: number, tierName: string } | null;
 }) {
+  const router = useRouter();
   const [selectedSetting, setSelectedSetting] = useState<string | null>(null);
   
   const handleLogout = async () => {
@@ -80,8 +83,12 @@ export function ProfileView({
     }
   };
 
-  const handleMenuClick = (label: string) => {
-    setSelectedSetting(label);
+  const handleMenuClick = (item: any) => {
+    if (item.route) {
+       router.push(item.route);
+    } else {
+       setSelectedSetting(item.label);
+    }
   };
 
   const achievedCount = BADGES.filter(b => b.achieved).length;
@@ -198,7 +205,7 @@ export function ProfileView({
             <div className="bg-white rounded-[40px] border border-gray-50 shadow-xl overflow-hidden divide-y divide-gray-50 px-2">
               {group.items.map((item, ii) => (
                 <div key={ii}
-                  onClick={() => handleMenuClick(item.label)}
+                  onClick={() => handleMenuClick(item)}
                   className="flex items-center justify-between px-6 py-5 cursor-pointer active:bg-rose-50 transition-all group rounded-[28px] hover:px-8">
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-300 group-hover:text-rose-400 group-hover:bg-rose-50 transition-all">

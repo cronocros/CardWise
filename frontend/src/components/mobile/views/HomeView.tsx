@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { CreditCard, ChevronRight } from 'lucide-react';
+import { CreditCard, ChevronRight, Gift, Sparkles } from 'lucide-react';
 import { PerformanceTrack, TransactionItem } from '@/components/mobile/cards';
 import { WeeklyBarChart, SimplePieChart, BucketChart, WordCloud, RadialGauge } from '@/components/mobile/charts';
 import { SAMPLE_USER } from '@/lib/sampleData';
@@ -13,7 +13,7 @@ interface HomeViewProps {
   buckets: Bucket[];
   transactions: Transaction[];
   setSelectedTx: (tx: Transaction) => void;
-  router: any;
+  router: { push: (path: string) => void };
 }
 
 export function HomeView({
@@ -107,7 +107,7 @@ export function HomeView({
       )}
 
       {/* 2-Column Split: Category & Goal */}
-      <div className="grid grid-cols-2 gap-5 px-1">
+      <div className="grid grid-cols-2 gap-5 px-1 pb-4">
         {visibleSections.includes('category') && (
           <div className="p-7 rounded-[48px] bg-white border border-gray-50 shadow-[0_20px_50px_rgba(0,0,0,0.05)] flex flex-col items-center justify-between text-center group active:scale-[0.98] transition-all animate-fade-in hover:shadow-2xl hover:-translate-y-1 duration-500" style={{ animationDelay: '0.4s' }}>
              <h3 className="text-[16px] font-black text-gray-800 tracking-tighter mb-4">카테고리</h3>
@@ -143,8 +143,75 @@ export function HomeView({
         )}
       </div>
 
+      {/* ───────────────────────────────────────────────────────────── */}
+      {/* 4 Feature Quick Cards (2x2 Grid) - PRO DESIGN */}
+      {/* ───────────────────────────────────────────────────────────── */}
+      <section className="px-1 grid grid-cols-2 gap-5 animate-fade-in" style={{ animationDelay: '0.6s' }}>
+        {/* Voucher Management */}
+        <button 
+          onClick={() => router.push('/mobile/vouchers')}
+          className="relative group h-[160px] rounded-[44px] bg-gradient-to-br from-[#FF9D66] to-[#FF5E62] p-6 text-left overflow-hidden shadow-[0_25px_50px_-12px_rgba(255,94,98,0.3)] active:scale-[0.96] transition-all"
+        >
+          <div className="absolute -right-4 -top-4 w-24 h-24 bg-white/20 blur-2xl rounded-full group-hover:scale-125 transition-transform" />
+          <div className="p-3 bg-white/20 backdrop-blur-md rounded-2xl w-fit mb-4">
+             <Gift size={20} className="text-white" />
+          </div>
+          <p className="text-white font-black text-[18px] tracking-tighter leading-tight">바우처 <br/>통합 관리</p>
+          <div className="absolute bottom-5 left-6 flex items-center gap-1">
+             <span className="text-[11px] font-black text-white/60 uppercase tracking-widest">Manage All</span>
+             <ChevronRight size={12} className="text-white/40" />
+          </div>
+        </button>
+
+        {/* AI Insight */}
+        <button 
+          onClick={() => router.push('?tab=insights')}
+          className="relative group h-[160px] rounded-[44px] bg-gradient-to-br from-[#8E2DE2] to-[#4A00E0] p-6 text-left overflow-hidden shadow-[0_25px_50px_-12px_rgba(74,0,224,0.3)] active:scale-[0.96] transition-all"
+        >
+          <div className="absolute -left-4 -bottom-4 w-24 h-24 bg-white/20 blur-2xl rounded-full group-hover:scale-125 transition-transform" />
+          <div className="p-3 bg-white/20 backdrop-blur-md rounded-2xl w-fit mb-4">
+             <Sparkles size={20} className="text-white" />
+          </div>
+          <p className="text-white font-black text-[18px] tracking-tighter leading-tight">지능형 <br/>AI 리포트</p>
+          <div className="absolute bottom-5 left-6 flex items-center gap-1">
+             <span className="text-[11px] font-black text-white/60 uppercase tracking-widest">AI analysis</span>
+             <ChevronRight size={12} className="text-white/40" />
+          </div>
+        </button>
+
+        {/* Fortune */}
+        <button 
+          onClick={() => router.push('/mobile/fortune')}
+          className="relative group h-[160px] rounded-[44px] bg-gradient-to-br from-[#1fd1f9] to-[#b621fe] p-6 text-left overflow-hidden shadow-[0_25px_50px_-12px_rgba(182,33,254,0.3)] active:scale-[0.96] transition-all"
+        >
+          <div className="p-3 bg-white/20 backdrop-blur-md rounded-2xl w-fit mb-4">
+             <span className="text-xl">🔮</span>
+          </div>
+          <p className="text-white font-black text-[18px] tracking-tighter leading-tight">오늘의 <br/>소비 운세</p>
+          <div className="absolute bottom-5 left-6 flex items-center gap-1">
+             <span className="text-[11px] font-black text-white/60 uppercase tracking-widest">Daily Luck</span>
+             <ChevronRight size={12} className="text-white/40" />
+          </div>
+        </button>
+
+        {/* Card Finder */}
+        <button 
+          onClick={() => router.push('/mobile/card-finder')}
+          className="relative group h-[160px] rounded-[44px] bg-gradient-to-br from-[#00b09b] to-[#96c93d] p-6 text-left overflow-hidden shadow-[0_25px_50px_-12px_rgba(150,201,61,0.3)] active:scale-[0.96] transition-all"
+        >
+          <div className="p-3 bg-white/20 backdrop-blur-md rounded-2xl w-fit mb-4">
+             <CreditCard size={20} className="text-white" />
+          </div>
+          <p className="text-white font-black text-[18px] tracking-tighter leading-tight">최적의 <br/>카드 매칭</p>
+          <div className="absolute bottom-5 left-6 flex items-center gap-1">
+             <span className="text-[11px] font-black text-white/60 uppercase tracking-widest">Finder</span>
+             <ChevronRight size={12} className="text-white/40" />
+          </div>
+        </button>
+      </section>
+
       {/* AI Insights Word Cloud */}
-      <section className="mt-2 mb-2 px-2 animate-fade-in" style={{ animationDelay: '0.6s' }}>
+      <section className="mt-8 mb-4 px-2 animate-fade-in" style={{ animationDelay: '0.8s' }}>
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-[17px] font-black text-gray-800 tracking-tighter">소비 키워드 인사이트</h3>
           <div className="px-3 py-1 rounded-full bg-rose-50 text-[10px] font-black text-rose-500 uppercase tracking-widest">AI 분석</div>

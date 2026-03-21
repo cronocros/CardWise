@@ -20,10 +20,12 @@ class CommunityController(
     @GetMapping("/posts")
     fun listPosts(
         @RequestHeader(name = "X-Account-Id", required = false) accountIdHeader: String?,
-        @RequestParam(required = false) category: String?
+        @RequestParam(required = false) category: String?,
+        @RequestParam(defaultValue = "1") page: Int,
+        @RequestParam(defaultValue = "10") limit: Int
     ): ApiResponse<List<PostResponse>> {
         val accountId = requestAccountIdResolver.resolve(accountIdHeader)
-        return postService.listPosts(accountId, category)
+        return postService.listPosts(accountId, category, page, limit)
     }
 
     @GetMapping("/posts/{postId}")

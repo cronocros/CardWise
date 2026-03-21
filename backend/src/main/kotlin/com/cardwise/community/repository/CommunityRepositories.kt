@@ -6,10 +6,14 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.util.UUID
 
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
+
 @Repository
 interface CommunityPostRepository : JpaRepository<CommunityPostEntity, Long> {
-    fun findAllByDeletedAtIsNullOrderByCreatedAtDesc(): List<CommunityPostEntity>
-    fun findAllByAccountIdAndDeletedAtIsNullOrderByCreatedAtDesc(accountId: UUID): List<CommunityPostEntity>
+    fun findAllByDeletedAtIsNull(pageable: Pageable): Page<CommunityPostEntity>
+    fun findAllByCategoryAndDeletedAtIsNull(category: String, pageable: Pageable): Page<CommunityPostEntity>
+    fun findAllByAccountIdAndDeletedAtIsNull(accountId: UUID, pageable: Pageable): Page<CommunityPostEntity>
 }
 
 @Repository

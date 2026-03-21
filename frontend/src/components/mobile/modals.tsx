@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { X, Home, CreditCard, Gift, LineChart, Users, Settings, User, Sparkles, Pencil, Trash2, MapPin, Tag, Smartphone, ShoppingBag } from 'lucide-react';
+import { X, Home, CreditCard, Gift, LineChart, Users, Settings, User, Sparkles, Pencil, Trash2, MapPin, Tag, Smartphone, ShoppingBag, HelpCircle } from 'lucide-react';
 import { Mascot } from './mascot';
 import { Transaction, Card, CommunityPost, CommunityComment } from '@/types/mobile';
 
@@ -338,17 +338,17 @@ export function TransactionDetailModal({ isOpen, onClose, tx, onRefresh }: Trans
              <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-400/30 blur-[80px] rounded-full translate-y-1/2 -translate-x-1/2" />
           </div>
           
-          {/* Actions */}
-          <div className="absolute top-10 right-10 flex items-center gap-4 z-30">
-             <button className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-xl flex items-center justify-center text-white/80 active:scale-75 transition-all border border-white/20 shadow-lg">
-                <Pencil size={20} />
+          {/* Actions - Stylish & Discreet */}
+          <div className="absolute top-10 right-10 flex items-center gap-3 z-30">
+             <button className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-xl flex items-center justify-center text-white/90 active:scale-75 transition-all border border-white/20 shadow-lg hover:bg-white/30">
+                <Pencil size={16} />
              </button>
              <button 
                 onClick={handleDelete}
                 disabled={isDeleting}
-                className="w-12 h-12 rounded-2xl bg-rose-500/20 backdrop-blur-xl flex items-center justify-center text-rose-200 active:scale-75 transition-all border border-rose-500/30 shadow-lg disabled:opacity-50"
+                className="w-9 h-9 rounded-xl bg-rose-500/30 backdrop-blur-xl flex items-center justify-center text-rose-100 active:scale-75 transition-all border border-rose-500/40 shadow-lg hover:bg-rose-500/50 disabled:opacity-50"
              >
-                <Trash2 size={20} />
+                <Trash2 size={16} />
              </button>
           </div>
 
@@ -1148,9 +1148,10 @@ export function SitemapModal({ isOpen, onClose, onNavigate }: SitemapModalProps)
       ]
     },
     {
-      title: 'Social & Account',
+      title: 'Social & Support',
       items: [
         { id: 'community', label: '커뮤니티', icon: Users, color: 'bg-amber-500', desc: '사용자간 정보 공유 및 팁' },
+        { id: '/mobile/support', label: '고객지원', icon: HelpCircle, color: 'bg-indigo-500', desc: '공지사항 및 1:1 문의' },
         { id: 'mypage', label: '내 정보', icon: User, color: 'bg-slate-400', desc: '프로필 설정 및 업적 관리' },
         { id: 'settings', label: '환경 설정', icon: Settings, color: 'bg-slate-200', desc: '앱 설정 및 알림 관리' },
       ]
@@ -1215,3 +1216,95 @@ export function SitemapModal({ isOpen, onClose, onNavigate }: SitemapModalProps)
   );
 }
 
+export function CreatePostModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  const [visible, setVisible] = useState(false);
+  const [category, setCategory] = useState('CARD_HACKS');
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setVisible(isOpen), 30);
+    return () => clearTimeout(timer);
+  }, [isOpen]);
+
+  const handleSave = async () => {
+    if (!title.trim() || !content.trim()) return;
+    setLoading(true);
+    
+    try {
+      const { createCommunityPost } = await import('@/lib/cardwise-api');
+      const res = await createCommunityPost({ category, title, content, tags: [] });
+      if (res?.data) {
+        alert('게시글이 등록되었습니다! 🎉');
+        onClose();
+      } else {
+        alert('등록에 실패했습니다.');
+      }
+    } catch (err) {
+      console.error('Create post error:', err);
+      alert('오류가 발생했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className={`fixed inset-0 z-[1000] flex items-end justify-center transition-all duration-300 ${visible ? 'opacity-100' : 'opacity-0'}`}>
+       <div className="absolute inset-0 bg-[#0a0515]/80 backdrop-blur-xl" onClick={onClose} />
+       
+       <div className={`relative w-full max-w-[430px] bg-white rounded-t-[50px] p-9 pb-12 shadow-2xl transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${visible ? 'translate-y-0' : 'translate-y-full'}`}>
+          <div className="w-14 h-1.5 bg-gray-200/60 rounded-full mx-auto mb-10" />
+          
+          <div className="flex items-center justify-between mb-8">
+             <h2 className="text-[26px] font-black text-slate-800 tracking-tighter">새 글 작성</h2>
+             <button onClick={onClose} className="w-11 h-11 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 active:scale-75 transition-transform">
+               <X size={22} />
+             </button>
+          </div>
+
+          <div className="space-y-6">
+             <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+                {['CARD_HACKS', 'SAVING_TIPS', 'QNA', 'FREE'].map(cat => (
+                  <button 
+                    key={cat}
+                    onClick={() => setCategory(cat)}
+                    className={`px-4 py-2.5 rounded-xl text-[12px] font-black transition-all ${
+                      category === cat ? 'bg-slate-900 text-white' : 'bg-gray-50 text-gray-400'
+                    }`}
+                  >
+                    {cat === 'CARD_HACKS' ? '💡 꿀팁' : cat === 'SAVING_TIPS' ? '💰 절약' : cat === 'QNA' ? '❓ 질문' : '💬 자유'}
+                  </button>
+                ))}
+             </div>
+
+             <div className="space-y-4">
+                <input 
+                  type="text" 
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="제목을 입력하세요"
+                  className="w-full p-5 rounded-[24px] bg-gray-50 border border-gray-100 outline-none focus:bg-white focus:border-slate-200 transition-all font-black text-[16px]"
+                />
+                <textarea 
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  placeholder="내용을 입력하세요..."
+                  className="w-full h-48 p-6 rounded-[32px] bg-gray-50 border border-gray-100 outline-none focus:bg-white focus:border-slate-200 transition-all font-medium text-[15px] resize-none"
+                />
+             </div>
+
+             <button 
+                onClick={handleSave}
+                disabled={loading || !title.trim() || !content.trim()}
+                className="w-full py-6 rounded-[32px] bg-slate-900 text-white font-black text-[17px] shadow-2xl active:scale-95 disabled:opacity-30 transition-all mt-4 tracking-[0.2em] h-20"
+              >
+                {loading ? '등록 중...' : '등록하기'}
+             </button>
+          </div>
+       </div>
+    </div>
+  );
+}
