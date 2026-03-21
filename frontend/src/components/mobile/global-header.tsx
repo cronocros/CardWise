@@ -150,6 +150,8 @@ export function GlobalHeader() {
                 window.dispatchEvent(new CustomEvent('openEditHomeModal'));
               } else if (activeTab === 'cards') {
                 window.dispatchEvent(new CustomEvent('openCardSettingsModal'));
+              } else if (activeTab === 'ledger') {
+                window.dispatchEvent(new CustomEvent('openEditLedgerModal'));
               } else {
                 router.push('/mobile/profile');
               }

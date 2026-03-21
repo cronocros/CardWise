@@ -5,15 +5,15 @@
 ## 전체 구성
 
 ```
-+-----------+     +-----------+     +-----------+     +-----------+
-| Frontend  |     | Backend   |     | Database  |     | Cache     |
-|           |     |           |     |           |     |           |
-| Next.js16 |<--->| Spring    |<--->| Supabase  |     | Redis     |
-| TypeScript|     | Boot      |     | PostgreSQL|     | (Upstash) |
-| Tailwind  |     | Kotlin    |     |           |     |           |
-| shadcn/ui |     |           |     |           |     |           |
-+-----------+     +-----------+     +-----------+     +-----------+
-   Vercel          Cloud Run         Managed           Serverless
++-----------+     +-----------+     +-----------+     +-----------+     +-----------+
+| Frontend  |     | Backend   |     | Database  |     | Storage   |     | Cache     |
+|           |     |           |     |           |     |           |     |           |
+| Next.js16 |<--->| Spring    |<--->| Supabase  |<--->| Supabase  |     | Upstash   |
+| TypeScript|     | Boot      |     | PostgreSQL|     | Storage   |     | Redis     |
+| Tailwind  |     | Kotlin    |     | (Auth)    |     | (Buckets) |     | Serverless|
++-----------+     +-----------+     +-----------+     +-----------+     +-----------+
+   Vercel            Vercel             Managed            Managed          Serverless
+      (또는 Cloud Run)
 ```
 
 ---
@@ -88,12 +88,13 @@
 
 | 항목 | 기술 | 선택 이유 |
 |------|------|----------|
-| Frontend 배포 | Vercel | Next.js 최적화, Edge 지원 |
-| Backend 배포 | Cloud Run (GCP) | 서버리스, 자동 스케일링 |
-| Cache (로컬) | Docker Redis (redis:7-alpine) | 로컬 개발, `docker compose up -d redis` |
-| Cache (운영) | Redis (Upstash) | 서버리스, pay-per-request, 스테이징/프로덕션 |
-| Auth | Supabase Auth | JWT 기반, 소셜 로그인 |
-| DNS | Vercel (기본) | 자동 SSL |
+| Frontend 배포 | Vercel | Next.js 최적화, Edge 지원, 글로벌 CDN |
+| Backend 배포 | Vercel (또는 Cloud Run) | API 통합 배포 또는 컨테이너 분리 |
+| Database | Supabase PostgreSQL | 관리형 DB, Auth 통합, RLS |
+| Storage | Supabase Storage | `media`, `receipts` 버킷 등 이미지/파일 관리 |
+| Cache (운영) | Upstash Redis | 서버리스, API 레이트 리밋, 메모리 캐싱 |
+| Auth | Supabase Auth | JWT 기반, 소셜 로그인 연동 |
+| Cache (로컬) | Docker Redis (redis:7-alpine) | 로컬 개발용 `docker compose up -d redis` |
 
 ---
 

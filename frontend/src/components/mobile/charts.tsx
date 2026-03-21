@@ -342,9 +342,10 @@ export function AreaTrendChart() {
           { x: 295, y: 50, label: '최고 81.4만', color: '#f43f5e', up: true },
           { x: 130, y: 125, label: '최저 28.9만', color: '#f43f5e', up: false }
         ].map((p, i) => (
-          <g key={i} className="animate-fade-in" style={{ animationDelay: `${1.5 + i * 0.3}s` }}>
-            <circle cx={p.x} cy={p.y} r="8" fill="white" className="shadow-lg" />
-            <circle cx={p.x} cy={p.y} r="4" fill={p.color} />
+          <g key={i} className="animate-fade-in group/point cursor-pointer" style={{ animationDelay: `${1.5 + i * 0.3}s` }}>
+            <circle cx={p.x} cy={p.y} r="14" fill={p.color} opacity="0.15" className="animate-pulse" />
+            <circle cx={p.x} cy={p.y} r="6" fill="white" className="shadow-sm" />
+            <circle cx={p.x} cy={p.y} r="3" fill={p.color} />
             
             <foreignObject x={p.x - 40} y={p.up ? p.y - 45 : p.y + 15} width="80" height="30">
               <div className="flex flex-col items-center">
@@ -371,10 +372,17 @@ export function AreaTrendChart() {
 // ─────────────────────────────────────────────────────────────
 // Simple Pie Chart (Full Segment)
 // ─────────────────────────────────────────────────────────────
-export function SimplePieChart({ data }: { data: DonutData[] }) {
+export function SimplePieChart({ data, onHoverChange }: { data: DonutData[], onHoverChange?: (idx: number | null) => void }) {
   const [animated, setAnimated] = useState(false);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
+  const handleHoverChange = (idx: number | null) => {
+    setHoveredIndex(idx);
+    if (onHoverChange) onHoverChange(idx);
+  };
+  
   const radius = 35;
+
   const circumference = 2 * Math.PI * radius;
 
   // Vibrant, distinctive colors for better visibility
@@ -414,9 +422,10 @@ export function SimplePieChart({ data }: { data: DonutData[] }) {
                 strokeDasharray={dashArray}
                 strokeDashoffset={animated ? dashOffset : 0}
                 strokeLinecap="butt"
-                onMouseEnter={() => setHoveredIndex(i)}
-                onMouseLeave={() => setHoveredIndex(null)}
-                onTouchStart={() => setHoveredIndex(i)}
+                onMouseEnter={() => handleHoverChange(i)}
+                onMouseLeave={() => handleHoverChange(null)}
+                onTouchStart={() => handleHoverChange(i)}
+                onClick={() => handleHoverChange(hoveredIndex === i ? null : i)}
                 className="transition-all duration-300 ease-out origin-center cursor-pointer opacity-90 hover:opacity-100"
                 style={{ 
                   animationDelay: `${i * 0.1}s`,

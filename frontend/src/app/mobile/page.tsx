@@ -12,6 +12,7 @@ import {
   AchievementModal, 
   TransactionDetailModal, 
   EditHomeModal, 
+  EditLedgerModal,
   NotificationModal, 
   AssetActionModal, 
   CardSettingsModal,
@@ -33,6 +34,20 @@ import { Transaction, Card } from '@/types/mobile';
 import { SAMPLE_USER, SAMPLE_CARDS, SAMPLE_TRANSACTIONS, SPENDING_CATEGORIES } from '@/lib/sampleData';
 import { WeeklyBarChart } from '@/components/mobile/charts';
 
+// Simple global cache to avoid refetching on every tab change (component mount)
+const globalCache: {
+  userData: { id: string; email: string; displayName: string; level: number; exp: number; tierName: string } | null;
+  monthlySpend: number;
+  transactions: Transaction[] | null;
+  cards: Card[] | null;
+  lastFetched: number;
+} = {
+  userData: null,
+  monthlySpend: SAMPLE_USER.monthlySpend,
+  transactions: null,
+  cards: null,
+  lastFetched: 0
+};
 
 export default function MobileHomePage() {
   return (
@@ -96,8 +111,8 @@ function MobileHomePageContent() {
   const [transactions, setTransactions] = useState<Transaction[]>(SAMPLE_TRANSACTIONS);
   
   // Real Data State
-  const [userData, setUserData] = useState<{ id: string; email: string; displayName: string; level: number; exp: number; tierName: string } | null>(null);
-  const [monthlySpend, setMonthlySpend] = useState(SAMPLE_USER.monthlySpend);
+  const [userData, setUserData] = useState<{ id: string; email: string; displayName: string; level: number; exp: number; tierName: string } | null>(globalCache.userData);
+  const [monthlySpend, setMonthlySpend] = useState(globalCache.monthlySpend);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -112,20 +127,23 @@ function MobileHomePageContent() {
           .eq('account_id', user.id)
           .single();
           
-        setUserData({
+        const mappedUser = {
           id: user.id,
           email: user.email || '',
           displayName: profile?.display_name || user.email?.split('@')[0] || '사용자',
           level: profile?.level || 1,
           exp: profile?.exp || 0,
           tierName: profile?.tier_name || 'BRONZE'
-        });
+        };
+        setUserData(mappedUser);
+        globalCache.userData = mappedUser;
         
         // Fetch monthly summary
         const now = new Date();
         const summary = await getMonthlySpendingSummary(user.id, now.getFullYear(), now.getMonth() + 1);
         if (summary && summary.totalAmount != null) {
           setMonthlySpend(summary.totalAmount);
+          globalCache.monthlySpend = summary.totalAmount;
         }
       }
     };
@@ -146,7 +164,10 @@ function MobileHomePageContent() {
           isAdjusted: p.isAdjusted
         }));
         
-        setTransactions(mapped.length > 0 ? mapped : SAMPLE_TRANSACTIONS);
+        if (mapped.length > 0) {
+          setTransactions(mapped);
+          globalCache.transactions = mapped;
+        }
       }
     };
 
@@ -169,19 +190,31 @@ function MobileHomePageContent() {
           color: '#1a1a1a',
           currency: 'KRW'
         }));
-        if (mapped.length > 0) setCards(mapped);
+        if (mapped.length > 0) {
+           setCards(mapped);
+           globalCache.cards = mapped;
+        }
       }
     };
 
-    fetchUser();
-    fetchTransactionsData();
-    fetchCardsData();
+    // Stale-while-revalidate pattern to avoid UI flashing
+    if (globalCache.transactions) setTransactions(globalCache.transactions);
+    if (globalCache.cards) setCards(globalCache.cards);
+
+    const now = Date.now();
+    if (now - globalCache.lastFetched > 30000) { // 30 sec cache
+       globalCache.lastFetched = now;
+       fetchUser();
+       fetchTransactionsData();
+       fetchCardsData();
+    }
   }, []);
   
   // Modal State
   const [showAddTx, setShowAddTx] = useState(false);
   const [showAchievement, setShowAchievement] = useState(false);
   const [showEditHome, setShowEditHome] = useState(false);
+  const [showEditLedger, setShowEditLedger] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showAssetAction, setShowAssetAction] = useState<'fill' | 'send' | null>(null);
   const [showCardSettings, setShowCardSettings] = useState(false);
@@ -231,6 +264,27 @@ function MobileHomePageContent() {
     localStorage.setItem('home_visible_sections', JSON.stringify(sections));
   };
 
+  // Persistent Ledger Sections
+  const DEFAULT_LEDGER_SECTIONS = ['summary', 'trend', 'calendar', 'dailyList'];
+  const [visibleLedgerSections, setVisibleLedgerSections] = useState<string[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('ledger_visible_sections');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error('Failed to load ledger sections:', e);
+        }
+      }
+    }
+    return DEFAULT_LEDGER_SECTIONS;
+  });
+
+  const saveLedgerSections = (sections: string[]) => {
+    setVisibleLedgerSections(sections);
+    localStorage.setItem('ledger_visible_sections', JSON.stringify(sections));
+  };
+
   useEffect(() => {
     let timeout: NodeJS.Timeout;
     const resetTimer = () => {
@@ -246,11 +300,13 @@ function MobileHomePageContent() {
     events.forEach(event => window.addEventListener(event, resetTimer));
     resetTimer();
     const handleEditHome = () => setShowEditHome(true);
+    const handleEditLedger = () => setShowEditLedger(true);
     const handleNotification = () => setShowNotifications(true);
     const handleCardSettings = () => setShowCardSettings(true);
     const handleSitemap = () => setShowSitemap(true);
     
     window.addEventListener('openEditHomeModal', handleEditHome);
+    window.addEventListener('openEditLedgerModal', handleEditLedger);
     window.addEventListener('openNotificationModal', handleNotification);
     window.addEventListener('openCardSettingsModal', handleCardSettings);
     window.addEventListener('openSitemapModal', handleSitemap);
@@ -258,6 +314,7 @@ function MobileHomePageContent() {
     return () => {
       events.forEach(event => window.removeEventListener(event, resetTimer));
       window.removeEventListener('openEditHomeModal', handleEditHome);
+      window.removeEventListener('openEditLedgerModal', handleEditLedger);
       window.removeEventListener('openNotificationModal', handleNotification);
       window.removeEventListener('openCardSettingsModal', handleCardSettings);
       window.removeEventListener('openSitemapModal', handleSitemap);
@@ -286,6 +343,19 @@ function MobileHomePageContent() {
   const resetSections = () => {
     if (window.confirm('홈 화면 구성을 초기 상태로 되돌리시겠습니까?')) {
       saveSections(DEFAULT_SECTIONS);
+    }
+  };
+
+  const toggleLedgerSection = (id: string) => {
+    const newSections = visibleLedgerSections.includes(id) 
+      ? visibleLedgerSections.filter(s => s !== id) 
+      : [...visibleLedgerSections, id];
+    saveLedgerSections(newSections);
+  };
+
+  const resetLedgerSections = () => {
+    if (window.confirm('가계부 화면 구성을 초기 상태로 되돌리시겠습니까?')) {
+      saveLedgerSections(DEFAULT_LEDGER_SECTIONS);
     }
   };
 
@@ -337,6 +407,7 @@ function MobileHomePageContent() {
             transactions={transactions}
             setSelectedTx={setSelectedTx}
             router={router}
+            visibleSections={visibleLedgerSections}
           />
         )}
         {activeTab === 'community' && <CommunityView />}
@@ -451,6 +522,14 @@ function MobileHomePageContent() {
           onToggleSection={toggleSection}
           onReorder={saveSections}
           onReset={resetSections}
+        />
+        <EditLedgerModal 
+          isOpen={showEditLedger} 
+          onClose={() => setShowEditLedger(false)} 
+          visibleSections={visibleLedgerSections} 
+          onToggleSection={toggleLedgerSection}
+          onReorder={saveLedgerSections}
+          onReset={resetLedgerSections}
         />
         <NotificationModal isOpen={showNotifications} onClose={() => setShowNotifications(false)} />
         <AssetActionModal isOpen={!!showAssetAction} onClose={() => setShowAssetAction(null)} type={showAssetAction} />

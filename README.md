@@ -12,6 +12,12 @@
 | **`docs/`** | 전체 SDLC 문서 및 아키텍처 | Markdown (01~07 분류) |
 | **`supabase/`** | DB 스키마 및 마이그레이션 | PostgreSQL, Migration SQL |
 | **`scripts/`** | 자산 추출 및 빌드 스크립트 | Node.js, Jimp |
+| **`scripts/`** | 자산 추출 및 빌드 스크립트 | Node.js, Jimp |
+
+### 🛠 핵심 인프라 스택 (Core Infrastructure)
+- **Deployment (배포)**: Vercel (최적화된 프론트엔드 및 Edge 인프라)
+- **Database & Storage**: Supabase (PostgreSQL, Auth, Storage)
+- **Memory Cache**: Upstash Redis (서버리스 인메모리 캐싱 및 레이트 리밋)
 
 ## 🚀 빠른 시작 (Quick Start)
 

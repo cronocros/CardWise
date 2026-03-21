@@ -1501,3 +1501,146 @@ export function CreatePostModal({ isOpen, onClose }: { isOpen: boolean; onClose:
 
 
 
+// ─────────────────────────────────────────────────────────────
+// Edit Ledger Modal (Personalization)
+// ─────────────────────────────────────────────────────────────
+interface EditLedgerModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  visibleSections: string[];
+  onToggleSection: (id: string) => void;
+  onReorder: (sections: string[]) => void;
+  onReset?: () => void;
+}
+
+const LEDGER_SECTIONS = [
+  { id: 'summary', name: '가계부 요약', icon: '💰' },
+  { id: 'trend', name: '지출 트렌드', icon: '📈' },
+  { id: 'calendar', name: '달력 뷰', icon: '📅' },
+  { id: 'dailyList', name: '일일 소비 현황', icon: '📋' },
+];
+
+export function EditLedgerModal({ isOpen, onClose, visibleSections, onToggleSection, onReorder, onReset }: EditLedgerModalProps) {
+  const [visible, setVisible] = useState(false);
+  const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setVisible(isOpen), 30);
+    return () => clearTimeout(timer);
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIdx(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedIdx === null || draggedIdx === index) return;
+
+    const newSections = [...visibleSections];
+    const draggedItem = newSections[draggedIdx];
+    newSections.splice(draggedIdx, 1);
+    newSections.splice(index, 0, draggedItem);
+    
+    setDraggedIdx(index);
+    onReorder(newSections);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIdx(null);
+  };
+
+  return (
+    <div className={`fixed inset-0 z-[1000] flex items-end justify-center transition-all duration-300 ${visible ? 'opacity-100' : 'opacity-0'}`}>
+       <div className="absolute inset-0 bg-[#0a0005]/70 backdrop-blur-xl" onClick={onClose} />
+       
+       <div className={`relative w-full max-w-[430px] bg-white rounded-t-[50px] p-9 pb-12 shadow-2xl transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${visible ? 'translate-y-0' : 'translate-y-full'}`}>
+          <div className="w-14 h-1.5 bg-gray-200/40 rounded-full mx-auto mb-10" />
+          
+          <div className="flex items-center justify-between mb-6 px-1">
+              <div className="flex items-center gap-2">
+                 <div className="w-1 h-4 bg-rose-500 rounded-full" />
+                 <h2 className="text-[18px] font-black text-slate-900 tracking-tighter">가계부 화면 구성</h2>
+              </div>
+              <div className="flex items-center gap-5">
+                 <button 
+                   onClick={() => {
+                     if (window.confirm('화면 구성을 초기 상태로 되돌리시겠습니까?')) {
+                        onReset?.();
+                     }
+                   }}
+                   className="text-slate-300 hover:text-rose-500 transition-colors active:rotate-180 duration-500"
+                   title="초기화"
+                 >
+                   <Sparkles size={16} />
+                 </button>
+                 <button 
+                   onClick={() => {
+                     if (window.confirm('현재 설정을 저장하시겠습니까?')) {
+                        onClose();
+                     }
+                   }}
+                   className="text-slate-300 hover:text-emerald-500 transition-colors"
+                   title="저장"
+                 >
+                   <Check size={20} />
+                 </button>
+                 <button 
+                   onClick={onClose} 
+                   className="text-slate-300 hover:text-slate-900 transition-colors"
+                   title="닫기"
+                 >
+                   <X size={18} />
+                 </button>
+              </div>
+           </div>
+
+           <div className="bg-slate-50/50 rounded-[32px] p-1.5 border border-slate-100/30">
+              <div className="max-h-[50vh] overflow-y-auto pr-1 scrollbar-hide space-y-1">
+                 {[...visibleSections, ...LEDGER_SECTIONS.map(s => s.id).filter(id => !visibleSections.includes(id))].map((id, index) => {
+                    const section = LEDGER_SECTIONS.find(s => s.id === id);
+                    if (!section) return null;
+                    const isActive = visibleSections.includes(id);
+                    const isRequired = id === 'calendar';
+
+                    return (
+                      <div 
+                        key={id} 
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, index)}
+                        onDragOver={(e) => handleDragOver(e, index)}
+                        onDragEnd={handleDragEnd}
+                        className={`py-2 px-3.5 rounded-[20px] flex items-center gap-3 transition-all cursor-grab active:cursor-grabbing border ${isActive ? 'bg-white border-white shadow-sm' : 'bg-transparent border-transparent opacity-40'} ${draggedIdx === index ? 'opacity-10 scale-95' : ''}`}
+                      >
+                         <div className="flex flex-col gap-0.5 opacity-20">
+                            <div className="w-0.5 h-0.5 rounded-full bg-slate-900" />
+                            <div className="w-0.5 h-0.5 rounded-full bg-slate-900" />
+                            <div className="w-0.5 h-0.5 rounded-full bg-slate-900" />
+                         </div>
+                         <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-base shadow-inner ${isActive ? 'bg-rose-50' : 'bg-gray-100'}`}>
+                           {section.icon}
+                         </div>
+                         <span className={`flex-1 text-[14px] font-black tracking-tight ${isActive ? 'text-slate-800' : 'text-slate-400'}`}>
+                           {section.name} {isRequired && <span className="text-[10px] text-rose-400 ml-1 font-bold">(필수)</span>}
+                         </span>
+                         <button 
+                           onClick={() => {
+                             if (!isRequired) onToggleSection(id);
+                           }}
+                           disabled={isRequired}
+                           className={`w-9 h-5 rounded-full transition-all duration-300 relative ${isActive ? 'bg-rose-500' : 'bg-slate-200'} ${isRequired ? 'opacity-50 cursor-not-allowed' : ''}`}
+                         >
+                            <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-all duration-300 ${isActive ? 'left-4.5' : 'left-0.5'}`} />
+                         </button>
+                      </div>
+                    );
+                 })}
+              </div>
+           </div>
+       </div>
+    </div>
+  );
+}
