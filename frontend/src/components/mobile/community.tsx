@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Search, MessageSquare, Heart, Bookmark, Share2, 
-  Flame, Plus
+  Flame, Plus, ChevronDown, Eye
 } from 'lucide-react';
 import { CommunityPost } from '@/types/mobile';
 import { CommunityDetailModal, CreatePostModal } from './modals';
@@ -11,11 +11,11 @@ import { getCommunityPosts, togglePostLike, togglePostBookmark, unwrapArray } fr
 
 const CATEGORIES = ['홈', 'CARD_HACKS', 'SAVING_TIPS', 'QNA', 'FREE'];
 const CATEGORY_LABELS: Record<string, string> = {
-  '홈': '🪐 홈',
-  'CARD_HACKS': '💡 꿀팁',
-  'SAVING_TIPS': '💰 절약',
-  'QNA': '❓ 질문',
-  'FREE': '💬 자유'
+  '홈': '🪐 커뮤니티 홈',
+  'CARD_HACKS': '💡 카드꿀팁',
+  'SAVING_TIPS': '💰 절약비법',
+  'QNA': '❓ 무엇이든 물어보세요',
+  'FREE': '💬 자유게시판'
 };
 
 const getAvatar = (accountId?: string) => {
@@ -27,15 +27,51 @@ const getAvatar = (accountId?: string) => {
 
 export function CommunityView() {
   const [selectedCategory, setSelectedCategory] = useState('홈');
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPost, setSelectedPost] = useState<CommunityPost | null>(null);
   const [isWriteModalOpen, setIsWriteModalOpen] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
+  const [topPosts, setTopPosts] = useState<Record<string, CommunityPost>>({});
+  const [trendingPosts, setTrendingPosts] = useState<CommunityPost[]>([]);
+
   const [page, setPage] = useState(1);
   const [hasMore, setMore] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
+
+  useEffect(() => {
+    const fetchTopPosts = async () => {
+      const targetCategories = ['CARD_HACKS', 'SAVING_TIPS', 'QNA', 'FREE'];
+      const results: Record<string, CommunityPost> = {};
+      
+      await Promise.all(targetCategories.map(async (cat) => {
+         try {
+           const res = await getCommunityPosts(cat, 1, 1, 'viewCount');
+           const unwrapped = unwrapArray<CommunityPost>(res);
+           if (unwrapped.length > 0) {
+             results[cat] = unwrapped[0];
+           }
+         } catch(e) {
+           console.error(`Failed to fetch top post for ${cat}`, e);
+         }
+      }));
+      setTopPosts(results);
+
+      // Fetch overall trending posts (by commentCount)
+      try {
+        const trendRes = await getCommunityPosts(undefined, 1, 5, 'commentCount');
+        setTrendingPosts(unwrapArray<CommunityPost>(trendRes));
+      } catch(e) {
+        console.error("Failed to fetch trending posts", e);
+      }
+    };
+
+    if (selectedCategory === '홈') {
+      fetchTopPosts();
+    }
+  }, [refreshTrigger, selectedCategory]);
 
   useEffect(() => {
     setPage(1);
@@ -154,36 +190,59 @@ export function CommunityView() {
 
   return (
     <div className="space-y-8 animate-fade-in pb-24">
-      {/* Search Bar */}
-      <div className="relative group">
-        <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-slate-900 transition-colors" size={18} />
-        <input 
-          type="text" 
-          placeholder="오늘의 금융 꿀팁을 찾아보세요" 
-          className="w-full h-14 pl-14 pr-6 rounded-2xl bg-gray-50 border-none focus:ring-4 focus:ring-slate-900/5 text-[14px] font-black transition-all"
-        />
-      </div>
+      {/* Integrated Search & Category Box - Premium All-in-one */}
+      <div className="relative z-[80] -mx-2 px-2">
+        <div className="bg-white border border-gray-100 rounded-[32px] shadow-2xl shadow-slate-900/5 overflow-hidden transition-all duration-300">
+           {/* Top: Category Selector */}
+           <button 
+             onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
+             className="w-full h-14 flex items-center justify-between px-6 bg-white hover:bg-gray-50/50 active:bg-gray-100/50 transition-colors"
+           >
+             <div className="flex items-center gap-3">
+               <span className="text-[17px] font-[900] text-slate-900 tracking-tight">{CATEGORY_LABELS[selectedCategory]}</span>
+             </div>
+             <ChevronDown className={`text-slate-400 transition-transform duration-500 ${isCategoryDropdownOpen ? 'rotate-180' : ''}`} size={20} />
+           </button>
 
-      {/* Premium App-like Chip Tabs - Modern & Clean */}
-      <div className="sticky top-0 z-[80] bg-white/95 backdrop-blur-md pt-3 pb-3 -mx-6 px-6 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[1px] after:bg-gray-100">
-        <div className="flex gap-2 overflow-x-auto no-scrollbar relative z-10 w-full snap-x">
-          {CATEGORIES.map((cat) => {
-            const isActive = selectedCategory === cat;
-            return (
-              <button 
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`snap-start relative px-4 py-2.5 text-[14px] font-[900] tracking-tight transition-all rounded-full whitespace-nowrap active:scale-95 ${
-                  isActive 
-                    ? 'bg-slate-900 text-white shadow-md shadow-slate-900/10' 
-                    : 'bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-600'
-                }`}
-              >
-                {CATEGORY_LABELS[cat]}
-              </button>
-            );
-          })}
+           {/* Divider - Subtle & Elegant */}
+           <div className="h-px bg-slate-50 mx-6 opacity-60" />
+
+           {/* Bottom: Search Input */}
+           <div className="relative h-14 flex items-center px-6 group/search">
+              <Search className="text-gray-300 group-focus-within/search:text-slate-900 transition-colors" size={18} />
+              <input 
+                type="text" 
+                placeholder="오늘의 금융 꿀팁을 찾아보세요" 
+                className="flex-1 h-full pl-3 bg-transparent border-none focus:ring-0 text-[14px] font-bold placeholder-gray-300 text-slate-800"
+              />
+           </div>
         </div>
+
+        {isCategoryDropdownOpen && (
+          <div className="absolute top-[calc(100%+8px)] left-2 right-2 p-2 bg-white/95 backdrop-blur-xl border border-gray-100 rounded-[28px] shadow-2xl animate-in zoom-in-95 fade-in duration-200 z-[90]">
+            <div className="grid grid-cols-1 gap-1">
+              {CATEGORIES.map((cat) => {
+                const isActive = selectedCategory === cat;
+                return (
+                  <button 
+                    key={cat}
+                    onClick={() => {
+                      setSelectedCategory(cat);
+                      setIsCategoryDropdownOpen(false);
+                    }}
+                    className={`flex items-center gap-3 px-5 py-3.5 rounded-2xl transition-all active:scale-[0.97] ${
+                      isActive 
+                        ? 'bg-slate-900 text-white shadow-md' 
+                        : 'hover:bg-gray-50 text-slate-600'
+                    }`}
+                  >
+                    <span className="text-[14px] font-[900]">{CATEGORY_LABELS[cat]}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Editor's Pick - Only visible on Home */}
@@ -203,6 +262,86 @@ export function CommunityView() {
              <Flame size={120} />
           </div>
         </section>
+      )}
+
+      {/* Top View Posts - Horizontal Scroll by Category */}
+      {selectedCategory === '홈' && Object.keys(topPosts).length > 0 && (
+        <div className="space-y-5 animate-in slide-in-from-right-4 duration-700">
+          <div className="flex items-center justify-between px-2">
+            <h3 className="text-[18px] font-[900] text-slate-800 tracking-tight flex items-center gap-2">
+              <Flame className="text-rose-500" size={20} fill="currentColor" />
+              게시판별 최다 조회
+            </h3>
+          </div>
+          <div className="flex gap-4 overflow-x-auto pb-4 px-2 no-scrollbar scroll-smooth">
+            {Object.entries(topPosts).map(([cat, post]) => (
+              <div 
+                key={cat}
+                onClick={() => handlePostClick(post)}
+                className="flex-shrink-0 w-[260px] p-6 rounded-[32px] bg-white border border-gray-50 shadow-xl shadow-slate-900/5 active:scale-[0.98] transition-all group"
+              >
+                <div className="flex items-center gap-2 mb-4">
+                   <span className="text-[10px] font-black text-rose-500 bg-rose-50 px-2.5 py-1 rounded-lg uppercase tracking-wider">
+                     {CATEGORY_LABELS[cat] ? CATEGORY_LABELS[cat].split(' ')[1] : cat}
+                   </span>
+                </div>
+                <h4 className="text-[16px] font-[900] text-slate-900 line-clamp-2 mb-3 tracking-tighter leading-tight group-hover:text-rose-500 transition-colors">
+                  {post.title}
+                </h4>
+                <div className="flex items-center gap-4 text-gray-300">
+                   <div className="flex items-center gap-1.5 bg-gray-50 px-2 py-1 rounded-md">
+                     <Eye size={12} className="text-gray-400" />
+                     <span className="text-[11px] font-black text-gray-400">{post.viewCount}</span>
+                   </div>
+                   <div className="flex items-center gap-1.5 bg-gray-50 px-2 py-1 rounded-md">
+                     <MessageSquare size={12} className="text-gray-400" />
+                     <span className="text-[11px] font-black text-gray-400">{post.commentCount}</span>
+                   </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Trending Posts - By Comment Count */}
+      {selectedCategory === '홈' && trendingPosts.length > 0 && (
+        <div className="space-y-5 animate-in slide-in-from-right-4 duration-1000">
+          <div className="flex items-center justify-between px-2">
+            <h3 className="text-[18px] font-[900] text-slate-800 tracking-tight flex items-center gap-2">
+              <MessageSquare className="text-indigo-500" size={20} fill="currentColor" />
+              지금 가장 핫한 토크
+            </h3>
+          </div>
+          <div className="flex gap-4 overflow-x-auto pb-4 px-2 no-scrollbar scroll-smooth">
+            {trendingPosts.map((post) => (
+              <div 
+                key={post.postId}
+                onClick={() => handlePostClick(post)}
+                className="flex-shrink-0 w-[260px] p-6 rounded-[32px] bg-indigo-50/30 border border-indigo-100/50 shadow-xl shadow-indigo-900/5 active:scale-[0.98] transition-all group"
+              >
+                <div className="flex items-center gap-2 mb-4">
+                   <span className="text-[10px] font-black text-indigo-500 bg-indigo-50 px-2.5 py-1 rounded-lg uppercase tracking-wider">
+                     Trending 🔥
+                   </span>
+                </div>
+                <h4 className="text-[16px] font-[900] text-slate-900 line-clamp-2 mb-3 tracking-tighter leading-tight group-hover:text-indigo-600 transition-colors">
+                  {post.title}
+                </h4>
+                <div className="flex items-center gap-4 text-gray-300">
+                   <div className="flex items-center gap-1.5 bg-white px-2 py-1 rounded-md border border-indigo-100/30">
+                     <MessageSquare size={12} className="text-indigo-400" />
+                     <span className="text-[11px] font-black text-indigo-500">{post.commentCount}</span>
+                   </div>
+                   <div className="flex items-center gap-1.5 bg-white px-2 py-1 rounded-md border border-indigo-100/30">
+                     <Heart size={12} className="text-rose-400" />
+                     <span className="text-[11px] font-black text-rose-500">{post.likeCount}</span>
+                   </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
 
       {/* Post Feed */}
@@ -270,6 +409,10 @@ export function CommunityView() {
                       <MessageSquare size={16} />
                       <span className="text-[12px] font-black">{post.commentCount}</span>
                     </button>
+                    <div className="flex items-center gap-1.5 text-gray-300">
+                      <Eye size={16} />
+                      <span className="text-[12px] font-black">{post.viewCount}</span>
+                    </div>
                     <button 
                       className="ml-auto text-gray-300 hover:text-slate-900 active:scale-90 transition-all flex items-center gap-1.5 p-2" 
                       onClick={(e) => handleShare(post, e)}
@@ -307,7 +450,18 @@ export function CommunityView() {
       <CommunityDetailModal 
         isOpen={!!selectedPost} 
         onClose={() => setSelectedPost(null)} 
-        post={selectedPost} 
+        post={selectedPost}
+        onUpdate={(updated) => {
+          setPosts(prev => prev.map(p => p.postId === updated.postId ? updated : p));
+          setTrendingPosts(prev => prev.map(p => p.postId === updated.postId ? updated : p));
+          setTopPosts(prev => {
+            const next = { ...prev };
+            Object.keys(next).forEach(cat => {
+              if (next[cat].postId === updated.postId) next[cat] = updated;
+            });
+            return next;
+          });
+        }}
       />
 
       <CreatePostModal 

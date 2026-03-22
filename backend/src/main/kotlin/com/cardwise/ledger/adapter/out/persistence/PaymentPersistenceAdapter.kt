@@ -2,14 +2,18 @@ package com.cardwise.ledger.adapter.out.persistence
 
 import com.cardwise.ledger.application.port.out.PaymentPersistencePort
 import com.cardwise.ledger.domain.model.*
-import com.cardwise.ledger.entity.PaymentAdjustmentEntity
-import com.cardwise.ledger.entity.PaymentEntity
-import com.cardwise.ledger.entity.PendingActionEntity
-import com.cardwise.ledger.repository.PaymentAdjustmentRepository
-import com.cardwise.ledger.repository.PaymentRepository
-import com.cardwise.ledger.repository.PendingActionRepository
+import com.cardwise.ledger.adapter.out.persistence.entity.PaymentAdjustmentEntity
+import com.cardwise.ledger.adapter.out.persistence.entity.PaymentEntity
+import com.cardwise.ledger.adapter.out.persistence.entity.PendingActionEntity
+import com.cardwise.ledger.adapter.out.persistence.repository.PaymentAdjustmentRepository
+import com.cardwise.ledger.adapter.out.persistence.repository.PaymentRepository
+import com.cardwise.ledger.adapter.out.persistence.repository.PendingActionRepository
+import com.cardwise.ledger.adapter.out.persistence.repository.PaymentProjection
+import com.cardwise.ledger.adapter.out.persistence.repository.PendingActionProjection
 import org.springframework.stereotype.Component
 import java.util.*
+import java.time.ZoneId
+import java.time.OffsetDateTime
 
 @Component
 class PaymentPersistenceAdapter(
@@ -94,14 +98,14 @@ class PaymentPersistenceAdapter(
     private fun PaymentAdjustmentEntity.toDomain() = PaymentAdjustment(
         adjustmentId = adjustmentId,
         paymentId = paymentId!!,
-        accountId = UUID.randomUUID(), // Should be fetched if needed, or mapping adjusted
+        accountId = UUID.randomUUID(), 
         adjustmentType = adjustmentType!!,
         originalKrwAmount = originalKrwAmount!!,
         adjustedKrwAmount = adjustedKrwAmount!!,
         differenceAmount = (adjustedKrwAmount ?: 0) - (originalKrwAmount ?: 0),
         reason = reason,
-        billedAt = billedAt?.atStartOfDay(java.time.ZoneId.systemDefault())?.toOffsetDateTime(),
-        createdAt = createdAt ?: java.time.OffsetDateTime.now()
+        billedAt = billedAt?.atStartOfDay(ZoneId.systemDefault())?.toOffsetDateTime(),
+        createdAt = createdAt ?: OffsetDateTime.now()
     )
 
     private fun PaymentAdjustment.toEntity() = PaymentAdjustmentEntity().apply {
@@ -125,7 +129,7 @@ class PaymentPersistenceAdapter(
         description = description,
         status = com.cardwise.ledger.domain.model.PendingActionStatus.valueOf(status!!),
         priority = com.cardwise.ledger.domain.model.Priority.valueOf(priority!!),
-        createdAt = createdAt ?: java.time.OffsetDateTime.now(),
+        createdAt = createdAt ?: OffsetDateTime.now(),
         resolvedAt = resolvedAt
     )
 
@@ -143,9 +147,9 @@ class PaymentPersistenceAdapter(
         resolvedAt = this@toEntity.resolvedAt
     }
 
-    private fun com.cardwise.ledger.repository.PaymentProjection.toDomain() = Payment(
+    private fun PaymentProjection.toDomain() = Payment(
         paymentId = paymentId,
-        accountId = accountId, // Fixed to use projection accountId
+        accountId = accountId, 
         userCardId = userCardId,
         merchantNameRaw = merchantNameRaw,
         paidAt = paidAt,
@@ -155,7 +159,7 @@ class PaymentPersistenceAdapter(
         transactionType = TransactionType.valueOf(transactionType)
     )
 
-    private fun com.cardwise.ledger.repository.PendingActionProjection.toDomain() = PendingAction(
+    private fun PendingActionProjection.toDomain() = PendingAction(
         pendingActionId = pendingActionId,
         accountId = accountId,
         actionType = actionType,

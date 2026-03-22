@@ -6,7 +6,7 @@ import com.cardwise.common.api.PaginationMeta
 import com.cardwise.common.exception.NotFoundException
 import com.cardwise.ledger.application.port.`in`.PendingActionUseCase
 import com.cardwise.ledger.application.port.out.PaymentPersistencePort
-import com.cardwise.ledger.dto.*
+import com.cardwise.ledger.application.dto.*
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.OffsetDateTime

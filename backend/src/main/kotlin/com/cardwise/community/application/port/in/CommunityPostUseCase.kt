@@ -1,10 +1,10 @@
-package com.cardwise.community.application.port.`in`
+package com.cardwise.community.application.service.service.port.`in`
 
 import com.cardwise.common.api.ApiResponse
-import com.cardwise.community.dto.CreatePostRequest
-import com.cardwise.community.dto.PostResponse
-import com.cardwise.community.dto.ReactionResponse
-import com.cardwise.community.dto.UpdatePostRequest
+import com.cardwise.community.application.dto.CreatePostRequest
+import com.cardwise.community.application.dto.PostResponse
+import com.cardwise.community.application.dto.ReactionResponse
+import com.cardwise.community.application.dto.UpdatePostRequest
 import java.util.UUID
 
 interface CommunityPostUseCase {

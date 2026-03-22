@@ -1,7 +1,7 @@
 package com.cardwise.ledger.application.port.`in`
 
 import com.cardwise.common.api.ApiResponse
-import com.cardwise.ledger.dto.*
+import com.cardwise.ledger.application.dto.*
 import java.util.UUID
 
 interface PaymentUseCase {

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Plus, ChevronLeft, ChevronRight, ChevronDown, FileUp, Sparkles, Search, SearchX, X, Tag, CalendarDays } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, ChevronDown, FileUp, Sparkles, Search, SearchX, X, Tag, CalendarDays, LayoutGrid, RotateCcw } from 'lucide-react';
 import { AreaTrendChart, SimplePieChart } from '@/components/mobile/charts';
 import { LedgerCalendar } from '@/components/mobile/calendar';
 import { TransactionItem } from '@/components/mobile/cards';
@@ -34,16 +34,44 @@ export function LedgerView({
   const [isSearchOpen, setIsSearchOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState('');
   
-  // 다중 필터 상태
+  // 오늘 날짜 기본값 (YYYY-MM-DD 형식)
+  const todayStr = React.useMemo(() => new Date().toISOString().split('T')[0], []);
+
+  // 다중 필터 상태 - 기본값을 오늘로 설정
   const [searchCategories, setSearchCategories] = React.useState<string[]>([]);
   const [searchTags, setSearchTags] = React.useState<string[]>([]);
-  const [searchPeriod, setSearchPeriod] = React.useState<{ type: string; start?: string; end?: string }>({ type: 'all' });
+  const [searchPeriod, setSearchPeriod] = React.useState<{ type: string; start?: string; end?: string }>({ 
+    type: 'all', 
+    start: todayStr, 
+    end: todayStr 
+  });
   
   // 필터 모달 상태
   const [isFilterModalOpen, setIsFilterModalOpen] = React.useState(false);
   const [filterModalTab, setFilterModalTab] = React.useState<'category'|'period'|'tag'>('category');
 
   const [activeCategoryIndex, setActiveCategoryIndex] = React.useState<number | null>(null);
+
+  // 날짜 선택기 제어를 위한 Ref
+  const startDateRef = React.useRef<HTMLInputElement>(null);
+  const endDateRef = React.useRef<HTMLInputElement>(null);
+
+  // 날짜 선택기 열기 함수
+  const openDatePicker = (ref: React.RefObject<HTMLInputElement | null>) => {
+    const el = ref.current;
+    if (el) {
+      const input = el as HTMLInputElement & { showPicker?: () => void };
+      if (typeof input.showPicker === 'function') {
+        try {
+          input.showPicker();
+        } catch {
+          input.click();
+        }
+      } else {
+        input.click();
+      }
+    }
+  };
 
   // 필터 적용 메커니즘
   const filteredTransactions = React.useMemo(() => {
@@ -89,6 +117,30 @@ export function LedgerView({
        return true;
     });
   }, [transactions, searchQuery, searchCategories, searchTags, searchPeriod]);
+
+  // 필터 활성화 여부
+  const isFilterActive = searchQuery !== '' || searchCategories.length > 0 || searchTags.length > 0 || searchPeriod.type !== 'all';
+
+  // 카드에 표시할 집계 데이터 (필터 없을 땐 해당 월 기준)
+  const cardSummaryData = React.useMemo(() => {
+    if (!isFilterActive) {
+      const now = new Date();
+      const currentMonthTxs = transactions.filter(tx => {
+        const txDate = new Date(tx.date);
+        return txDate.getFullYear() === now.getFullYear() && txDate.getMonth() === now.getMonth();
+      });
+      return {
+        expense: currentMonthTxs.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0),
+        income: currentMonthTxs.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0),
+        title: `${now.getMonth() + 1}월 소비내역`
+      };
+    }
+    return {
+      expense: filteredTransactions.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0),
+      income: filteredTransactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0),
+      title: '필터 적용 합계'
+    };
+  }, [isFilterActive, transactions, filteredTransactions]);
 
   const totalExpense = filteredTransactions.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
   const totalIncome = filteredTransactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
@@ -250,7 +302,9 @@ export function LedgerView({
         </div>
       ) : (
         <div className="animate-fade-in space-y-6">
-          <div className="flex flex-col gap-4 p-6 rounded-[32px] bg-slate-900 text-white shadow-2xl relative overflow-hidden">
+          {/* 소비 내역 카드 섹션 */}
+          <div className="mx-2 mb-2 relative group z-20">
+             <div className="flex flex-col gap-4 p-6 rounded-[32px] bg-slate-900 text-white shadow-2xl relative overflow-hidden h-[180px] justify-center items-center">
              <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12">
                 <FileUp size={80} />
              </div>
@@ -261,26 +315,27 @@ export function LedgerView({
                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-rose-300">소비 내역</p>
                   </div>
                </div>
-               <h3 className="text-[34px] font-black tracking-tighter mb-6 leading-none">전체 소비 내역</h3>
-               <div className="flex items-center gap-6">
-                  <div className="flex flex-col">
-                     <span className="text-[11px] font-black text-white/30 uppercase tracking-widest mb-1.5">총 지출</span>
-                     <span className="text-[22px] font-black text-rose-400 font-display tracking-tight">₩{totalExpense.toLocaleString()}</span>
+               <h3 className="text-[30px] font-black tracking-tighter mb-8 text-center">{cardSummaryData.title}</h3>
+               <div className="flex items-center justify-center gap-8">
+                  <div className="flex flex-col items-center text-center whitespace-nowrap">
+                     <span className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-1 font-display">총 지출 합계</span>
+                     <span className="text-[20px] font-black text-rose-400 font-display tracking-tight">{cardSummaryData.expense.toLocaleString()}원</span>
                   </div>
                   <div className="w-px h-10 bg-white/10" />
-                  <div className="flex flex-col">
-                     <span className="text-[11px] font-black text-white/30 uppercase tracking-widest mb-1.5">총 수입</span>
-                     <span className="text-[22px] font-black text-emerald-400 font-display tracking-tight">₩{totalIncome.toLocaleString()}</span>
+                  <div className="flex flex-col items-center text-center whitespace-nowrap">
+                     <span className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-1 font-display">총 수입 합계</span>
+                     <span className="text-[20px] font-black text-emerald-400 font-display tracking-tight">{cardSummaryData.income.toLocaleString()}원</span>
                   </div>
                </div>
-             </div>
-             <button onClick={() => setIsSearchOpen(!isSearchOpen)} className="absolute top-8 right-8 w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center text-white hover:bg-white/20 active:scale-90 transition-all z-20">
-                <Search size={18} />
-             </button>
+              </div>
+              <button onClick={() => setIsSearchOpen(!isSearchOpen)} className="absolute top-8 right-8 w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center text-white hover:bg-white/20 active:scale-90 transition-all z-20 shadow-lg backdrop-blur-sm border border-white/10">
+                 <Search size={18} />
+              </button>
+           </div>
           </div>
 
           {isSearchOpen && (
-             <div className="animate-in slide-in-from-top-4 fade-in duration-300 mx-2 p-3 rounded-[24px] bg-white border border-gray-100 shadow-[0_15px_40px_-10px_rgba(0,0,0,0.08)] relative z-0 mt-3 mb-2 space-y-3">
+             <div className="animate-in slide-in-from-top-10 fade-in duration-500 mx-2 p-3 pt-16 rounded-b-[32px] bg-white border-x border-b border-gray-100 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.12)] relative z-10 -mt-12 space-y-3">
                 {/* 검색 인풋 영역 */}
                 <div className="flex items-center gap-2 px-3 py-2 bg-gray-50/80 rounded-[16px] border border-gray-100/50 focus-within:bg-white focus-within:border-slate-800 transition-all focus-within:shadow-[0_0_0_4px_rgba(15,23,42,0.05)]">
                    <Search size={16} className="text-gray-400 shrink-0" />
@@ -298,160 +353,186 @@ export function LedgerView({
                    )}
                 </div>
                 
-                {/* 1줄 필터 바 (필터 모달 호출 버튼 칩스) */}
-                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 -mx-1 px-1">
-                   {/* 카테고리 필터 버튼 */}
-                   <button 
-                      onClick={() => { setFilterModalTab('category'); setIsFilterModalOpen(true); }}
-                      className={`shrink-0 flex items-center gap-1.5 font-bold text-[13px] pl-3 py-1.5 rounded-[12px] pr-2 transition-colors border ${
-                        searchCategories.length === 0 ? 'bg-white text-slate-500 border-gray-200 hover:bg-gray-50' : 'bg-slate-800 text-white border-slate-800 shadow-sm'
-                      }`}
-                   >
-                      {searchCategories.length === 0 ? '모든 분류' : searchCategories.length === 1 ? searchCategories[0] : `${searchCategories[0]} 외 ${searchCategories.length-1}개`}
-                      <ChevronDown size={14} className={`pointer-events-none ${searchCategories.length === 0 ? 'text-slate-400' : 'text-slate-300'}`} />
-                   </button>
+                {/* 검색 필터 단축 메뉴 바 (아이콘 버튼 + 액티브 칩) - 가로 스크롤 대신 줄바꿈(Wrap) 적용 */}
+                <div className="relative flex flex-wrap items-center gap-1.5 pb-1 px-1 min-h-[40px]">
+                   {/* 고정된 필터 모달 아이콘 버튼들 */}
+                   <div className="flex items-center gap-1.5 shrink-0 bg-gray-50/50 p-1 rounded-full border border-gray-100">
+                     <button 
+                        onClick={() => { setFilterModalTab('period'); setIsFilterModalOpen(true); }}
+                        className={`w-8 h-8 flex items-center justify-center rounded-full shadow-[0_2px_4px_rgba(0,0,0,0.02)] transition-all ${filterModalTab === 'period' && isFilterModalOpen ? 'bg-slate-900 text-white' : 'bg-white text-slate-500 hover:text-slate-800'}`}
+                     >
+                        <CalendarDays size={15} />
+                     </button>
+                     <button 
+                        onClick={() => { setFilterModalTab('category'); setIsFilterModalOpen(true); }}
+                        className={`w-8 h-8 flex items-center justify-center rounded-full shadow-[0_2px_4px_rgba(0,0,0,0.02)] transition-all ${filterModalTab === 'category' && isFilterModalOpen ? 'bg-slate-900 text-white' : 'bg-white text-slate-500 hover:text-slate-800'}`}
+                     >
+                        <LayoutGrid size={15} />
+                     </button>
+                     <button 
+                        onClick={() => { setFilterModalTab('tag'); setIsFilterModalOpen(true); }}
+                        className={`w-8 h-8 flex items-center justify-center rounded-full shadow-[0_2px_4px_rgba(0,0,0,0.02)] transition-all ${filterModalTab === 'tag' && isFilterModalOpen ? 'bg-slate-900 text-white' : 'bg-white text-slate-500 hover:text-slate-800'}`}
+                     >
+                        <Tag size={15} />
+                     </button>
+                   </div>
 
-                   {/* 조회 기간 필터 버튼 */}
-                   <button 
-                      onClick={() => { setFilterModalTab('period'); setIsFilterModalOpen(true); }}
-                      className={`shrink-0 flex items-center gap-1.5 font-bold text-[13px] pl-3 py-1.5 rounded-[12px] pr-2 transition-colors border ${
-                        searchPeriod.type === 'all' ? 'bg-white text-slate-500 border-gray-200 hover:bg-gray-50' : 'bg-slate-800 text-white border-slate-800 shadow-sm'
-                      }`}
-                   >
-                      {searchPeriod.type === 'all' ? '모든 기간' : searchPeriod.type === 'custom' ? '직접 설정' : { '7d': '최근 1주일', '1m': '최근 1개월', '3m': '최근 3개월' }[searchPeriod.type]}
-                      <ChevronDown size={14} className={`pointer-events-none ${searchPeriod.type === 'all' ? 'text-slate-400' : 'text-slate-300'}`} />
-                   </button>
-
-                   {/* 태그 영역 리스트 및 추가 버튼 */}
+                   {/* 구분선 */}
                    <div className="w-px h-4 bg-gray-200 mx-1 shrink-0" />
                    
+                   {/* 모달에서 선택한 내역이 나열되는 영역 (액티브 칩) */}
+                   {searchPeriod.type !== 'all' && (
+                      <button 
+                         onClick={() => { setFilterModalTab('period'); setIsFilterModalOpen(true); }}
+                         className="shrink-0 flex items-center gap-0.5 font-black text-[9px] px-2 py-1.5 rounded-full bg-slate-900 text-white shadow-md shadow-slate-100 transition-all active:scale-95"
+                      >
+                         {searchPeriod.type === 'custom' ? '직접 설정' : { '7d': '1주일', '1m': '1개월', '3m': '3개월' }[searchPeriod.type]}
+                         <ChevronDown size={8} className="opacity-60" />
+                      </button>
+                   )}
+
+                   {searchCategories.map(cat => (
+                      <button 
+                         key={cat}
+                         onClick={() => setSearchCategories(prev => prev.filter(c => c !== cat))}
+                         className="shrink-0 flex items-center gap-0.5 font-black text-[9px] px-2 py-1.5 rounded-full bg-slate-900 text-white shadow-md shadow-slate-100 transition-all hover:bg-slate-800 active:scale-95"
+                      >
+                         {cat}
+                         <X size={8} className="opacity-60" />
+                      </button>
+                   ))}
+
                    {searchTags.map(tag => (
                       <button 
                          key={tag}
                          onClick={() => setSearchTags(prev => prev.filter(t => t !== tag))}
-                         className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-[10px] text-[13px] font-bold bg-rose-50 border border-rose-200 text-rose-600 shadow-sm hover:bg-rose-100 transition-all"
+                         className="shrink-0 flex items-center gap-0.5 px-2 py-1.5 rounded-full text-[9px] font-black bg-rose-50 border border-rose-100 text-rose-500 shadow-sm hover:bg-rose-100 transition-all active:scale-95"
                       >
                          #{tag}
-                         <X size={12} className="opacity-60 hover:opacity-100" />
+                         <X size={8} className="opacity-60" />
                       </button>
                    ))}
 
-                   <button 
-                      onClick={() => { setFilterModalTab('tag'); setIsFilterModalOpen(true); }}
-                      className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] text-[13px] font-bold bg-white border border-dashed border-gray-300 text-slate-400 hover:bg-gray-50 hover:text-slate-600 transition-all"
-                   >
-                      <Plus size={14} /> 태그 검색
-                   </button>
+                   {/* 선택된 필터가 하나도 없을 때 안내 문구 */}
+                   {searchPeriod.type === 'all' && searchCategories.length === 0 && searchTags.length === 0 && (
+                      <span className="text-[12px] text-gray-400 font-bold px-2 shrink-0 animate-in fade-in">아이콘을 눌러 필터를 추가해보세요</span>
+                   )}
                 </div>
-             </div>
-          )}
 
-          {/* 상세 필터 모달 (Bottom Sheet) */}
-          {isFilterModalOpen && (
-             <div className="fixed inset-0 z-[100] flex flex-col justify-end">
-                <div className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in" onClick={() => setIsFilterModalOpen(false)} />
-                <div className="relative bg-white rounded-t-[32px] p-6 pb-8 animate-in slide-in-from-bottom-full duration-300 max-h-[85vh] flex flex-col">
-                   <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6" />
-                   <div className="flex items-center justify-between mb-6">
-                      <h3 className="text-[20px] font-black text-slate-800 tracking-tight">상세 필터</h3>
-                      <button onClick={() => { setSearchCategories([]); setSearchTags([]); setSearchPeriod({ type: 'all' }); }} className="text-[13px] font-bold text-slate-400 hover:text-slate-600 active:scale-95 transition-all bg-gray-50 px-3 py-1.5 rounded-full">모두 초기화</button>
-                   </div>
-                   
-                   <div className="flex items-center gap-2 mb-6 p-1.5 bg-gray-50 rounded-[16px]">
-                     {['category', 'period', 'tag'].map(tab => (
-                        <button 
-                          key={tab}
-                          onClick={() => setFilterModalTab(tab as 'category' | 'period' | 'tag')}
-                          className={`flex-1 py-2 rounded-xl text-[14px] font-bold transition-all ${filterModalTab === tab ? 'bg-white text-slate-800 shadow-[0_2px_8px_rgba(0,0,0,0.04)]' : 'text-slate-400 hover:text-slate-600'}`}
-                        >
-                           {tab === 'category' ? '카테고리' : tab === 'period' ? '조회 기간' : '태그'}
-                        </button>
-                     ))}
-                   </div>
-
-                   <div className="overflow-y-auto no-scrollbar flex-1 -mx-2 px-2 pb-4 min-h-[50vh]">
-                     {filterModalTab === 'category' && (
-                        <div className="flex flex-wrap gap-2.5">
-                           <button onClick={() => setSearchCategories([])} className={`px-4 py-2.5 rounded-2xl text-[14px] font-bold border-2 transition-all ${searchCategories.length === 0 ? 'bg-slate-800 text-white border-slate-800 shadow-md' : 'bg-white text-slate-500 border-gray-100 hover:border-gray-200'}`}>전체 카테고리</button>
-                           {Array.from(new Set(categories.map(c => c.name))).map(cat => (
-                             <button 
-                               key={cat}
-                               onClick={() => setSearchCategories(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat])}
-                               className={`px-4 py-2.5 rounded-2xl text-[14px] font-bold border-2 transition-all cursor-pointer ${searchCategories.includes(cat) ? 'bg-rose-50 text-rose-600 border-rose-200 shadow-sm' : 'bg-white text-slate-600 border-gray-100 hover:border-gray-200'}`}
-                             >
-                               {cat}
-                             </button>
-                           ))}
+                {/* 팝오버 필터 (Popover) - 가로 스크롤 영역 밖의 상위 컨테이너에 위치하며 레이어 순서를 최상단으로 설정 */}
+                {isFilterModalOpen && (
+                   <div className="absolute top-full left-0 right-0 z-[200] mt-1 animate-in fade-in slide-in-from-top-2 duration-200 px-1">
+                      {/* 배경 클릭 감지 (닫기) - 딤 처리 강화 및 블러 처리 */}
+                      <div className="fixed inset-0 z-0 bg-slate-900/15 backdrop-blur-[3px]" onClick={() => setIsFilterModalOpen(false)} />
+                      
+                      {/* 실제 팝오버 본체 - 크기 축소 및 디자인 정밀화 */}
+                      <div className="relative z-10 w-full bg-white rounded-[22px] border border-slate-100 shadow-[0_25px_60px_-12px_rgba(15,23,42,0.3)] p-4 flex flex-col">
+                        <div className="flex items-center justify-between mb-3 px-1">
+                           <div className="flex items-center gap-1.5">
+                              <span className="w-1 h-4 bg-slate-900 rounded-full" />
+                              <h4 className="text-[13px] font-black text-slate-800 tracking-tight">
+                                 {filterModalTab === 'category' ? '분류 선택' : filterModalTab === 'period' ? '기간 설정' : '태그 필터'}
+                              </h4>
+                           </div>
+                           <button onClick={() => { setSearchCategories([]); setSearchTags([]); setSearchPeriod({ type: 'all' }); }} className="flex items-center gap-1 text-[11px] font-black text-slate-400 hover:text-slate-600 transition-colors uppercase tracking-tight">
+                              <RotateCcw size={10} />
+                              초기화
+                           </button>
                         </div>
-                     )}
-                     
-                     {filterModalTab === 'tag' && (
-                        <div className="flex flex-wrap gap-2">
-                           {Array.from(new Set(transactions.flatMap(tx => tx.tags || []))).map(tag => (
-                             <button 
-                               key={tag}
-                               onClick={() => setSearchTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])}
-                               className={`px-3 py-2 rounded-xl text-[14px] font-bold border-2 transition-all cursor-pointer ${searchTags.includes(tag) ? 'bg-rose-50 text-rose-600 border-rose-200 shadow-sm' : 'bg-white text-slate-500 border-gray-100 hover:border-gray-200'}`}
-                             >
-                               #{tag}
-                             </button>
-                           ))}
-                           {Array.from(new Set(transactions.flatMap(tx => tx.tags || []))).length === 0 && (
-                             <div className="py-12 w-full flex flex-col items-center justify-center text-center">
-                               <Tag size={40} className="text-gray-200 mb-3" />
-                               <span className="text-[15px] font-bold text-slate-400">등록된 태그가 아직 없어요</span>
-                             </div>
+
+                        <div className="max-h-[30vh] overflow-y-auto no-scrollbar px-0.5 pb-0.5">
+                           {filterModalTab === 'category' && (
+                              <div className="flex flex-wrap gap-1.5">
+                                 <button onClick={() => setSearchCategories([])} className={`px-3 py-1.5 rounded-lg text-[12px] font-black border transition-all ${searchCategories.length === 0 ? 'bg-slate-900 text-white border-slate-900' : 'bg-gray-50 text-slate-400 border-transparent hover:border-gray-200'}`}>전체</button>
+                                 {Array.from(new Set(categories.map(c => c.name))).map(cat => (
+                                    <button 
+                                      key={cat}
+                                      onClick={() => setSearchCategories(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat])}
+                                      className={`px-3 py-1.5 rounded-lg text-[12px] font-black border transition-all ${searchCategories.includes(cat) ? 'bg-rose-50 text-rose-600 border-rose-200 shadow-sm' : 'bg-gray-50 text-slate-500 border-transparent hover:border-gray-200'}`}
+                                    >
+                                      {cat}
+                                    </button>
+                                 ))}
+                              </div>
+                           )}
+
+                           {filterModalTab === 'period' && (
+                              <div className="space-y-3">
+                                 <div className="grid grid-cols-2 gap-1.5">
+                                    {[{ id: 'all', label: '전체 시간' }, { id: '7d', label: '최근 1주일' }, { id: '1m', label: '최근 1개월' }, { id: '3m', label: '최근 3개월' }].map(p => (
+                                       <button 
+                                          key={p.id}
+                                          onClick={() => setSearchPeriod({ type: p.id })}
+                                          className={`py-1.5 rounded-lg text-[12px] font-black border transition-all ${searchPeriod.type === p.id ? 'bg-slate-900 text-white border-slate-900' : 'bg-gray-50 text-slate-500 border-transparent hover:border-gray-200'}`}
+                                       >
+                                          {p.label}
+                                       </button>
+                                    ))}
+                                 </div>
+                                 <div className="pt-3 border-t border-gray-50">
+                                    <p className="text-[10px] font-black text-slate-400 mb-1.5 px-0.5 uppercase tracking-wider">직접 설정 (시작 - 종료)</p>
+                                    <div className="flex items-center gap-1.5">
+                                       <div 
+                                          onClick={() => openDatePicker(startDateRef)}
+                                          className="relative flex-1 bg-gray-50 rounded-lg h-7 flex items-center justify-center p-1 border border-transparent focus-within:border-slate-200 cursor-pointer active:bg-gray-100 transition-colors"
+                                       >
+                                          <CalendarDays size={10} className="absolute left-2 text-slate-400 pointer-events-none" />
+                                          <span className="text-[9px] font-black text-slate-800 ml-3 pointer-events-none">{searchPeriod.start || todayStr}</span>
+                                          <input 
+                                             ref={startDateRef}
+                                             type="date" 
+                                             value={searchPeriod.start || todayStr} 
+                                             onChange={e => setSearchPeriod({ type: 'custom', start: e.target.value, end: searchPeriod.end })}
+                                             className="absolute inset-0 opacity-0 pointer-events-none w-full" 
+                                          />
+                                       </div>
+                                       <span className="text-slate-200 text-[10px]">-</span>
+                                       <div 
+                                          onClick={() => openDatePicker(endDateRef)}
+                                          className="relative flex-1 bg-gray-50 rounded-lg h-7 flex items-center justify-center p-1 border border-transparent focus-within:border-slate-200 cursor-pointer active:bg-gray-100 transition-colors"
+                                       >
+                                          <CalendarDays size={10} className="absolute left-2 text-slate-400 pointer-events-none" />
+                                          <span className="text-[9px] font-black text-slate-800 ml-3 pointer-events-none">{searchPeriod.end || todayStr}</span>
+                                          <input 
+                                             ref={endDateRef}
+                                             type="date" 
+                                             value={searchPeriod.end || todayStr} 
+                                             onChange={e => setSearchPeriod({ type: 'custom', start: searchPeriod.start, end: e.target.value })}
+                                             className="absolute inset-0 opacity-0 pointer-events-none w-full" 
+                                          />
+                                       </div>
+                                    </div>
+                                 </div>
+                              </div>
+                           )}
+
+                           {filterModalTab === 'tag' && (
+                              <div className="flex flex-wrap gap-1.5">
+                                 {Array.from(new Set(transactions.flatMap(tx => tx.tags || []))).map(tag => (
+                                    <button 
+                                      key={tag}
+                                      onClick={() => setSearchTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])}
+                                      className={`px-3 py-1.5 rounded-lg text-[12px] font-black border transition-all ${searchTags.includes(tag) ? 'bg-rose-50 text-rose-600 border-rose-200 shadow-sm' : 'bg-gray-50 text-slate-500 border-transparent hover:border-gray-200'}`}
+                                    >
+                                      #{tag}
+                                    </button>
+                                 ))}
+                                 {Array.from(new Set(transactions.flatMap(tx => tx.tags || []))).length === 0 && (
+                                    <div className="py-6 w-full text-center text-[12px] font-black text-slate-300">등록된 태그가 없습니다</div>
+                                 )}
+                              </div>
                            )}
                         </div>
-                     )}
-                     
-                     {filterModalTab === 'period' && (
-                        <div className="space-y-6">
-                           <div className="grid grid-cols-2 gap-3">
-                             {[{ id: 'all', label: '전체 시간' }, { id: '7d', label: '최근 1주일' }, { id: '1m', label: '최근 1개월' }, { id: '3m', label: '최근 3개월' }].map(p => (
-                                <button 
-                                  key={p.id}
-                                  onClick={() => setSearchPeriod({ type: p.id })}
-                                  className={`py-3.5 rounded-2xl text-[14px] font-bold border-2 transition-all cursor-pointer ${searchPeriod.type === p.id ? 'bg-slate-800 text-white border-slate-800 shadow-md' : 'bg-white text-slate-600 border-gray-100 hover:border-gray-200'}`}
-                                >
-                                  {p.label}
-                                </button>
-                             ))}
-                           </div>
-                           
-                           <div className="pt-6 border-t border-gray-100">
-                             <div className="flex items-center gap-2 mb-4">
-                               <CalendarDays size={16} className="text-rose-500" />
-                               <p className="text-[14px] font-black text-slate-800 tracking-tight">직접 설정</p>
-                             </div>
-                             <div className="flex items-center gap-3">
-                               <div className={`flex-1 bg-white border-2 rounded-2xl px-4 py-3.5 focus-within:border-slate-800 transition-colors ${searchPeriod.type === 'custom' ? 'border-rose-200 bg-rose-50/30' : 'border-gray-100'}`}>
-                                 <input 
-                                   type="date" 
-                                   value={searchPeriod.start || ''} 
-                                   onChange={e => setSearchPeriod({ type: 'custom', start: e.target.value, end: searchPeriod.end })}
-                                   className="w-full bg-transparent border-none text-[14px] font-bold text-slate-700 outline-none focus:ring-0 p-0" 
-                                 />
-                               </div>
-                               <span className="text-slate-300 font-black text-[18px]">-</span>
-                               <div className={`flex-1 bg-white border-2 rounded-2xl px-4 py-3.5 focus-within:border-slate-800 transition-colors ${searchPeriod.type === 'custom' ? 'border-rose-200 bg-rose-50/30' : 'border-gray-100'}`}>
-                                 <input 
-                                   type="date" 
-                                   value={searchPeriod.end || ''} 
-                                   onChange={e => setSearchPeriod({ type: 'custom', start: searchPeriod.start, end: e.target.value })}
-                                   className="w-full bg-transparent border-none text-[14px] font-bold text-slate-700 outline-none focus:ring-0 p-0" 
-                                 />
-                               </div>
-                             </div>
-                           </div>
-                        </div>
-                     )}
+
+                        <button 
+                           onClick={() => setIsFilterModalOpen(false)}
+                           className="mt-4 w-full py-1.5 bg-slate-900 rounded-xl text-white font-black text-[11px] shadow-lg shadow-slate-100 active:scale-95 transition-all"
+                        >
+                           필터 적용하기
+                        </button>
+                      </div>
                    </div>
-                   
-                   <button onClick={() => setIsFilterModalOpen(false)} className="mt-4 w-full py-4.5 bg-slate-900 rounded-[24px] text-white font-black text-[16px] flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-[0_10px_20px_-5px_rgba(15,23,42,0.3)]">
-                     필터 닫기 및 결과보기
-                   </button>
-                </div>
+                )}
              </div>
           )}
 

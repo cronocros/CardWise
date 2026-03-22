@@ -1,60 +1,69 @@
-# CardWise - 프로젝트 통합 문서 가이드 (docs/README.md)
+# CardWise 프로젝트 통합 문서 가이드 (DOC-00-01)
 
-이 문서는 CardWise 프로젝트의 모든 개발 산출물과 가이드라인을 분류한 **전체 문서 지도**입니다. (v3.5 프리미엄 업적 시스템 업데이트 반영)
+이 문서는 CardWise 프로젝트의 모든 개발 산출물과 가이드라인을 분류하고 코드화한 **전체 문서 지도**입니다. (v3.7 헥사고날 아키텍처 완성 및 프로젝트 최적화 반영)
 
-## 🧭 문서 카테고리 (6단계 가공 프로세스)
+## 🧭 문서 카테고리 및 관리 코드 (Directory Structure)
 
-각 폴더는 소프트웨어 개발 생명주기(SDLC)에 따라 분류되어 있습니다.
+모든 문서는 고유의 관리 코드(`DOC-xx-xx`)를 부여받아 체계적으로 관리됩니다.
 
-### [01. 분석 (Analysis)](01-analysis/)
-*프로젝트의 전제 조건과 요구 사항을 정의합니다.*
-- `functional-requirements.md`: 주요 기능 요건 및 프로세스 흐름
-- `non-functional-requirements.md`: 성능, 보안, 가용성 지표
-- `risk-register.md`: 잠재적 리스크 및 대응 방안
-- `audit-report.md`: 코드 및 보안 감사 결과
+### [00. 메인 (Core)](./)
+- `DOC-00-01`: [README.md](README.md) - 전체 문서 가이드 (본 문서)
+- `DOC-00-02`: [STATUS.md](STATUS.md) - **Single Source of Truth** (AI/IDE 작업용 종합 현황)
+
+### [01. 분석 및 요구사항 (Analysis)](01-analysis/)
+- `DOC-01-01`: [DOC-01-01-functional-requirements.md](01-analysis/DOC-01-01-functional-requirements.md) - 기능 요건 명세
+- `DOC-01-02`: [DOC-01-02-non-functional-requirements.md](01-analysis/DOC-01-02-non-functional-requirements.md) - 비기능/품질 요건
+- `DOC-01-03`: [DOC-01-03-feature-matrix.md](01-analysis/DOC-01-03-feature-matrix.md) - 기능 구현 대조표
+- `DOC-01-04`: [DOC-01-04-risk-register.md](01-analysis/DOC-01-04-risk-register.md) - 리스크 관리부
+- `DOC-01-05`: [DOC-01-05-architecture-checklist.md](01-analysis/DOC-01-05-architecture-checklist.md) - 아키텍처 점검표
 
 ### [02. 기획 및 계획 (Planning)](02-planning/)
-*일정, 범위, 태스크를 관리합니다.*
-- `implementation_plan_v3.4.md`: 이전 버전(v3.4) 구현 로드맵
-- `TASKS.md`: 기능 코드별 세부 체크리스트 및 작업 현황
-- `feature-matrix.md`: 전체 완성도 대조표 (95%+)
+- `DOC-02-01`: [DOC-02-01-tasks.md](02-planning/DOC-02-01-tasks.md) - 세부 태스크 및 진행 상태
+- `DOC-02-02`: [DOC-02-02-refinement-plan.md](02-planning/DOC-02-02-refinement-plan.md) - 중장기 고도화 계획
 
 ### [03. 아키텍처 및 설계 (Architecture)](03-architecture/)
-*시스템 원칙과 구조를 명시합니다.*
-- `system-architecture.md`: 인프라, 배포, 인프라스트럭처
-- `application-architecture.md`: Hexagonal (Kotlin) 모듈 구조
-- `frontend-architecture.md`: Next.js BFF 패턴 및 상태 관리
-- `auth-design.md`: Supabase JWT 인증 설계 및 흐름
-- `schema-design.md`: DB ERD 및 테이블/컬럼 명세
+- `DOC-03-01`: [DOC-03-01-system-architecture.md](03-architecture/DOC-03-01-system-architecture.md) - 시스템 구성 및 인프라
+- `DOC-03-02`: [DOC-03-02-application-architecture.md](03-architecture/DOC-03-02-application-architecture.md) - 헥사고날/CQRS 상세 설계
+- `DOC-03-03`: [DOC-03-03-schema-design.md](03-architecture/DOC-03-03-schema-design.md) - DB ERD 및 테이블 상세
+- `DOC-03-04`: [DOC-03-04-api-design.md](03-architecture/DOC-03-04-api-design.md) - REST API 설계서
+- `DOC-03-05`: [DOC-03-05-auth-design.md](03-architecture/DOC-03-05-auth-design.md) - 인증/인가 메커니즘
+- `DOC-03-06`: [DOC-03-06-frontend-architecture.md](03-architecture/DOC-03-06-frontend-architecture.md) - Next.js 아키텍처
+- `DOC-03-07`: [DOC-03-07-data-dictionary.md](03-architecture/DOC-03-07-data-dictionary.md) - 데이터 용어 사전
+- `DOC-03-08`: [DOC-03-08-tech-stack.md](03-architecture/DOC-03-08-tech-stack.md) - 기술 스택 정의서
+- `DOC-03-09`: [DOC-03-09-gamification-system.md](03-architecture/DOC-03-09-gamification-system.md) - 게임화(뱃지/경험치) 로직
 
 ### [04. 디자인 (Design)](04-design/)
-*UI/UX 원칙과 가이드라인을 정의합니다.*
-- `design-system.md`: 컬러 패밀리, 타이포그래피, 컴포넌트 토큰
-- `BADGE_SYSTEM.md`: **20종 뱃지 및 업적 시스템 상세 명세 (v3.5)**
-- `pencil-new.pen`: Pencil 전용 디자인 에셋 파일 (백업)
+- `DOC-04-01`: [DOC-04-01-design-system.md](04-design/DOC-04-01-design-system.md) - 디자인 가이드 및 토큰
+- `DOC-04-02`: [DOC-04-02-ux-architecture.md](04-design/DOC-04-02-ux-architecture.md) - UX 레이아웃 구조
+- `DOC-04-03`: [DOC-04-03-card-ui-specification.md](04-design/DOC-04-03-card-ui-specification.md) - 카드 컴포넌트 상세
 
-### [05. 구현 및 운영 (Implementation)](05-implementation/)
-*서버 가동 및 환경 설정을 위한 실전 가이드입니다.*
-- `deployment-guide.md`: Vercel/Cloud Run 배포 절차
-- `observability.md`: 로깅 및 모니터링 전략
+### [05. 운영 및 배포 (Ops)](05-ops/)
+- `DOC-05-01`: [DOC-05-01-deployment-guide.md](05-ops/DOC-05-01-deployment-guide.md) - 배포 가이드
+- `DOC-05-02`: [DOC-05-02-observability-strategy.md](05-ops/DOC-05-02-observability-strategy.md) - 모니터링/로깅 전략
 
-### [06. 테스트 (Testing)](06-testing/)
-*품질 보증을 위한 시나리오 및 결과입니다.*
-- `test-strategy.md`: 단위/통합/E2E 테스트 전략
-- `test-accounts.md`: 통합 테넌시 파악 용 4대 테스트 표준 계정 및 UUID 가이드
+### [06. 품질 및 테스트 (Test)](06-test/)
+- `DOC-06-01`: [DOC-06-01-test-strategy.md](06-test/DOC-06-01-test-strategy.md) - 테스트 전략 및 계획
+- `DOC-06-02`: [DOC-06-02-test-accounts.md](06-test/DOC-06-02-test-accounts.md) - 테스트 시나리오/계정
 
-### [07. 기타 및 아카이브 (Other)](07-other/)
-*과거 기록 및 보조 도구 모음입니다.*
-- `LINKS.md`: 로컬 실행 및 외부 서비스 통합 링크
-- `archive/`: 이전 버전 명세서 및 완료된 이슈 기록
+### [07. 세부 기능 명세 (Spec)](07-spec/)
+- `DOC-07-01`: [DOC-07-01-auth-specification.md](07-spec/DOC-07-01-auth-specification.md) - 인증/가입 상세
+- `DOC-07-02`: [DOC-07-02-card-management.md](07-spec/DOC-07-02-card-management.md) - 카드 관리 상세
+- `DOC-07-03`: [DOC-07-03-ledger-specification.md](07-spec/DOC-07-03-ledger-specification.md) - 가계부(수동) 상세
+- `DOC-07-04`: [DOC-07-04-ledger-inbox.md](07-spec/DOC-07-04-ledger-inbox.md) - 가계부 인박스 상세
+- `DOC-07-05`: [DOC-07-05-performance-tracking.md](07-spec/DOC-07-05-performance-tracking.md) - 실적 추적 상세
+- `DOC-07-06`: [DOC-07-06-benefit-search.md](07-spec/DOC-07-06-benefit-search.md) - 혜택 검색 상세
+- `DOC-07-07`: [DOC-07-07-voucher-management.md](07-spec/DOC-07-07-voucher-management.md) - 바우처 관리 상세
+- `DOC-07-08`: [DOC-07-08-notification.md](07-spec/DOC-07-08-notification.md) - 알림 시스템 상세
+- `DOC-07-09`: [DOC-07-09-dashboard.md](07-spec/DOC-07-09-dashboard.md) - 대시보드 및 통계 상세
+- `DOC-07-10`: [DOC-07-10-group-ledger.md](07-spec/DOC-07-10-group-ledger.md) - 그룹 가계부 상세
+- `DOC-07-11`: [DOC-07-11-community-specification.md](07-spec/DOC-07-11-community-specification.md) - 커뮤니티 상세 명세
+- `DOC-07-12`: [DOC-07-12-tag-system.md](07-spec/DOC-07-12-tag-system.md) - 태그 시스템 상세
+- `DOC-07-13`: [DOC-07-13-kafka-event-design.md](07-other/DOC-07-13-kafka-event-design.md) - 이벤트 주도 아키텍처 초안
 
 ---
 
-## 🚦 현재 활동 (Core Documents)
+## 🏗️ 개발 및 문서 관리 원칙
 
-- **[STATUS.md](STATUS.md)**: 실시간 구현 현황 및 라우팅 구조 (가장 자주 읽어야 할 문서)
-- **[CLAUDE.md](../CLAUDE.md)**: 개발 환경 설정 및 터미널 명령어 퀵 치트 시트
-
-## ⚠️ 내부 관리 도구 (OPS)
-- `ops/dashboard`: AI 에이전트 작업 모니터링 라이브 대시보드
-- 대시보드 URL: `http://localhost:4173` (백그라운드 실행 필요)
+1. **코드 기반 참조**: 모든 기능은 `F-xx`, 문서는 `DOC-xx-xx` 코드로 식별하며, 문서 내 참조는 반드시 코드를 병기한다.
+2. **AI/IDE 친화적 구성**: `STATUS.md`는 프로젝트의 현재 맥락을 즉시 파악할 수 있는 진입점으로 관리한다.
+3. **분류 규칙**: 기획 요건은 `01-analysis`, 시스템/기술 설계는 `03-architecture`, 구체적인 기능 명세는 `07-spec` 폴더에 위치시킨다.

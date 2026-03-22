@@ -579,9 +579,10 @@ export interface CommunityReactionEnvelope {
   data: CommunityReactionResponse;
 }
 
-export async function getCommunityPosts(category?: string, page = 1, limit = 10) {
+export async function getCommunityPosts(category?: string, page = 1, limit = 10, sortBy?: string) {
   let query = `?page=${page}&limit=${limit}`;
   if (category) query += `&category=${category}`;
+  if (sortBy) query += `&sortBy=${sortBy}`;
   return tryFetchBackendJson<CommunityPostsResponse>(`/community/posts${query}`);
 }
 

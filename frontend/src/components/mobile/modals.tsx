@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { X, Home, CreditCard, Gift, LineChart, Users, Settings, User, Sparkles, Pencil, Trash2, MapPin, Tag, Smartphone, ShoppingBag, HelpCircle, Check, Star, Pin, Plus } from 'lucide-react';
+import { X, Home, CreditCard, Gift, Heart, LineChart, Users, Settings, User, Sparkles, Pencil, Trash2, MapPin, Tag, Smartphone, ShoppingBag, HelpCircle, Check, Star, Pin, Plus, Eye } from 'lucide-react';
 import { Mascot } from './mascot';
 import { Transaction, Card, CommunityPost, CommunityComment } from '@/types/mobile';
 
@@ -1148,6 +1148,7 @@ interface CommunityDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   post: CommunityPost | null;
+  onUpdate?: (updatedPost: CommunityPost) => void;
 }
 
 const getAvatar = (accountId?: string) => {
@@ -1157,8 +1158,9 @@ const getAvatar = (accountId?: string) => {
   return avatars[hash % avatars.length];
 };
 
-export function CommunityDetailModal({ isOpen, onClose, post }: CommunityDetailModalProps) {
+export function CommunityDetailModal({ isOpen, onClose, post, onUpdate }: CommunityDetailModalProps) {
   const [visible, setVisible] = useState(false);
+  const [localPost, setLocalPost] = useState<CommunityPost | null>(post);
   const [comments, setComments] = useState<CommunityComment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(false);
@@ -1174,17 +1176,36 @@ export function CommunityDetailModal({ isOpen, onClose, post }: CommunityDetailM
     const timer = setTimeout(() => {
       setVisible(isOpen);
       if (isOpen && post) {
+        setLocalPost(post);
         loadComments();
       }
     }, 30);
     return () => clearTimeout(timer);
   }, [isOpen, post, loadComments]);
 
-  const handleCreateComment = async () => {
-    if (!post || !newComment.trim()) return;
-    setLoading(true);
-    const res = await createPostComment(post.postId, newComment, replyingTo?.id);
+  const handleToggleLike = async () => {
+    if (!localPost) return;
+    const { togglePostLike } = await import('@/lib/cardwise-api');
+    const res = await togglePostLike(localPost.postId);
     if (res?.data) {
+      setLocalPost(prev => {
+        const updated = prev ? { ...prev, isLiked: res.data.isActive, likeCount: res.data.count } : null;
+        if (updated) onUpdate?.(updated);
+        return updated;
+      });
+    }
+  };
+
+  const handleCreateComment = async () => {
+    if (!localPost || !newComment.trim()) return;
+    setLoading(true);
+    const res = await createPostComment(localPost.postId, newComment, replyingTo?.id);
+    if (res?.data) {
+      const updatedPost = localPost ? { ...localPost, commentCount: (localPost.commentCount || 0) + 1 } : null;
+      if (updatedPost) {
+        setLocalPost(updatedPost);
+        onUpdate?.(updatedPost);
+      }
       setNewComment('');
       setReplyingTo(null);
       loadComments();
@@ -1192,7 +1213,7 @@ export function CommunityDetailModal({ isOpen, onClose, post }: CommunityDetailM
     setLoading(false);
   };
 
-  if (!isOpen || !post) return null;
+  if (!isOpen || !localPost) return null;
 
   return (
     <div className={`fixed inset-0 z-[1000] flex items-center justify-center p-6 transition-all duration-300 ${visible ? 'opacity-100' : 'opacity-0'}`}>
@@ -1200,25 +1221,35 @@ export function CommunityDetailModal({ isOpen, onClose, post }: CommunityDetailM
        <div className={`relative w-full max-w-sm bg-white rounded-[48px] p-9 shadow-2xl transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${visible ? 'translate-y-0 scale-100' : 'translate-y-24 scale-90'}`}>
           <div className="flex items-center gap-4 mb-8">
              <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-2xl border border-gray-100">
-                {getAvatar(post?.author?.accountId || post?.accountId)}
+                {getAvatar(localPost.author?.accountId || localPost.accountId)}
              </div>
              <div>
-                <p className="text-[15px] font-black text-slate-800">{post?.author?.displayName || '익명 계정'}</p>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  {post?.author?.tierName && (
-                    <span className="text-[9px] font-black text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded-md uppercase tracking-tighter">
-                      {post.author.tierName}
-                    </span>
-                  )}
-                  <span className="text-[9px] font-bold text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded-md uppercase tracking-tighter">
-                    Lv.{post?.author?.level || 1}
-                  </span>
-                  <span className="text-[11px] text-gray-400 font-bold uppercase tracking-widest pl-1">· {post?.category} · {post?.createdAt ? new Date(post.createdAt).toLocaleDateString() : ''}</span>
-                </div>
+                <p className="text-[15px] font-black text-slate-800">{localPost.author?.displayName || '익명 계정'}</p>
+                 <div className="flex items-center gap-1.5 mt-0.5">
+                   {localPost.author?.tierName && (
+                     <span className="text-[9px] font-black text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded-md uppercase tracking-tighter">
+                       {localPost.author.tierName}
+                     </span>
+                   )}
+                   <span className="text-[9px] font-bold text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded-md uppercase tracking-tighter">
+                     Lv.{localPost.author?.level || 1}
+                   </span>
+                   <span className="text-[11px] text-gray-400 font-bold uppercase tracking-widest pl-1">· {localPost.category} · {localPost.createdAt ? new Date(localPost.createdAt).toLocaleDateString() : ''}</span>
+                   <div className="flex items-center gap-1 ml-2 text-gray-300">
+                     <Eye size={12} />
+                     <span className="text-[10px] font-black">{localPost.viewCount}</span>
+                   </div>
+                 </div>
              </div>
+             <button 
+                className={`ml-auto p-3 rounded-2xl transition-all active:scale-75 ${localPost.isLiked ? 'bg-rose-50 text-rose-500' : 'bg-gray-50 text-gray-300'}`}
+                onClick={handleToggleLike}
+              >
+                <Heart size={20} fill={localPost.isLiked ? "currentColor" : "none"} />
+              </button>
           </div>
-          <h2 className="text-[22px] font-black text-slate-800 tracking-tight leading-tight mb-4">{post?.title}</h2>
-          <p className="text-[14px] text-slate-500 leading-relaxed font-medium mb-10">{post?.content}</p>
+          <h2 className="text-[22px] font-black text-slate-800 tracking-tight leading-tight mb-4">{localPost.title}</h2>
+          <p className="text-[14px] text-slate-500 leading-relaxed font-medium mb-10">{localPost.content}</p>
           <div className="p-5 rounded-[28px] bg-gray-50 border border-gray-100 mb-6 max-h-[300px] overflow-y-auto no-scrollbar shadow-inner">
              <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest mb-4">Comments ({comments.length + comments.reduce((acc, c) => acc + (c.replies?.length || 0), 0)})</p>
              <div className="space-y-5">

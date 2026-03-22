@@ -1,0 +1,18 @@
+# CardWise Project Rules (MANDATORY)
+
+다음 규칙은 이 프로젝트의 핵심 지침(SSOT)이므로 반드시 준수해야 함:
+
+1. 아키텍처 및 문서 참조 지침:
+   - 모든 가이드는 루트의 **`CLAUDE.md`**를 최우선으로 하되, 현재 진행 상태와 상세 인덱스는 **`docs/STATUS.md`** 및 **`docs/README.md`**를 반드시 참조할 것.
+   - 백엔드는 CQRS, Hexagonal, DDD, MSA 원칙을 엄격하게 준수할 것.
+   - 프론트엔드는 BFF 패턴(`frontend/src/app/api/*` 경유) 및 App Router 구조를 따를 것.
+
+2. 문서 관리 및 파일 구조:
+   - 모든 문서는 **`docs/`** 폴더 하위의 카테고리별 디렉토리에 **`DOC-xx-xx-document-title.md`** 형식의 표준 명명 규식을 사용할 것.
+   - 문서의 1번 제목(`#`)은 반드시 **`# CardWise [문서 제목] (DOC-xx-xx)`** 형식을 유지할 것.
+   - 서버 실행 및 재시작은 반드시 루트의 **`restart-all.ps1`** 등 전용 PowerShell 스크립트 기반으로 제안할 것.
+
+3. 인프라 및 통신:
+   - 로컬 데이터베이스 또는 로컬 Redis 구동을 절대 제안하지 말 것. 항상 **Supabase (Remote Cloud)**와 **Upstash (Serverless Redis)**를 전제로 설계할 것.
+
+*주의: 위 지침을 벗어나는 제안을 하거나 코드를 생성하기 전에는 반드시 사용자에게 사전에 확인을 구할 것.*

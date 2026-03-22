@@ -7,7 +7,7 @@ import com.cardwise.ledger.application.port.`in`.PaymentUseCase
 import com.cardwise.ledger.application.port.out.PaymentPersistencePort
 import com.cardwise.ledger.domain.model.Payment
 import com.cardwise.ledger.domain.model.TransactionType
-import com.cardwise.ledger.dto.*
+import com.cardwise.ledger.application.dto.*
 import com.cardwise.notification.application.port.`in`.NotificationUseCase
 import com.cardwise.notification.infrastructure.NotificationInsertCommand
 import org.springframework.context.ApplicationEventPublisher
