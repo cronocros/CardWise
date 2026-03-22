@@ -1,9 +1,9 @@
 'use client';
 
 import React from 'react';
-import { CreditCard, ChevronRight, Settings } from 'lucide-react';
+import { CreditCard, ArrowUpRight } from 'lucide-react';
 import { PerformanceTrack, TransactionItem } from '@/components/mobile/cards';
-import { WeeklyBarChart, SimplePieChart, BucketChart, WordCloud, RadialGauge } from '@/components/mobile/charts';
+import { SimplePieChart, BucketChart, WordCloud, RadialGauge } from '@/components/mobile/charts';
 import { SAMPLE_USER } from '@/lib/sampleData';
 import { CategoryData, Bucket, Transaction } from '@/types/mobile';
 
@@ -12,10 +12,9 @@ interface HomeViewProps {
   categories: CategoryData[];
   buckets: Bucket[];
   transactions: Transaction[];
-  setShowEditHome: (val: boolean) => void;
-  setShowAssetAction: (val: 'fill' | 'send' | null) => void;
   setSelectedTx: (tx: Transaction) => void;
-  router: any; // NextRouter typing is complex with App Router, keeping any for now but documented
+  router: { push: (path: string) => void };
+  monthlySpend?: number;
 }
 
 export function HomeView({
@@ -23,178 +22,176 @@ export function HomeView({
   categories,
   buckets,
   transactions,
-  setShowEditHome,
-  setShowAssetAction,
   setSelectedTx,
-  router
+  router,
+  monthlySpend = SAMPLE_USER.monthlySpend,
 }: HomeViewProps) {
   const recentTransactions = transactions.slice(0, 3);
+  const currentMonth = new Date().getMonth() + 1;
   
-  // Use router to handle navigation if needed
-  const handleSettingsClick = () => {
-    setShowEditHome(true);
-  };
 
   return (
     <div className="space-y-6">
-      {/* Asset Summary Section */}
-      {visibleSections.includes('balance') && (
-        <section className="animate-fade-in">
-          <div className="relative rounded-[40px] p-8 overflow-hidden shadow-[0_35px_70px_-15px_rgba(244,63,94,0.35)] border-t border-white/30"
-            style={{ 
-              background: 'linear-gradient(135deg, #1e1b4b 0%, #4338ca 30%, #f43f5e 100%)',
-            }}>
-            {/* Animated Glows */}
-            <div className="absolute top-[-20%] right-[-10%] w-60 h-60 bg-rose-500/20 rounded-full blur-[100px] animate-pulse" />
-            <div className="absolute bottom-[-20%] left-[-10%] w-40 h-40 bg-indigo-500/20 rounded-full blur-[80px]" />
-            
-            <div className="flex justify-between items-center mb-10 relative z-10 transition-all">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-ping" />
-                  <p className="text-[12px] font-black text-rose-100/60 uppercase tracking-[0.25em]">종합 지출 내역</p>
+      {visibleSections.map((sectionId) => {
+        if (sectionId === 'balance') {
+          return (
+            <section key="balance" className="animate-fade-in group px-1">
+              <div className="relative rounded-[40px] px-6 py-6 overflow-hidden shadow-[0_30px_60px_-15px_rgba(30,27,75,0.4)] border border-white/10 active:scale-[0.98] transition-transform duration-500 bg-slate-900"
+                style={{ 
+                  background: 'radial-gradient(120% 120% at 0% 0%, #1e1b4b 0%, #312e81 40%, #701a75 100%)',
+                }}>
+                <div className="absolute top-[-20%] right-[-10%] w-64 h-64 bg-rose-500/20 rounded-full blur-[80px] group-hover:bg-rose-500/30 transition-colors duration-700" />
+                <div className="absolute bottom-[-10%] left-[-10%] w-48 h-48 bg-indigo-500/30 rounded-full blur-[60px]" />
+                <div className="absolute inset-0 bg-[url('/noise.png')] opacity-20 mix-blend-overlay pointer-events-none" />
+                <div className="absolute inset-0 translate-x-[-100%] group-hover:animate-[mobile-shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-12 pointer-events-none" />
+                
+                <div className="flex justify-between items-center relative z-10 transition-all gap-4">
+                  <div className="flex-1 min-w-0 flex flex-col justify-center">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse shadow-[0_0_8px_rgba(251,113,133,0.8)]" />
+                      <p className="text-[13px] font-bold text-white/70 uppercase tracking-widest leading-none mt-0.5">
+                        종합 지출 내역 <span className="text-[10px] font-medium text-white/50 lowercase ml-1">({currentMonth}월 기준)</span>
+                      </p>
+                    </div>
+                    
+                    <div className="flex items-baseline gap-1 mb-5 whitespace-nowrap">
+                      <h2 className="text-[36px] font-black text-white tracking-tighter drop-shadow-lg leading-none truncate">
+                        {monthlySpend.toLocaleString()}
+                      </h2>
+                      <span className="text-[20px] font-bold text-white/90 drop-shadow-md">원</span>
+                    </div>
+                    
+                    <div className="inline-flex items-center gap-2 bg-white/10 border border-white/10 px-3 py-1.5 rounded-full backdrop-blur-md w-max shadow-inner whitespace-nowrap">
+                      <span className="text-[10px] font-black text-white/70 tracking-widest uppercase flex-shrink-0">이번 달 목표 현황</span>
+                      <div className="w-px h-3 bg-white/20" />
+                      <div className="flex items-center gap-1">
+                        <span className="text-[12px] font-black text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.4)]">3개중 2개</span>
+                        <span className="text-[11px] font-bold text-emerald-400/80 mr-1">달성</span>
+                        <span className="text-[10px] font-bold text-white/50">(1개 남음)</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col items-center justify-center relative z-10 w-[90px] flex-shrink-0 min-w-max -mt-2 -mr-3">
+                    <div className="relative group-hover:scale-105 transition-transform duration-500 flex justify-center w-full">
+                      <RadialGauge percent={66} id="main-asset" size={80} />
+                    </div>
+                  </div>
                 </div>
-                <h2 className="text-[38px] font-black text-white tracking-tighter drop-shadow-2xl leading-none mb-3">
-                  ₩{SAMPLE_USER.monthlySpend.toLocaleString()}
-                </h2>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-black text-white/40 bg-white/5 border border-white/10 px-2.5 py-1 rounded-full uppercase tracking-tighter">Budget Left</span>
-                  <p className="text-[12px] font-black text-emerald-400 drop-shadow-sm">
-                    ₩{(SAMPLE_USER.monthlyBudget - SAMPLE_USER.monthlySpend).toLocaleString()}
-                  </p>
+                
+                <div className="absolute right-[-20px] bottom-[-20px] p-8 scale-[2.5] opacity-[0.03] pointer-events-none rotate-[15deg] group-hover:rotate-[20deg] group-hover:scale-[2.8] transition-all duration-700">
+                  <CreditCard size={120} />
                 </div>
               </div>
-              
-              <div className="flex flex-col items-end gap-4 relative z-10 transition-all">
-                <button 
-                  onClick={handleSettingsClick}
-                  className="w-10 h-10 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20 active:scale-75 transition-transform"
-                >
-                  <Settings className="text-white w-5 h-5" />
-                </button>
-                
-                {/* Radial Progress */}
-                <div className="flex flex-col items-center gap-2 mr-1">
-                  <RadialGauge 
-                    percent={Math.round((SAMPLE_USER.monthlySpend / SAMPLE_USER.monthlyBudget) * 100)} 
-                    id="main-asset" 
-                    size={84} 
-                  />
-                  <div className="w-12 h-1 bg-white/10 rounded-full overflow-hidden">
-                     <div className="h-full bg-rose-400 w-2/3" />
+            </section>
+          );
+        }
+
+        if (sectionId === 'performance') {
+          return (
+            <div key="performance" className="px-1 animate-fade-in translate-y-0 opacity-100">
+              <PerformanceTrack 
+                current={monthlySpend} 
+                tiers={[
+                  { label: '30만원', benefit: '5% 할인', amount: 300000 }, 
+                  { label: '50만원', benefit: '추가적립', amount: 500000 }, 
+                  { label: '100만원', benefit: 'VIP 혜택', amount: 1000000 }
+                ]} 
+                cardName="현대카드 (메인 소비 실적)" 
+              />
+            </div>
+          );
+        }
+
+        if (sectionId === 'analytics') {
+          return (
+            <div key="analytics" className="grid grid-cols-2 gap-4 px-1 pb-2">
+              <div className="px-5 py-6 rounded-[48px] bg-white border border-gray-50 shadow-[0_20px_50px_rgba(0,0,0,0.05)] flex flex-col items-center justify-between text-center group active:scale-[0.98] transition-all animate-fade-in hover:shadow-2xl duration-500">
+                <h3 className="text-[16px] font-black text-gray-800 tracking-tighter mb-2">카테고리</h3>
+                <div className="scale-[0.8] origin-center relative">
+                  <div className="absolute inset-0 bg-rose-500/5 blur-2xl rounded-full scale-150" />
+                  <SimplePieChart data={categories} />
+                </div>
+                <div className="mt-3">
+                  <p className="text-[14px] font-black text-gray-800">식사 30%</p>
+                  <div className="mt-1 flex items-center justify-center gap-1">
+                    <div className="w-1 h-1 rounded-full bg-rose-400" />
+                    <p className="text-[10px] font-bold text-gray-400 leading-none">가장 높음</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="px-5 py-6 rounded-[48px] bg-white border border-gray-50 shadow-[0_20px_50px_rgba(0,0,0,0.05)] flex flex-col items-center justify-between text-center group active:scale-[0.98] transition-all animate-fade-in hover:shadow-2xl duration-500">
+                <h3 className="text-[16px] font-black text-gray-800 tracking-tighter mb-2">이달의 목표</h3>
+                <div className="scale-[0.9] origin-center relative">
+                  <div className="absolute inset-0 bg-rose-500/5 blur-2xl rounded-full scale-150" />
+                  <BucketChart buckets={buckets} compact />
+                </div>
+                <div className="mt-3">
+                  <p className="text-[14px] font-black text-rose-500">62% 달성</p>
+                  <div className="mt-1 flex items-center justify-center gap-1">
+                    <div className="w-1 h-1 rounded-full bg-rose-400" />
+                    <p className="text-[10px] font-bold text-gray-400 leading-none">목표 진행중</p>
                   </div>
                 </div>
               </div>
             </div>
+          );
+        }
 
-            <div className="flex gap-4 relative z-10">
-              <button 
-                onClick={() => setShowAssetAction('fill')}
-                className="flex-1 h-16 rounded-[24px] bg-white text-rose-600 font-black text-[16px] shadow-[0_10px_30px_rgba(255,255,255,0.2)] active:scale-95 hover:bg-rose-50 transition-all border-b-4 border-rose-100"
-              >
-                채우기
-              </button>
-              <button 
-                onClick={() => setShowAssetAction('send')}
-                className="flex-1 h-16 rounded-[24px] bg-white/10 backdrop-blur-xl text-white font-black text-[16px] border border-white/20 active:scale-95 hover:bg-white/20 transition-all"
-              >
-                보내기 
-              </button>
+        if (sectionId === 'weekly') {
+          return (
+            <div key="weekly" className="px-1 animate-fade-in" style={{ animationDelay: '0.3s' }}>
+              {/* Note: WeeklyBarChart would be rendered here if we choose to make it reorderable too, 
+                  but user mentioned "homescreen edit" which usually refers to these cards. */}
             </div>
-            
-            <div className="absolute right-[-20px] bottom-[-20px] p-8 scale-[2.5] opacity-5 pointer-events-none rotate-[25deg]">
-              <CreditCard size={120} />
-            </div>
-          </div>
-        </section>
-      )}
-      
-      {/* Performance Track Section */}
-      {visibleSections.includes('performance') && (
-        <PerformanceTrack 
-          current={SAMPLE_USER.monthlySpend} 
-          tiers={[
-            { label: '30만원', benefit: '5% 할인', amount: 300000 }, 
-            { label: '50만원', benefit: '추가적립', amount: 500000 }, 
-            { label: '100만원', benefit: 'VIP 혜택', amount: 1000000 }
-          ]} 
-          cardName="현대카드 (메인 소비 실적)" 
-        />
-      )}
+          );
+        }
 
-      {/* Weekly Pattern Chart */}
-      {visibleSections.includes('weekly') && (
-        <section className="p-7 rounded-[40px] bg-white border border-gray-100 shadow-lg animate-fade-in" style={{ animationDelay: '0.2s' }}>
-          <div className="flex items-center justify-between mb-8 px-2">
-            <h3 className="text-[17px] font-black text-gray-800 tracking-tighter">주간 소비 패턴</h3>
-            <span className="text-[10px] font-black text-gray-400 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100 uppercase tracking-widest">이번주</span>
-          </div>
-          <WeeklyBarChart />
-        </section>
-      )}
+        if (sectionId === 'insights') {
+          return (
+            <section key="insights" className="mt-2 mb-2 px-1 animate-fade-in" style={{ animationDelay: '0.4s' }}>
+              <div className="bg-white rounded-[40px] px-6 py-6 border border-gray-100 shadow-[0_20px_40px_rgba(0,0,0,0.03)] group active:scale-[0.98] transition-all">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-[17px] font-black text-gray-800 tracking-tighter">소비 키워드</h3>
+                  <div className="px-3 py-1 rounded-full bg-rose-50 text-[10px] font-black text-rose-500 uppercase tracking-widest">AI 분석</div>
+                </div>
+                <WordCloud />
+              </div>
+            </section>
+          );
+        }
 
-      {/* 2-Column Split: Category & Goal */}
-      <div className="grid grid-cols-2 gap-4">
-        {visibleSections.includes('category') && (
-          <div className="p-6 rounded-[40px] bg-white border border-gray-100 shadow-lg flex flex-col items-center justify-between text-center group active:scale-[0.98] transition-all animate-fade-in" style={{ animationDelay: '0.4s' }}>
-             <h3 className="text-[12px] font-black text-gray-800 uppercase tracking-widest opacity-30 mb-4">Categories</h3>
-             <div className="scale-[0.8] origin-center">
-               <SimplePieChart data={categories} />
-             </div>
-             <div className="mt-4">
-                <p className="text-[14px] font-black text-gray-800">식사 30%</p>
-                <p className="text-[10px] font-bold text-gray-400">가장 높은 비중</p>
-             </div>
-          </div>
-        )}
+        if (sectionId === 'recent') {
+          return (
+            <section key="recent" className="space-y-5 animate-fade-in px-1 pt-2" style={{ animationDelay: '0.5s' }}>
+              <div className="bg-white rounded-[32px] px-5 py-6 border border-gray-100 shadow-[0_20px_40px_rgba(0,0,0,0.03)]">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-[17px] font-black text-gray-800 tracking-tighter">최근 지출 내역</h3>
+                  <button 
+                    onClick={() => router.push('/mobile/ledger')}
+                    className="w-9 h-9 rounded-full bg-rose-50 flex items-center justify-center text-rose-500 hover:bg-rose-100 active:scale-90 transition-transform outline-none"
+                  >
+                    <ArrowUpRight size={18} strokeWidth={2.5} />
+                  </button>
+                </div>
+                <div className="divide-y divide-gray-50/50">
+                  {recentTransactions.map((tx, idx) => (
+                    <TransactionItem 
+                      key={tx.id} 
+                      tx={tx} 
+                      onClick={() => setSelectedTx(tx)}
+                      delay={0.1 * idx}
+                    />
+                  ))}
+                </div>
+              </div>
+            </section>
+          );
+        }
 
-        {visibleSections.includes('goal') && (
-          <div className="p-6 rounded-[40px] bg-gradient-to-br from-white to-rose-50/20 border border-gray-100 shadow-lg flex flex-col items-center justify-between text-center group active:scale-[0.98] transition-all animate-fade-in" style={{ animationDelay: '0.5s' }}>
-             <h3 className="text-[12px] font-black text-gray-800 uppercase tracking-widest opacity-30 mb-4">Monthly Goal</h3>
-             <div className="scale-[0.9] origin-center">
-               <BucketChart buckets={buckets} compact />
-             </div>
-             <div className="mt-4">
-                <p className="text-[14px] font-black text-rose-500">62% 달성</p>
-                <p className="text-[10px] font-bold text-gray-400">18.6만 / 30만</p>
-             </div>
-          </div>
-        )}
-      </div>
-
-      {/* AI Insights Word Cloud */}
-      <section className="mt-2 mb-2 px-2 animate-fade-in" style={{ animationDelay: '0.6s' }}>
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-[17px] font-black text-gray-800 tracking-tighter">소비 키워드 인사이트</h3>
-          <div className="px-3 py-1 rounded-full bg-rose-50 text-[10px] font-black text-rose-500 uppercase tracking-widest">AI Analysis</div>
-        </div>
-        <WordCloud />
-      </section>
-
-      {/* Recent Transactions List */}
-      {visibleSections.includes('recent') && (
-        <section className="space-y-5 animate-fade-in" style={{ animationDelay: '0.7s' }}>
-          <div className="flex items-center justify-between px-2">
-            <h3 className="text-[17px] font-black text-gray-800 tracking-tighter">최근 지출 내역</h3>
-            <button 
-              onClick={() => router.push('/mobile/ledger')}
-              className="text-[12px] font-black text-rose-500 flex items-center gap-1 active:scale-90 transition-transform"
-            >
-              전체보기 <ChevronRight size={14} />
-            </button>
-          </div>
-          <div className="bg-white rounded-[40px] border border-gray-100 shadow-xl overflow-hidden divide-y divide-gray-50">
-            {recentTransactions.map((tx, idx) => (
-              <TransactionItem 
-                key={tx.id} 
-                tx={tx} 
-                onClick={() => setSelectedTx(tx)}
-                delay={0.1 * idx}
-              />
-            ))}
-          </div>
-        </section>
-      )}
+        return null;
+      })}
     </div>
   );
 }

@@ -1,6 +1,8 @@
 import { Transaction, Card, Badge, CommunityPost } from '../types/mobile';
 
 export interface UserStats {
+  id: string;
+  email: string;
   totalAssets: number;
   monthlySpend: number;
   monthlyBudget: number;
@@ -8,7 +10,16 @@ export interface UserStats {
   topCategory: string;
 }
 
+export const TEST_ACCOUNTS = {
+  ADMIN: '11111111-1111-1111-1111-111111111111',
+  USER_A: '22222222-2222-2222-2222-222222222222',
+  USER_B: '33333333-3333-3333-3333-333333333333',
+  RANDOM: 'a8d9f12b-3c4e-5a6b-7c8d-9e0f1a2b3c4d'
+};
+
 export const SAMPLE_USER: UserStats = {
+  id: TEST_ACCOUNTS.ADMIN,
+  email: 'admin@cardwise.com',
   totalAssets: 125840900,
   monthlySpend: 2450000,
   monthlyBudget: 3500000,
@@ -23,16 +34,23 @@ export const SAMPLE_CARDS: Card[] = [
     issuer: '현대카드',
     firstFour: '4579',
     lastFour: '8801',
+    expiryMonth: '12',
+    expiryYear: '28',
     gradient: 'linear-gradient(135deg, #1a1a1a 0%, #333333 100%)',
     color: '#1a1a1a',
     current: 850000,
-    target: 5000000,
+    target: 1000000,
+    annualTarget: 30000000,
+    isMain: true,
+    isPinned: true,
+    type: 'credit',
     benefitType: 'mileage',
     benefitValue: '1.5 마일 / 1천원',
     brand: 'visa',
     tier: 'infinite',
     tags: ['프리미엄', '여행', '마일리지'],
-    currency: 'KRW'
+    currency: 'KRW',
+    features: ['apple_pay', 'transport', 'contactless']
   },
   {
     id: 'c2',
@@ -40,16 +58,21 @@ export const SAMPLE_CARDS: Card[] = [
     issuer: '삼성카드',
     firstFour: '5243',
     lastFour: '4229',
+    expiryMonth: '05',
+    expiryYear: '29',
     gradient: 'linear-gradient(135deg, #fb7185 0%, #e11d48 100%)',
     color: '#e11d48',
-    current: 1240000,
-    target: 10000000,
+    current: 324000,
+    target: 500000,
+    annualTarget: 6000000,
+    type: 'credit',
     benefitType: 'discount',
     benefitValue: '최대 50% 할인',
     brand: 'mastercard',
     tier: 'platinum',
     tags: ['생활', '쇼핑', '커피'],
-    currency: 'KRW'
+    currency: 'KRW',
+    features: ['samsung_pay', 'transport', 'contactless', 'wallet']
   },
   {
     id: 'c3',
@@ -57,16 +80,21 @@ export const SAMPLE_CARDS: Card[] = [
     issuer: '신한카드',
     firstFour: '9400',
     lastFour: '9103',
+    expiryMonth: '08',
+    expiryYear: '27',
     gradient: 'linear-gradient(135deg, #60a5fa 0%, #2563eb 100%)',
     color: '#2563eb',
     current: 450000,
-    target: 8000000,
+    target: 300000,
+    annualTarget: 10000000,
+    type: 'credit',
     benefitType: 'point',
     benefitValue: '최대 3.5% 적립',
     brand: 'visa',
     tier: 'signature',
     tags: ['무실적', '포인트', '단순함'],
-    currency: 'KRW'
+    currency: 'KRW',
+    features: ['samsung_pay', 'contactless']
   },
   {
     id: 'c4',
@@ -74,16 +102,21 @@ export const SAMPLE_CARDS: Card[] = [
     issuer: 'KB국민카드',
     firstFour: '4518',
     lastFour: '5562',
+    expiryMonth: '11',
+    expiryYear: '28',
     gradient: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)',
     color: '#fbbf24',
     current: 156000,
-    target: 2000000,
+    target: 300000,
+    annualTarget: 5000000,
+    type: 'debit',
     benefitType: 'discount',
     benefitValue: '최대 2만원 할인',
     brand: 'mastercard',
     tier: 'gold',
     tags: ['학생', '체크카드', '가성비'],
-    currency: 'KRW'
+    currency: 'KRW',
+    features: ['samsung_pay', 'transport', 'contactless']
   },
   {
     id: 'c5',
@@ -91,16 +124,21 @@ export const SAMPLE_CARDS: Card[] = [
     issuer: '롯데카드',
     firstFour: '3791',
     lastFour: '2456',
+    expiryMonth: '03',
+    expiryYear: '30',
     gradient: 'linear-gradient(135deg, #94a3b8 0%, #475569 100%)',
     color: '#475569',
     current: 85000,
-    target: 1500000,
+    target: 500000,
+    annualTarget: 12000000,
+    type: 'credit',
     benefitType: 'discount',
     benefitValue: '1.2% 결제 할인',
     brand: 'amex',
     tier: 'classic',
     tags: ['범용', '단순함', '사회초년생'],
-    currency: 'KRW'
+    currency: 'KRW',
+    features: ['contactless', 'wallet']
   }
 ];
 
@@ -148,8 +186,8 @@ const generateTransactions = (): Transaction[] => {
 
   // Generate for Jan, Feb, Mar
   for (let month = 1; month <= 3; month++) {
-    // Fixed count for stability
-    const count = 35; 
+    // Increased count for rich history
+    const count = 45; 
     
     // Monthly Salary
     txs.push({
@@ -192,7 +230,11 @@ const generateTransactions = (): Transaction[] => {
       currency: (merchant as any).currency || 'KRW',
       exchangeRate: (merchant as any).currency === 'USD' ? 1345 : undefined,
       tags: isOverseas ? ['해외결제', 'Overseas'] : [month % 2 === 0 ? '개인' : '생활'],
-      benefitInfo: i % 3 === 0 ? `${Math.floor(pseudoRandom() * 10) + 1}% 할인 적용` : undefined
+      benefitInfo: i % 3 === 0 ? `카드 기본 ${Math.floor(pseudoRandom() * 5) + 1}% 할인` : undefined,
+      benefitAmount: i % 3 === 0 ? Math.floor(Number(amountValue) * 0.05) : undefined,
+      paymentMethod: i % 2 === 0 ? '현대카드 M (4321)' : '신한카드 Deep Oil (2313)',
+      items: i % 4 === 0 ? '로켓배송 외 2건' : merchant.name,
+      description: i % 5 === 0 ? '매달 이용하는 단골 매장' : '카드 결제 내역'
     });
     }
   }
@@ -220,47 +262,67 @@ export const SAMPLE_BADGES: Badge[] = [
 
 export const COMMUNITY_POSTS: CommunityPost[] = [
   {
-    id: 'p1',
-    author: { name: '현명한체리', avatar: '🍒', badge: '절약왕' },
+    postId: 1,
+    accountId: TEST_ACCOUNTS.USER_A,
     category: '꿀팁',
     title: '고정지출 10만원 줄이는 3가지 방법',
     content: '1. 구독 서비스 정리하기 2. 통신사 결합 할인 3. 가스 전기 요금 자동이체...',
-    likes: 128,
-    comments: 45,
+    likeCount: 128,
+    commentCount: 45,
+    viewCount: 1024,
+    isLiked: false,
+    isBookmarked: false,
     createdAt: '2026-03-19T10:00:00Z',
-    tags: ['절약', '고정지출', '꿀팁']
+    updatedAt: '2026-03-19T10:00:00Z',
+    tags: ['절약', '고정지출', '꿀팁'],
+    author: { name: '현명한체리', avatar: '🍒', badge: '절약왕' },
   },
   {
-    id: 'p2',
-    author: { name: '카드마스터', avatar: '💳', badge: 'Infinite' },
+    postId: 2,
+    accountId: TEST_ACCOUNTS.USER_B,
     category: '카드수다',
     title: '현대카드를 메인으로 쓰는 이유',
     content: '디자인도 디자인이지만, 코스트코 결제랑 앱 사용성이 넘사벽인 것 같아요.',
-    likes: 89,
-    comments: 23,
+    likeCount: 89,
+    commentCount: 23,
+    viewCount: 567,
+    isLiked: true,
+    isBookmarked: false,
     createdAt: '2026-03-20T14:30:00Z',
-    tags: ['현대카드', '프리미엄', '디자인']
+    updatedAt: '2026-03-20T14:30:00Z',
+    tags: ['현대카드', '프리미엄', '디자인'],
+    author: { name: '카드마스터', avatar: '💳', badge: 'Infinite' },
   },
   {
-    id: 'p3',
-    author: { name: '무소유꿈나무', avatar: '🌴', badge: '초보' },
+    postId: 3,
+    accountId: TEST_ACCOUNTS.RANDOM,
     category: '질문',
     title: '사회초년생 첫 신용카드 추천 부탁드려요!',
     content: '주로 교통비랑 편의점 지출이 많은데 어떤 카드가 제일 혜택이 좋을까요?',
-    likes: 42,
-    comments: 56,
+    likeCount: 42,
+    commentCount: 56,
+    viewCount: 890,
+    isLiked: false,
+    isBookmarked: true,
     createdAt: '2026-03-21T09:00:00Z',
-    tags: ['추천', '사회초년생', '신입']
+    updatedAt: '2026-03-21T09:00:00Z',
+    tags: ['추천', '사회초년생', '신입'],
+    author: { name: '무소유꿈나무', avatar: '🌴', badge: '초보' },
   },
   {
-    id: 'p4',
-    author: { name: '알뜰살뜰', avatar: '🍋', badge: '절약왕' },
+    postId: 4,
+    accountId: TEST_ACCOUNTS.USER_A,
     category: '꿀팁',
     title: '스타벅스 50% 할인 받는 법 (진짜임)',
     content: '삼성카드 taptap O 카드랑 통신사 사이즈업 조합하면 거의 반값입니다.',
-    likes: 256,
-    comments: 12,
+    likeCount: 256,
+    commentCount: 12,
+    viewCount: 1540,
+    isLiked: false,
+    isBookmarked: false,
     createdAt: '2026-03-21T11:15:00Z',
-    tags: ['스타벅스', '할인', '꿀팁']
+    updatedAt: '2026-03-21T11:15:00Z',
+    tags: ['스타벅스', '할인', '꿀팁'],
+    author: { name: '알뜰살뜰', avatar: '🍋', badge: '절약왕' },
   }
 ];

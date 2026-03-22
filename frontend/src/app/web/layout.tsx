@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Home, CreditCard, BookOpen, Gift, User, LogOut } from 'lucide-react';
+import { Home, CreditCard, BookOpen, Gift, User, LogOut, Users } from 'lucide-react';
 
 export default function WebLayout({
   children,
@@ -14,6 +14,7 @@ export default function WebLayout({
     { id: 'cards', label: '카드 관리', icon: <CreditCard size={20} />, href: '/web/cards' },
     { id: 'ledger', label: '가계부', icon: <BookOpen size={20} />, href: '/web/ledger' },
     { id: 'benefits', label: '혜택/바우처', icon: <Gift size={20} />, href: '/web/benefits' },
+    { id: 'community', label: '커뮤니티', icon: <Users size={20} />, href: '/web/community' },
     { id: 'mypage', label: '마이페이지', icon: <User size={20} />, href: '/web/mypage' },
   ];
 

@@ -57,3 +57,4 @@ ops/dashboard/runtime/
 
 # Design preview (개발 참고용 HTML - 프로젝트 산출물 아님)
 design-preview/
+node_modules

@@ -1,8 +1,8 @@
 package com.cardwise.notification.application
 
 import com.cardwise.notification.infrastructure.NotificationInsertCommand
-import com.cardwise.performance.infrastructure.UserCardRepository
-import com.cardwise.performance.infrastructure.UserVoucherRepository
+import com.cardwise.card.adapter.out.persistence.repository.UserCardRepository
+import com.cardwise.voucher.adapter.out.persistence.repository.UserVoucherRepository
 import java.time.Clock
 import java.time.LocalDate
 import java.time.YearMonth

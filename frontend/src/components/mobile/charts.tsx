@@ -71,7 +71,7 @@ export function DonutChart({ data, totalAmountText = '31만 2천원', subText = 
           })}
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none translate-y-2">
-           <div className="w-2.5 h-2.5 bg-rose-500 rounded-full animate-ping mb-2" />
+           <div className="w-2.5 h-2.5 bg-rose-500 rounded-full mb-2" />
            <span className="text-[20px] font-black text-var(--text-strong) tracking-tighter leading-none">{totalAmountText}</span>
            <span className="text-[10px] font-black text-var(--text-soft) uppercase tracking-[0.2em] mt-2 opacity-50">{subText}</span>
         </div>
@@ -266,7 +266,7 @@ export function BucketChart({ buckets, compact = false }: { buckets: BucketData[
 // ─────────────────────────────────────────────────────────────
 // Radial Gauge (Styling Polished)
 // ─────────────────────────────────────────────────────────────
-export function RadialGauge({ percent, id, size = 64 }: { percent: number; id: string; size?: number }) {
+export function RadialGauge({ percent, size = 64, color = "white" }: { percent: number; size?: number; color?: string }) {
   const [animatedDash, setAnimatedDash] = useState(0);
   
   useEffect(() => {
@@ -276,22 +276,16 @@ export function RadialGauge({ percent, id, size = 64 }: { percent: number; id: s
 
   return (
     <svg width={size} height={size} viewBox="0 0 80 80" className="flex-shrink-0 drop-shadow-md group active:scale-95 transition-transform">
-      <defs>
-        <linearGradient id={`gaugeGrad-${id}`} x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#fda4af" />
-          <stop offset="100%" stopColor="#f43f5e" />
-        </linearGradient>
-      </defs>
-      <circle cx="40" cy="40" r="32" fill="none" stroke="#f8fafc" strokeWidth="13" strokeDasharray="150 51" strokeDashoffset="-75" strokeLinecap="round" />
+      <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(0,0,0,0.05)" strokeWidth="12" strokeDasharray="150 51" strokeDashoffset="-75" strokeLinecap="round" />
       <circle
-        cx="40" cy="40" r="32" fill="none" stroke={`url(#gaugeGrad-${id})`} strokeWidth="13"
+        cx="40" cy="40" r="32" fill="none" stroke={color} strokeWidth="12"
         strokeDasharray={`${animatedDash} ${201 - animatedDash}`}
         strokeDashoffset="-75" strokeLinecap="round"
-        className="transition-all duration-[1800ms] ease-[cubic-bezier(0.34,1.56,0.64,1)]"
+        className="transition-all duration-[1800ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] shadow-xl"
       />
       <g className="translate-y-0.5">
-        <text x="40" y="44" textAnchor="middle" fill="var(--primary-500)" fontSize="24" fontWeight="black" className="font-display tracking-tight">{percent}</text>
-        <text x="40" y="56" textAnchor="middle" fill="var(--text-soft)" fontSize="7" fontWeight="black" className="uppercase tracking-[0.2em] opacity-40">%</text>
+        <text x="40" y="44" textAnchor="middle" fill={color === "white" ? "white" : "#1e293b"} fontSize="24" fontWeight="black" className="font-display tracking-tight drop-shadow-md">{percent}</text>
+        <text x="40" y="56" textAnchor="middle" fill={color === "white" ? "rgba(255,255,255,0.7)" : "#64748b"} fontSize="7" fontWeight="black" className="uppercase tracking-[0.2em] opacity-80">%</text>
       </g>
     </svg>
   );
@@ -348,9 +342,10 @@ export function AreaTrendChart() {
           { x: 295, y: 50, label: '최고 81.4만', color: '#f43f5e', up: true },
           { x: 130, y: 125, label: '최저 28.9만', color: '#f43f5e', up: false }
         ].map((p, i) => (
-          <g key={i} className="animate-fade-in" style={{ animationDelay: `${1.5 + i * 0.3}s` }}>
-            <circle cx={p.x} cy={p.y} r="8" fill="white" className="shadow-lg" />
-            <circle cx={p.x} cy={p.y} r="4" fill={p.color} className="animate-ping" />
+          <g key={i} className="animate-fade-in group/point cursor-pointer" style={{ animationDelay: `${1.5 + i * 0.3}s` }}>
+            <circle cx={p.x} cy={p.y} r="14" fill={p.color} opacity="0.15" className="animate-pulse" />
+            <circle cx={p.x} cy={p.y} r="6" fill="white" className="shadow-sm" />
+            <circle cx={p.x} cy={p.y} r="3" fill={p.color} />
             
             <foreignObject x={p.x - 40} y={p.up ? p.y - 45 : p.y + 15} width="80" height="30">
               <div className="flex flex-col items-center">
@@ -377,10 +372,27 @@ export function AreaTrendChart() {
 // ─────────────────────────────────────────────────────────────
 // Simple Pie Chart (Full Segment)
 // ─────────────────────────────────────────────────────────────
-export function SimplePieChart({ data }: { data: DonutData[] }) {
+export function SimplePieChart({ data, onHoverChange }: { data: DonutData[], onHoverChange?: (idx: number | null) => void }) {
   const [animated, setAnimated] = useState(false);
-  const radius = 38;
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
+  const handleHoverChange = (idx: number | null) => {
+    setHoveredIndex(idx);
+    if (onHoverChange) onHoverChange(idx);
+  };
+  
+  const radius = 35;
+
   const circumference = 2 * Math.PI * radius;
+
+  // Vibrant, distinctive colors for better visibility
+  const VIBRANT_MAP: Record<string, string> = {
+    '식비': '#f43f5e',
+    '카페': '#ec4899',
+    '교통': '#8b5cf6',
+    '쇼핑': '#3b82f6',
+    '수입': '#10b981'
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => setAnimated(true), 300);
@@ -390,11 +402,13 @@ export function SimplePieChart({ data }: { data: DonutData[] }) {
   return (
     <div className="flex flex-col items-center group">
       <div className="relative">
-        <svg width="160" height="160" viewBox="0 0 100 100" className="transform -rotate-90 drop-shadow-2xl">
+        <svg width="150" height="150" viewBox="0 0 100 100" className="transform -rotate-90 drop-shadow-2xl overflow-visible">
           {data.map((item, i) => {
             const prevSum = data.slice(0, i).reduce((sum, d) => sum + d.percent, 0);
             const dashArray = `${(item.percent / 100) * circumference} ${circumference}`;
             const dashOffset = -((prevSum / 100) * circumference);
+            const isHovered = hoveredIndex === i;
+            const sliceColor = VIBRANT_MAP[item.name] || item.color;
 
             return (
               <circle
@@ -403,20 +417,38 @@ export function SimplePieChart({ data }: { data: DonutData[] }) {
                 cy="50"
                 r={radius}
                 fill="none"
-                stroke={item.color}
-                strokeWidth="24"
+                stroke={sliceColor}
+                strokeWidth={isHovered ? "28" : "20"}
                 strokeDasharray={dashArray}
                 strokeDashoffset={animated ? dashOffset : 0}
                 strokeLinecap="butt"
-                className="transition-all duration-[1500ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-[1.05] origin-center cursor-pointer"
-                style={{ animationDelay: `${i * 0.1}s` }}
+                onMouseEnter={() => handleHoverChange(i)}
+                onMouseLeave={() => handleHoverChange(null)}
+                onTouchStart={() => handleHoverChange(i)}
+                onClick={() => handleHoverChange(hoveredIndex === i ? null : i)}
+                className="transition-all duration-300 ease-out origin-center cursor-pointer opacity-90 hover:opacity-100"
+                style={{ 
+                  animationDelay: `${i * 0.1}s`,
+                  filter: isHovered ? 'brightness(1.1) drop-shadow(0 0 10px rgba(0,0,0,0.15))' : 'none',
+                  transform: isHovered ? 'scale(1.08)' : 'scale(1)'
+                }}
               />
             );
           })}
         </svg>
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-           <div className="w-12 h-12 bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center shadow-lg border border-white/50">
-              <span className="text-[12px] font-black text-rose-500">Analysis</span>
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+           <div className={`w-16 h-16 bg-white rounded-full flex flex-col items-center justify-center shadow-[0_10px_30px_rgba(0,0,0,0.15)] border border-gray-50 transition-all duration-500 scale-100`}>
+              {hoveredIndex !== null ? (
+                <>
+                  <span className="text-[9px] font-black text-gray-400 tracking-tight leading-none mb-0.5">{data[hoveredIndex].name}</span>
+                  <span className="text-[14px] font-black text-slate-800 tracking-tighter leading-none">{data[hoveredIndex].percent}%</span>
+                </>
+              ) : (
+                <div className="flex flex-col items-center">
+                  <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest leading-none mb-1">지출</span>
+                  <div className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+                </div>
+              )}
            </div>
         </div>
       </div>
@@ -428,28 +460,51 @@ export function SimplePieChart({ data }: { data: DonutData[] }) {
 // Word Cloud Component ( spending Insights )
 // ─────────────────────────────────────────────────────────────
 export function WordCloud() {
+  const [mounted, setMounted] = useState(false);
+  const [animationsDone, setAnimationsDone] = useState(false);
+  
+  useEffect(() => {
+    // Add a tiny delay to ensure CSS transitions trigger nicely
+    const timer = setTimeout(() => setMounted(true), 100);
+    const timer2 = setTimeout(() => setAnimationsDone(true), 1200);
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(timer2);
+    };
+  }, []);
+
   const tags = [
-    { text: '편의점', size: 32, color: 'text-rose-500' },
-    { text: '스타벅스', size: 24, color: 'text-blue-500' },
-    { text: '배달의민족', size: 28, color: 'text-emerald-500' },
-    { text: '교통', size: 20, color: 'text-slate-400' },
-    { text: '넷플릭스', size: 22, color: 'text-rose-400' },
-    { text: '쇼핑', size: 26, color: 'text-purple-500' },
-    { text: '자기계발', size: 18, color: 'text-amber-500' },
-    { text: '점심식사', size: 30, color: 'text-rose-600' },
+    { text: '편의점', size: 24, color: 'text-rose-500' },
+    { text: '스타벅스', size: 18, color: 'text-blue-500' },
+    { text: '배달의민족', size: 22, color: 'text-emerald-500' },
+    { text: '교통', size: 14, color: 'text-slate-400' },
+    { text: '넷플릭스', size: 16, color: 'text-rose-400' },
+    { text: '쇼핑', size: 20, color: 'text-purple-500' },
+    { text: '자기계발', size: 13, color: 'text-amber-500' },
+    { text: '점심식사', size: 22, color: 'text-rose-600' },
   ];
 
   return (
-    <div className="flex flex-wrap justify-center items-center gap-x-6 gap-y-4 py-10 px-4 min-h-[220px] bg-gradient-to-b from-transparent to-rose-50/20 rounded-[40px] border border-dashed border-rose-100/50">
-       {tags.map((tag, i) => (
-         <span 
-           key={i} 
-           style={{ fontSize: `${tag.size}px` }}
-           className={`${tag.color} font-black tracking-tighter hover:scale-125 transition-transform cursor-default select-none animate-spring opacity-90 hover:opacity-100`}
-         >
-           #{tag.text}
-         </span>
-       ))}
+    <div className="flex flex-wrap justify-center items-center gap-x-5 gap-y-2 py-4 px-3 min-h-[100px] bg-gradient-to-b from-transparent to-rose-50/20 rounded-[32px] border border-dashed border-rose-100/50">
+       {tags.map((tag, i) => {
+         const rotateDeg = (i % 2 === 0 ? 1 : -1) * 20;
+         const inlineTransform = mounted ? 'scale(1) rotate(0deg) translateY(0)' : `scale(0.5) rotate(${rotateDeg}deg) translateY(10px)`;
+         
+         return (
+           <span 
+             key={i} 
+             className={`font-black tracking-tight ${tag.color} inline-block select-none cursor-pointer hover:!scale-[1.3] hover:!-translate-y-2 hover:!rotate-3 hover:text-opacity-80 active:scale-95`} 
+             style={{ 
+               fontSize: `${tag.size}px`,
+               opacity: mounted ? 1 : 0,
+               transform: animationsDone ? undefined : inlineTransform,
+               transition: animationsDone ? 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s' : `all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) ${i * 0.08}s`,
+             }}
+           >
+             #{tag.text}
+           </span>
+         );
+       })}
     </div>
   );
 }

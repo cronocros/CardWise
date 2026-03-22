@@ -1,8 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { backendUrl } from "./cardwise-api";
-
-const DEV_FALLBACK_ACCOUNT_ID = "00000000-0000-0000-0000-000000000001";
+const DEV_FALLBACK_ACCOUNT_ID = "11111111-1111-1111-1111-111111111111"; // TEST_ACCOUNTS.ADMIN
 
 function copyHeaders(source: Headers) {
   const headers = new Headers();
@@ -41,7 +40,9 @@ async function getSupabaseSession(request: NextRequest) {
     });
 
     const { data: { session } } = await supabase.auth.getSession();
-    return session;
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    return { session, user };
   } catch {
     return null;
   }
@@ -64,13 +65,16 @@ export async function proxyToBackend(
   });
 
   // Inject Supabase JWT and accountId from session
-  const session = await getSupabaseSession(request);
+  const authData = await getSupabaseSession(request);
+  const session = authData?.session;
+  const user = authData?.user;
 
   if (session?.access_token) {
     // Pass JWT to backend for verification
     headers.set("Authorization", `Bearer ${session.access_token}`);
     // Extract accountId (sub) from JWT and inject as X-Account-Id
-    const accountId = session.user?.id;
+    // Use user.id from getUser() to be secure and avoid Supabase session.user warnings
+    const accountId = user?.id || session.user?.id;
     if (accountId) {
       headers.set("X-Account-Id", accountId);
     }

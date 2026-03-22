@@ -8,20 +8,23 @@ import com.cardwise.analytics.api.DashboardTrendPointResponse
 import com.cardwise.analytics.api.TagCrossBreakdownResponse
 import com.cardwise.analytics.api.TagCrossSelectionResponse
 import com.cardwise.analytics.api.TagCrossStatsResponse
-import com.cardwise.analytics.infrastructure.AnalyticsReadRepository
+import com.cardwise.analytics.application.port.`in`.AnalyticsQueryUseCase
+import com.cardwise.analytics.application.port.out.AnalyticsReadPort
 import java.time.LocalDate
 import java.time.YearMonth
 import java.util.UUID
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
+@Transactional(readOnly = true)
 class AnalyticsService(
-    private val analyticsReadRepository: AnalyticsReadRepository,
-) {
-    fun getMonthlySummary(accountId: UUID, yearMonth: YearMonth): DashboardMonthlySummaryResponse {
-        val current = analyticsReadRepository.findMonthlySummary(accountId, yearMonth)
+    private val analyticsReadPort: AnalyticsReadPort,
+) : AnalyticsQueryUseCase {
+    override fun getMonthlySummary(accountId: UUID, yearMonth: YearMonth): DashboardMonthlySummaryResponse {
+        val current = analyticsReadPort.findMonthlySummary(accountId, yearMonth)
         val previousYearMonth = yearMonth.minusMonths(1)
-        val previous = analyticsReadRepository.findMonthlySummary(accountId, previousYearMonth)
+        val previous = analyticsReadPort.findMonthlySummary(accountId, previousYearMonth)
         val totalSpent = current?.totalSpent ?: 0L
         val previousSpent = previous?.totalSpent ?: 0L
         val changeAmount = totalSpent - previousSpent
@@ -43,8 +46,8 @@ class AnalyticsService(
         )
     }
 
-    fun getCardSummaries(accountId: UUID, from: LocalDate, to: LocalDate): List<DashboardCardSummaryResponse> {
-        return analyticsReadRepository.findCardSummaries(accountId, resolveYearMonth(from, to))
+    override fun getCardSummaries(accountId: UUID, from: LocalDate, to: LocalDate): List<DashboardCardSummaryResponse> {
+        return analyticsReadPort.findCardSummaries(accountId, resolveYearMonth(from, to))
             .map { row ->
                 DashboardCardSummaryResponse(
                     userCardId = row.userCardId,
@@ -58,8 +61,8 @@ class AnalyticsService(
             }
     }
 
-    fun getCategorySummaries(accountId: UUID, from: LocalDate, to: LocalDate): List<DashboardCategorySummaryResponse> {
-        val rows = analyticsReadRepository.findCategorySummaries(accountId, resolveYearMonth(from, to))
+    override fun getCategorySummaries(accountId: UUID, from: LocalDate, to: LocalDate): List<DashboardCategorySummaryResponse> {
+        val rows = analyticsReadPort.findCategorySummaries(accountId, resolveYearMonth(from, to))
         val totalSpent = rows.sumOf { it.spentAmount }.takeIf { it > 0L } ?: 0L
 
         return rows.map { row ->
@@ -74,8 +77,8 @@ class AnalyticsService(
         }
     }
 
-    fun getTagSummaries(accountId: UUID, from: LocalDate, to: LocalDate): List<DashboardTagSummaryResponse> {
-        val rows = analyticsReadRepository.findTagSummaries(accountId, resolveYearMonth(from, to))
+    override fun getTagSummaries(accountId: UUID, from: LocalDate, to: LocalDate): List<DashboardTagSummaryResponse> {
+        val rows = analyticsReadPort.findTagSummaries(accountId, resolveYearMonth(from, to))
         val totalSpent = rows.sumOf { it.spentAmount }.takeIf { it > 0L } ?: 0L
 
         return rows.map { row ->
@@ -89,12 +92,12 @@ class AnalyticsService(
         }
     }
 
-    fun getTrendPoints(accountId: UUID, period: String, limit: Int): List<DashboardTrendPointResponse> {
+    override fun getTrendPoints(accountId: UUID, period: String, limit: Int): List<DashboardTrendPointResponse> {
         val normalizedLimit = limit.coerceIn(3, 12)
         return when (period.uppercase()) {
-            "MONTHLY" -> analyticsReadRepository.findMonthlyTrends(accountId, normalizedLimit)
-            "WEEKLY" -> analyticsReadRepository.findMonthlyTrends(accountId, 4)
-            else -> analyticsReadRepository.findMonthlyTrends(accountId, normalizedLimit)
+            "MONTHLY" -> analyticsReadPort.findMonthlyTrends(accountId, normalizedLimit)
+            "WEEKLY" -> analyticsReadPort.findMonthlyTrends(accountId, 4)
+            else -> analyticsReadPort.findMonthlyTrends(accountId, normalizedLimit)
         }.map { row ->
             DashboardTrendPointResponse(
                 yearMonth = row.yearMonth,
@@ -105,7 +108,7 @@ class AnalyticsService(
         }
     }
 
-    fun getTagCrossStats(
+    override fun getTagCrossStats(
         accountId: UUID,
         type: String,
         tagIds: List<Long>,
@@ -113,7 +116,7 @@ class AnalyticsService(
         to: LocalDate,
     ): TagCrossStatsResponse {
         val normalizedTagIds = tagIds.distinct().filter { it > 0L }
-        val selectedTags = analyticsReadRepository.findTagsByIds(accountId, normalizedTagIds)
+        val selectedTags = analyticsReadPort.findTagsByIds(accountId, normalizedTagIds)
             .map { row ->
                 TagCrossSelectionResponse(
                     tagId = row.tagId,
@@ -132,9 +135,9 @@ class AnalyticsService(
         }
 
         val breakdownRows = when (normalizeCrossType(type)) {
-            "period" -> analyticsReadRepository.findTagCrossByPeriod(accountId, normalizedTagIds, from, to)
-            "tag" -> analyticsReadRepository.findTagCrossByTag(accountId, normalizedTagIds, from, to)
-            else -> analyticsReadRepository.findTagCrossByCategory(accountId, normalizedTagIds, from, to)
+            "period" -> analyticsReadPort.findTagCrossByPeriod(accountId, normalizedTagIds, from, to)
+            "tag" -> analyticsReadPort.findTagCrossByTag(accountId, normalizedTagIds, from, to)
+            else -> analyticsReadPort.findTagCrossByCategory(accountId, normalizedTagIds, from, to)
         }
 
         val breakdown = breakdownRows.map { row ->

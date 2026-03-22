@@ -32,16 +32,15 @@ export async function middleware(request: NextRequest) {
   try {
     const { data: { user } } = await supabase.auth.getUser()
 
-    const isAuthRoute = request.nextUrl.pathname.startsWith('/login') || request.nextUrl.pathname.startsWith('/mobile/login')
-    const isPublicRoute = ['/', '/login', '/mobile/login'].includes(request.nextUrl.pathname)
+    const isAuthRoute = request.nextUrl.pathname.startsWith('/login')
+    const isPublicRoute = ['/', '/login'].includes(request.nextUrl.pathname)
 
     if (!user && !isAuthRoute && !isPublicRoute && !request.nextUrl.pathname.startsWith('/_next')) {
-      const redirectUrl = request.nextUrl.pathname.startsWith('/mobile') ? '/mobile/login' : '/login'
-      return NextResponse.redirect(new URL(redirectUrl, request.url))
+      return NextResponse.redirect(new URL('/login', request.url))
     }
 
     if (user && isAuthRoute) {
-      const redirectUrl = request.nextUrl.pathname.startsWith('/mobile') ? '/mobile' : '/web/dashboard'
+      const redirectUrl = '/mobile';
       return NextResponse.redirect(new URL(redirectUrl, request.url))
     }
   } catch (e) {

@@ -90,6 +90,32 @@
         "owner card performance rows",
         "member voucher rows"
       ]
+    },
+    {
+      "seed_id": "community",
+      "label": "Community posts, comments, and reactions",
+      "feature_refs": ["F9"],
+      "requirement_refs": [],
+      "api_refs": [
+        "GET /api/v1/community/posts",
+        "POST /api/v1/community/posts",
+        "POST /api/v1/community/posts/{postId}/like"
+      ],
+      "db_refs": [
+        "community_post",
+        "community_comment",
+        "community_post_like",
+        "community_post_bookmark"
+      ],
+      "validates": [
+        "post listings and detail",
+        "comment creation and visibility",
+        "reaction counts and states"
+      ],
+      "entities": [
+        "community posts",
+        "community comments"
+      ]
     }
   ]
 }

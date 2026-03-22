@@ -13,6 +13,10 @@ export interface Transaction {
   currency: 'KRW' | 'USD';
   exchangeRate?: number;
   benefitInfo?: string; // e.g., "스타벅스 50% 할인"
+  benefitAmount?: number; // amount of benefit received
+  paymentMethod?: string; // "신한카드 (1234)", "카카오페이"
+  items?: string;       // e.g., "로켓배송 외 2건"
+  description?: string; 
 }
 
 export interface Card {
@@ -20,10 +24,16 @@ export interface Card {
   name: string;
   firstFour: string;
   lastFour: string;
+  expiryMonth?: string; // e.g., "12"
+  expiryYear?: string;  // e.g., "28"
   issuer: string;
   gradient: string;
   current: number;
   target: number;
+  annualTarget?: number;
+  isMain?: boolean;
+  isPinned?: boolean;
+  type?: 'credit' | 'debit';
   benefitType: 'discount' | 'mileage' | 'point';
   benefitValue: string;
   tags?: string[];
@@ -32,6 +42,7 @@ export interface Card {
   tier: 'classic' | 'gold' | 'platinum' | 'signature' | 'infinite' | 'world' | 'world_elite';
   color: string;
   currency: 'KRW' | 'USD';
+  features?: string[]; // e.g., ["apple_pay", "atm", "samsung_pay", "transport", "contactless"]
 }
 
 export interface Badge {
@@ -47,20 +58,26 @@ export interface Badge {
 }
 
 export interface CommunityPost {
-  id: string;
-  author: {
-    name: string;
-    avatar: string;
-    badge?: string;
-  };
-  category: '꿀팁' | '카드수다' | '질문' | '챌린지';
+  postId: number;
+  accountId: string;
+  category: string;
   title: string;
   content: string;
-  image?: string;
-  likes: number;
-  comments: number;
-  createdAt: string;
+  imageUrl?: string | null;
   tags: string[];
+  viewCount: number;
+  likeCount: number;
+  commentCount: number;
+  isLiked: boolean;
+  isBookmarked: boolean;
+  createdAt: string;
+  updatedAt: string;
+  author?: {
+    accountId: string;
+    displayName: string | null;
+    level: number;
+    tierName: string | null;
+  };
 }
 
 export interface CategoryData {
@@ -81,4 +98,21 @@ export interface Bucket {
   achieved: boolean;
   value?: string;
   target?: number;
+}
+
+export interface CommunityComment {
+  commentId: number;
+  postId: number;
+  accountId: string;
+  content: string;
+  parentId?: number | null;
+  author?: {
+    accountId: string;
+    displayName: string | null;
+    level: number;
+    tierName: string | null;
+  };
+  replies?: CommunityComment[];
+  createdAt: string;
+  updatedAt: string;
 }

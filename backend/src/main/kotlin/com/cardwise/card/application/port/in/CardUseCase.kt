@@ -1,4 +1,4 @@
-package com.cardwise.card.application.port.`in`
+package com.cardwise.card.application.service.port.`in`
 
 import java.util.UUID
 

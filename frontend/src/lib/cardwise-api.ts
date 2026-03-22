@@ -1,5 +1,7 @@
+import { CommunityPost, CommunityComment } from "@/types/mobile";
+
 export const BACKEND_BASE_URL =
-  process.env.BACKEND_BASE_URL ?? "http://localhost:8080/api/v1";
+  process.env.BACKEND_BASE_URL ?? "http://127.0.0.1:8080/api/v1";
 
 export type JsonRecord = Record<string, unknown>;
 
@@ -63,6 +65,7 @@ export type PaymentRecord = {
   krwAmount: number;
   finalKrwAmount?: number;
   paidAt: string;
+  transactionType: "INCOME" | "EXPENSE" | string;
   isAdjusted: boolean;
   tierChanged?: boolean;
   newTierName?: string;
@@ -73,13 +76,52 @@ export interface CreatePaymentRequest {
   merchantName: string;
   krwAmount: number;
   paidAt: string;
+  transactionType: "INCOME" | "EXPENSE" | string;
 }
 
 export interface PaymentListResponse {
   data: PaymentRecord[];
-  meta?: {
-    pagination?: PaginationMeta;
-  };
+  pagination?: PaginationMeta;
+}
+
+export interface UpdatePaymentRequest {
+  userCardId: number;
+  merchantName: string;
+  krwAmount: number;
+  paidAt: string;
+  transactionType: "INCOME" | "EXPENSE" | string;
+}
+
+export async function getPayments(limit = 100) {
+  return tryFetchBackendJson<PaymentListResponse>(`/payments?limit=${limit}`);
+}
+
+export async function updatePayment(paymentId: number, request: UpdatePaymentRequest) {
+  return tryFetchBackendJson<PaymentRecord>(`/payments/${paymentId}`, {
+    method: "PATCH",
+    body: JSON.stringify(request),
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+export async function deletePayment(paymentId: number) {
+  return tryFetchBackendJson<{ success: boolean; message?: string }>(`/payments/${paymentId}`, {
+    method: "DELETE",
+  });
+}
+
+export async function createPayment(request: CreatePaymentRequest) {
+  return tryFetchBackendJson<PaymentRecord>("/payments", {
+    method: "POST",
+    body: JSON.stringify(request),
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+export async function getMonthlySpendingSummary(accountId: string, year: number, month: number) {
+  return tryFetchBackendJson<{ totalAmount: number; year: number; month: number }>(
+    `/spending-summary/monthly?accountId=${accountId}&year=${year}&month=${month}`
+  );
 }
 
 export interface PerformanceResponse {
@@ -381,16 +423,6 @@ export interface BenefitRecommendationEnvelope {
   };
 }
 
-export interface UpdateCardRequest {
-  cardNickname?: string;
-  issuedAt?: string;
-}
-
-export interface DeleteCardResponse {
-  userCardId: number;
-  message: string;
-}
-
 export interface CardBenefitDetailEnvelope {
   data: {
     cardId: number;
@@ -413,143 +445,227 @@ export interface UserCardSummaryResponse {
   cardNickname: string | null;
   issuedAt: string;
   isActive: boolean;
+  imageUrl?: string;
 }
 
 export interface UserCardsResponse {
   data: UserCardSummaryResponse[];
 }
 
-export interface NotificationItemResponse {
-  notificationId: number;
-  notificationType: string;
-  eventCode: string;
+export interface CardMetadataResponse {
+  data: {
+    issuers: Array<{ id: string; name: string; logoUrl?: string }>;
+    brands: Array<{ id: string; name: string; logoUrl?: string }>;
+  };
+}
+
+export interface CardSummaryDto {
+  cardId: number;
+  cardName: string;
+  issuerId: string;
+  brandId: string;
+  cardType: 'CREDIT' | 'DEBIT';
+  features: string[];
+  imageUrl?: string;
+}
+
+export interface CardsResponse {
+  data: CardSummaryDto[];
+}
+
+export interface RegisterCardDetailedRequest {
+  cardNickname: string;
+  issuerId: string;
+  brandId: string;
+  cardType: 'CREDIT' | 'DEBIT';
+  cardNumberFirstFour: string;
+  cardNumberLastFour: string;
+  expiryMonth: string;
+  expiryYear: string;
+  monthlyTargetAmount: number;
+  annualTargetAmount: number;
+  features: string[];
+  isNotificationEnabled: boolean;
+  isMain: boolean;
+  isPinned: boolean;
+  imageUrl?: string;
+}
+
+export interface RegisterCardRequest {
+  cardId: number;
+  issuedAt: string; // ISO Date YYYY-MM-DD
+  cardNickname?: string;
+}
+
+export interface UpdateCardRequest {
+  cardNickname?: string;
+  issuedAt?: string;
+}
+
+export interface DeleteCardResponse {
+  userCardId: number;
+  message: string;
+}
+
+export async function getCardMetadata() {
+  return tryFetchBackendJson<CardMetadataResponse>("/cards/metadata");
+}
+
+export async function getCards(issuerId?: string, brandId?: string, keyword?: string) {
+  let query = "";
+  if (issuerId) query += `issuerId=${issuerId}&`;
+  if (brandId) query += `brandId=${brandId}&`;
+  if (keyword) query += `keyword=${encodeURIComponent(keyword)}&`;
+  return tryFetchBackendJson<CardsResponse>(`/cards?${query}`);
+}
+
+export async function registerCardDetailed(request: RegisterCardDetailedRequest) {
+  return tryFetchBackendJson<UserCardSummaryResponse>("/my-cards/detailed", {
+    method: "POST",
+    body: JSON.stringify(request),
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+export async function getMyCards() {
+  return tryFetchBackendJson<UserCardsResponse>("/my-cards");
+}
+
+export async function registerCard(request: RegisterCardRequest) {
+  return tryFetchBackendJson<UserCardSummaryResponse>("/my-cards", {
+    method: "POST",
+    body: JSON.stringify(request),
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+export async function updateCard(userCardId: number, request: UpdateCardRequest) {
+  return tryFetchBackendJson<UserCardSummaryResponse>(`/my-cards/${userCardId}`, {
+    method: "PATCH",
+    body: JSON.stringify(request),
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+export async function deleteCard(userCardId: number) {
+  return tryFetchBackendJson<DeleteCardResponse>(`/my-cards/${userCardId}`, {
+    method: "DELETE"
+  });
+}
+
+export interface CommunityReactionResponse {
+  postId: number;
+  isActive: boolean;
+  count: number;
+}
+
+export interface CommunityPostsResponse {
+  data: CommunityPost[];
+}
+
+export interface CommunityPostResponse {
+  data: CommunityPost;
+}
+
+export interface CommunityCommentsResponse {
+  data: CommunityComment[];
+}
+
+export interface CommunityCommentResponse {
+  data: CommunityComment;
+}
+
+export interface CommunityReactionEnvelope {
+  data: CommunityReactionResponse;
+}
+
+export async function getCommunityPosts(category?: string, page = 1, limit = 10, sortBy?: string) {
+  let query = `?page=${page}&limit=${limit}`;
+  if (category) query += `&category=${category}`;
+  if (sortBy) query += `&sortBy=${sortBy}`;
+  return tryFetchBackendJson<CommunityPostsResponse>(`/community/posts${query}`);
+}
+
+export interface NoticeRecord {
+  noticeId: number;
   title: string;
-  body: string;
-  actionUrl: string | null;
-  actionLabel: string | null;
-  referenceTable: string | null;
-  referenceId: number | null;
-  isRead: boolean;
-  readAt: string | null;
+  content: string;
+  isCritical: boolean;
+  viewCount: number;
   createdAt: string;
 }
 
-export interface NotificationUnreadCountResponse {
-  unreadCount: number;
+export interface FaqRecord {
+  faqId: number;
+  category: string;
+  question: string;
+  answer: string;
+  priority: number;
+  createdAt: string;
 }
 
-export interface GroupSummaryEnvelope {
-  data: Array<{
-    groupId: number;
-    groupName: string;
-    description: string | null;
-    role: string;
-    memberCount: number;
-    currentMonthSpent: number;
-    maxMembers: number;
-  }>;
-}
-
-export interface GroupMemberRecord {
+export interface InquiryRecord {
+  inquiryId: number;
   accountId: string;
-  displayName: string;
-  email: string;
-  role: string;
-  joinedAt: string;
+  category: string;
+  title: string;
+  content: string;
+  answer: string | null;
+  status: "PENDING" | "ANSWERED" | string;
+  createdAt: string;
+  answeredAt: string | null;
 }
 
-export interface GroupTagRecord {
-  tagId: number;
-  tagName: string;
-  color: string | null;
+export interface NoticeListResponse { data: NoticeRecord[] }
+export interface FaqListResponse { data: FaqRecord[] }
+export interface InquiryListResponse { data: InquiryRecord[] }
+
+export async function getNotices(page = 0, size = 10) {
+  return tryFetchBackendJson<NoticeListResponse>(`/support/notices?page=${page}&size=${size}`);
 }
 
-export interface GroupDetailEnvelope {
-  data: {
-    groupId: number;
-    groupName: string;
-    description: string | null;
-    role: string;
-    memberCount: number;
-    currentMonthSpent: number;
-    maxMembers: number;
-    ownerAccountId: string;
-    canManageSettings: boolean;
-    pendingInvitationCount: number;
-    members: GroupMemberRecord[];
-  };
+export async function getFaqs(page = 0, size = 20) {
+  return tryFetchBackendJson<FaqListResponse>(`/support/faqs?page=${page}&size=${size}`);
 }
 
-export interface GroupActionEnvelope {
-  data: {
-    groupId: number;
-    status: string;
-    message: string;
-  };
+export async function getMyInquiries(page = 0, size = 10) {
+  return tryFetchBackendJson<InquiryListResponse>(`/support/inquiries?page=${page}&size=${size}`);
 }
 
-export interface GroupTagEnvelope {
-  data: GroupTagRecord[];
+export async function getCommunityPost(postId: number) {
+  return tryFetchBackendJson<CommunityPostResponse>(`/community/posts/${postId}`);
 }
 
-export interface GroupPaymentRecord {
-  paymentId: number;
-  accountId: string;
-  userCardId: number;
-  payerName: string;
-  merchantName: string;
-  amount: number;
-  paidAt: string;
-  currency: string;
-  memo: string | null;
-  tagNames: string[];
-  canEdit: boolean;
+export async function togglePostLike(postId: number) {
+  return tryFetchBackendJson<CommunityReactionEnvelope>(`/community/posts/${postId}/like`, {
+    method: "POST",
+  });
 }
 
-export interface GroupInvitationEnvelope {
-  data: Array<{
-    invitationId: number;
-    groupId: number;
-    groupName: string;
-    inviterName: string;
-    inviteeEmail: string;
-    invitationStatus: string;
-    expiresAt: string;
-    createdAt: string;
-  }>;
+export async function togglePostBookmark(postId: number) {
+  return tryFetchBackendJson<CommunityReactionEnvelope>(`/community/posts/${postId}/bookmark`, {
+    method: "POST",
+  });
 }
 
-export interface GroupPaymentEnvelope {
-  data: GroupPaymentRecord[];
+export async function getPostComments(postId: number) {
+  return tryFetchBackendJson<CommunityCommentsResponse>(`/community/posts/${postId}/comments`);
 }
 
-export interface GroupStatsEnvelope {
-  data: {
-    groupId: number;
-    groupName: string;
-    from: string;
-    to: string;
-    totalSpent: number;
-    paymentCount: number;
-    memberStats: Array<{
-      accountId: string;
-      displayName: string;
-      spentAmount: number;
-      paymentCount: number;
-      sharePercent: number;
-    }>;
-    tagStats: Array<{
-      tagName: string;
-      spentAmount: number;
-      paymentCount: number;
-      sharePercent: number;
-    }>;
-    monthlyTrend: Array<{
-      yearMonth: string;
-      totalSpent: number;
-      paymentCount: number;
-    }>;
-  };
+export async function createPostComment(postId: number, content: string, parentId?: number) {
+  return tryFetchBackendJson<CommunityCommentResponse>(`/community/posts/${postId}/comments`, {
+    method: "POST",
+    body: JSON.stringify({ content, parentId }),
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+export async function createCommunityPost(data: { category: string; title: string; content: string; tags: string[]; imageUrl?: string }) {
+  return tryFetchBackendJson<CommunityPostResponse>("/community/posts", {
+    method: "POST",
+    body: JSON.stringify(data),
+    headers: { "Content-Type": "application/json" },
+  });
 }
 
 function normalizeBaseUrl(baseUrl: string) {
@@ -558,6 +674,11 @@ function normalizeBaseUrl(baseUrl: string) {
 
 export function backendUrl(pathname: string) {
   const normalizedPath = pathname.startsWith("/") ? pathname.slice(1) : pathname;
+  
+  if (typeof window !== "undefined") {
+    return `/api/${normalizedPath}`;
+  }
+
   return new URL(normalizedPath, normalizeBaseUrl(BACKEND_BASE_URL)).toString();
 }
 
@@ -565,14 +686,20 @@ export async function fetchBackendJson<T>(
   pathname: string,
   init?: RequestInit,
 ): Promise<T> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
+
   const response = await fetch(backendUrl(pathname), {
     ...init,
+    signal: controller.signal,
     cache: "no-store",
     headers: {
       accept: "application/json",
       ...(init?.headers ?? {}),
     },
   });
+  
+  clearTimeout(timeoutId);
 
   if (!response.ok) {
     const body = await response.text();

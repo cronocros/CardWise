@@ -27,11 +27,8 @@ export function SessionWarden({ children }: { children: React.ReactNode }) {
 
   const handleLogout = useCallback(() => {
     setIsExpired(true);
-    // Determine redirect based on current path
-    const isMobile = pathname.startsWith('/mobile');
-    const redirectUrl = isMobile ? '/mobile/login?reason=timeout' : '/login?reason=timeout';
-    router.push(redirectUrl);
-  }, [router, pathname]);
+    router.push('/login?reason=timeout');
+  }, [router]);
 
   useEffect(() => {
     if (pathname.includes('/login')) return; // Don't monitor on login pages
@@ -81,8 +78,7 @@ export function SessionWarden({ children }: { children: React.ReactNode }) {
              <button 
                onClick={() => {
                  setIsExpired(false);
-                 const isMobile = pathname.startsWith('/mobile');
-                 router.push(isMobile ? '/mobile/login' : '/login');
+                 router.push('/login');
                }}
                className="w-full py-4 bg-rose-500 text-white font-black rounded-2xl shadow-lg shadow-rose-500/30 active:scale-95 transition-all"
              >

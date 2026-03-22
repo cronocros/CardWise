@@ -2,7 +2,7 @@ package com.cardwise.performance.application
 
 import com.cardwise.performance.domain.event.PerformanceTierChangedEvent
 import com.cardwise.performance.infrastructure.PerformanceTierRepository
-import com.cardwise.performance.infrastructure.UserCardRepository
+import com.cardwise.card.adapter.out.persistence.repository.UserCardRepository
 import com.cardwise.performance.infrastructure.UserPerformanceEntity
 import com.cardwise.performance.infrastructure.UserPerformanceRepository
 import org.springframework.context.ApplicationEventPublisher
@@ -52,7 +52,7 @@ class PerformanceUpdateService(
 
     private fun calculateMonthlySpent(userCardId: Long, yearMonth: YearMonth): Long {
         val sql = """
-            SELECT COALESCE(SUM(COALESCE(final_krw_amount, krwAmount)), 0)
+            SELECT COALESCE(SUM(COALESCE(final_krw_amount, krw_amount)), 0)
             FROM payment
             WHERE user_card_id = :userCardId
               AND to_char(date_trunc('month', paid_at), 'YYYY-MM') = :yearMonth
@@ -77,7 +77,7 @@ class PerformanceUpdateService(
             runningTotal += perf.monthlySpent
             perf.annualAccumulated = runningTotal
             
-            val newTier = tiers.lastOrNull { 
+            val newTier = tiers.findLast { 
                 val maxAmt = it.maxAmount
                 it.minAmount <= runningTotal && (maxAmt == null || runningTotal <= maxAmt) 
             }

@@ -3,19 +3,21 @@ package com.cardwise.voucher.application
 import com.cardwise.common.api.ApiResponse
 import com.cardwise.common.exception.BadRequestException
 import com.cardwise.common.exception.NotFoundException
-import com.cardwise.performance.infrastructure.CardEntity
-import com.cardwise.performance.infrastructure.CardRepository
-import com.cardwise.performance.infrastructure.CardVoucherEntity
-import com.cardwise.performance.infrastructure.CardVoucherRepository
-import com.cardwise.performance.infrastructure.UserCardEntity
-import com.cardwise.performance.infrastructure.UserCardRepository
+import com.cardwise.card.adapter.out.persistence.entity.CardEntity
+import com.cardwise.card.adapter.out.persistence.repository.CardRepository
+import com.cardwise.voucher.adapter.out.persistence.entity.CardVoucherEntity
+import com.cardwise.voucher.adapter.out.persistence.repository.CardVoucherRepository
+import com.cardwise.card.adapter.out.persistence.entity.UserCardEntity
+import com.cardwise.card.adapter.out.persistence.repository.UserCardRepository
 import com.cardwise.performance.infrastructure.UserPerformanceRepository
-import com.cardwise.performance.infrastructure.UserVoucherEntity
-import com.cardwise.performance.infrastructure.UserVoucherRepository
+import com.cardwise.voucher.adapter.out.persistence.entity.UserVoucherEntity
+import com.cardwise.voucher.adapter.out.persistence.repository.UserVoucherRepository
 import com.cardwise.voucher.api.VoucherActionRequest
 import com.cardwise.voucher.api.VoucherHistoryResponse
 import com.cardwise.voucher.api.VoucherSummaryResponse
 import com.cardwise.voucher.domain.VoucherUnlockSupport
+import com.cardwise.voucher.application.port.`in`.VoucherCommandUseCase
+import com.cardwise.voucher.application.port.`in`.VoucherQueryUseCase
 import com.cardwise.voucher.infrastructure.UserVoucherLogEntity
 import com.cardwise.voucher.infrastructure.UserVoucherLogRepository
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -52,8 +54,8 @@ class VoucherService(
     private val userVoucherLogRepository: UserVoucherLogRepository,
     private val objectMapper: ObjectMapper,
     private val clock: Clock,
-) {
-    fun listUserCardVouchers(
+) : VoucherQueryUseCase, VoucherCommandUseCase {
+    override fun listUserCardVouchers(
         userCardId: Long,
         accountId: UUID,
     ): ApiResponse<List<VoucherSummaryResponse>> {
@@ -72,7 +74,7 @@ class VoucherService(
         )
     }
 
-    fun listVouchers(
+    override fun listVouchers(
         accountId: UUID,
         status: String?,
     ): ApiResponse<List<VoucherSummaryResponse>> {
@@ -85,7 +87,7 @@ class VoucherService(
         return ApiResponse(data = items)
     }
 
-    fun listExpiringVouchers(
+    override fun listExpiringVouchers(
         accountId: UUID,
         days: Int,
     ): ApiResponse<List<VoucherSummaryResponse>> {
@@ -105,7 +107,7 @@ class VoucherService(
     }
 
     @Transactional
-    fun useVoucher(
+    override fun useVoucher(
         userVoucherId: Long,
         accountId: UUID,
         request: VoucherActionRequest,
@@ -135,7 +137,7 @@ class VoucherService(
     }
 
     @Transactional
-    fun unuseVoucher(
+    override fun unuseVoucher(
         userVoucherId: Long,
         accountId: UUID,
         request: VoucherActionRequest,
@@ -155,7 +157,7 @@ class VoucherService(
         return ApiResponse(data = toSummary(context.copy(userVoucher = saved), LocalDate.now(clock)))
     }
 
-    fun listVoucherHistory(
+    override fun listVoucherHistory(
         userVoucherId: Long,
         accountId: UUID,
     ): ApiResponse<List<VoucherHistoryResponse>> {

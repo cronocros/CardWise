@@ -2,9 +2,10 @@
 
 import React, { useState } from 'react';
 import { 
-  Plus, ChevronRight, Crown, UserCheck, Users,
-  PieChart, Calendar
+  Plus, ChevronRight, Crown, UserCheck, 
+  PieChart, Calendar, Sparkles
 } from 'lucide-react';
+import { Mascot } from '@/components/mobile/mascot';
 
 // ─────────────────────────────────────────────────────────────
 // Group Ledger View — 공동 가계부
@@ -155,11 +156,15 @@ export function GroupLedgerView() {
           </div>
 
           {/* Empty Invite Banner */}
-          <div className="p-7 rounded-[36px] border-2 border-dashed border-gray-100 flex flex-col items-center text-center gap-3">
-            <div className="text-3xl">👥</div>
-            <p className="text-[14px] font-black text-var(--text-soft) opacity-50">가족이나 친구와 함께 지출을 관리해보세요</p>
+          <div className="p-8 rounded-[48px] border-2 border-dashed border-rose-100 flex flex-col items-center text-center gap-4 bg-rose-50/30 relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-br from-rose-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            <Mascot pose="thinking" size={80} className="mb-2 relative z-10" />
+            <div className="relative z-10">
+              <p className="text-[17px] font-black text-rose-600 tracking-tight">함께 쓰면 더 즐거워요!</p>
+              <p className="text-[12px] font-bold text-rose-400 mt-1 opacity-80 leading-snug">가족이나 친구와 함께 지출을 관리하고<br/>최고의 절약 왕을 가려보세요 🏆</p>
+            </div>
             <button onClick={() => setShowCreateModal(true)}
-              className="px-6 py-3 rounded-2xl bg-rose-50 text-rose-500 font-black text-[13px] active:scale-95 transition-all border border-rose-100">
+              className="px-8 py-4 rounded-[22px] bg-rose-500 text-white font-black text-[14px] active:scale-95 transition-all shadow-lg shadow-rose-200 border border-rose-400/20 relative z-10 group-hover:-translate-y-1 duration-500">
               새 그룹 만들기
             </button>
           </div>
@@ -169,21 +174,35 @@ export function GroupLedgerView() {
           {/* Group Detail View */}
           <div>
             {/* Back + Group Header */}
-            <div className="flex items-center gap-4 mb-6">
-              <button onClick={() => setSelectedGroupId(null)}
-                className="w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-500 active:scale-90 transition-transform">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-5 h-5">
-                  <path d="M15 18l-6-6 6-6" strokeLinecap="round" />
-                </svg>
-              </button>
-              <div className="flex-1">
-                <p className="text-[18px] font-black text-var(--text-strong) tracking-tight">{selectedGroup?.emoji} {selectedGroup?.name}</p>
-                <p className="text-[11px] text-var(--text-soft) opacity-40 font-bold">멤버 {selectedGroup?.memberCount}명</p>
-              </div>
-              <div className="text-right">
-                <p className="text-[18px] font-black text-Rose-500 text-rose-500">{formatKRW(selectedGroup?.monthlyTotal || 0)}</p>
-                <p className="text-[10px] font-bold text-var(--text-muted) opacity-40">이번달 합계</p>
-              </div>
+            <div className="p-7 rounded-[44px] bg-slate-900 shadow-2xl relative overflow-hidden mb-6 group">
+               <div className="absolute -right-4 -top-4 w-32 h-32 bg-rose-500/20 blur-3xl rounded-full" />
+               <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-transparent pointer-events-none" />
+               
+               <div className="flex items-center gap-4 relative z-10">
+                 <button onClick={() => setSelectedGroupId(null)}
+                   className="w-11 h-11 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center text-white active:scale-75 transition-transform">
+                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="w-5 h-5">
+                     <path d="M15 18l-6-6 6-6" strokeLinecap="round" />
+                   </svg>
+                 </button>
+                 <div className="flex-1">
+                   <div className="flex items-center gap-2">
+                     <span className="text-2xl">{selectedGroup?.emoji}</span>
+                     <h3 className="text-[20px] font-black text-white tracking-tighter leading-none">{selectedGroup?.name}</h3>
+                   </div>
+                   <div className="flex items-center gap-2 mt-2">
+                     <div className="px-2 py-0.5 rounded-full bg-white/10 border border-white/10 flex items-center gap-1">
+                        <Sparkles size={10} className="text-rose-300" />
+                        <span className="text-[9px] font-black text-white/60 uppercase tracking-widest">Master Level</span>
+                     </div>
+                     <p className="text-[11px] text-white/40 font-bold uppercase tracking-widest">멤버 {selectedGroup?.memberCount}명</p>
+                   </div>
+                 </div>
+                 <div className="text-right">
+                   <p className="text-[22px] font-black text-rose-400 font-display tracking-tight leading-none mb-1">{formatKRW(selectedGroup?.monthlyTotal || 0)}</p>
+                   <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">Monthly Sum</p>
+                 </div>
+               </div>
             </div>
 
             {/* Stats/List Toggle */}

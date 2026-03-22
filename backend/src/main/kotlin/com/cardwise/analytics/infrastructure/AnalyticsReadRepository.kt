@@ -1,12 +1,13 @@
 package com.cardwise.analytics.infrastructure
 
+import com.cardwise.analytics.application.port.out.AnalyticsReadPort
 import java.sql.ResultSet
 import java.time.LocalDate
 import java.time.YearMonth
 import java.util.UUID
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
-import org.springframework.stereotype.Repository
+import org.springframework.stereotype.Component
 
 data class MonthlySummaryRow(
     val yearMonth: String,
@@ -51,11 +52,11 @@ data class TagCrossBreakdownRow(
     val paymentCount: Int,
 )
 
-@Repository
-class AnalyticsReadRepository(
+@Component
+class AnalyticsReadAdapter(
     private val jdbcTemplate: NamedParameterJdbcTemplate,
-) {
-    fun findMonthlySummary(accountId: UUID, yearMonth: YearMonth): MonthlySummaryRow? {
+) : AnalyticsReadPort {
+    override fun findMonthlySummary(accountId: UUID, yearMonth: YearMonth): MonthlySummaryRow? {
         val sql = """
             select
                 ums.year_month,
@@ -74,7 +75,7 @@ class AnalyticsReadRepository(
         return jdbcTemplate.query(sql, params, ::mapMonthlySummary).firstOrNull()
     }
 
-    fun findCardSummaries(accountId: UUID, yearMonth: YearMonth): List<CardSummaryRow> {
+    override fun findCardSummaries(accountId: UUID, yearMonth: YearMonth): List<CardSummaryRow> {
         val sql = """
             select
                 ucs.user_card_id,
@@ -103,7 +104,7 @@ class AnalyticsReadRepository(
         return jdbcTemplate.query(sql, params, ::mapCardSummary)
     }
 
-    fun findCategorySummaries(accountId: UUID, yearMonth: YearMonth): List<CategorySummaryRow> {
+    override fun findCategorySummaries(accountId: UUID, yearMonth: YearMonth): List<CategorySummaryRow> {
         val sql = """
             select
                 ucs.category_id,
@@ -126,7 +127,7 @@ class AnalyticsReadRepository(
         return jdbcTemplate.query(sql, params, ::mapCategorySummary)
     }
 
-    fun findTagSummaries(accountId: UUID, yearMonth: YearMonth): List<TagSummaryRow> {
+    override fun findTagSummaries(accountId: UUID, yearMonth: YearMonth): List<TagSummaryRow> {
         val sql = """
             select
                 uts.tag_id,
@@ -148,7 +149,7 @@ class AnalyticsReadRepository(
         return jdbcTemplate.query(sql, params, ::mapTagSummary)
     }
 
-    fun findMonthlyTrends(accountId: UUID, limit: Int): List<MonthlySummaryRow> {
+    override fun findMonthlyTrends(accountId: UUID, limit: Int): List<MonthlySummaryRow> {
         val sql = """
             select
                 summary.year_month,
@@ -176,7 +177,7 @@ class AnalyticsReadRepository(
         return jdbcTemplate.query(sql, params, ::mapMonthlySummary)
     }
 
-    fun findTagsByIds(accountId: UUID, tagIds: List<Long>): List<TagSelectionRow> {
+    override fun findTagsByIds(accountId: UUID, tagIds: List<Long>): List<TagSelectionRow> {
         if (tagIds.isEmpty()) {
             return emptyList()
         }
@@ -198,7 +199,7 @@ class AnalyticsReadRepository(
         return jdbcTemplate.query(sql, params, ::mapTagSelection)
     }
 
-    fun findTagCrossByCategory(
+    override fun findTagCrossByCategory(
         accountId: UUID,
         tagIds: List<Long>,
         from: LocalDate,
@@ -235,7 +236,7 @@ class AnalyticsReadRepository(
         return jdbcTemplate.query(sql, buildCrossParams(accountId, tagIds, from, to), ::mapTagCrossBreakdown)
     }
 
-    fun findTagCrossByPeriod(
+    override fun findTagCrossByPeriod(
         accountId: UUID,
         tagIds: List<Long>,
         from: LocalDate,
@@ -272,7 +273,7 @@ class AnalyticsReadRepository(
         return jdbcTemplate.query(sql, buildCrossParams(accountId, tagIds, from, to), ::mapTagCrossBreakdown)
     }
 
-    fun findTagCrossByTag(
+    override fun findTagCrossByTag(
         accountId: UUID,
         tagIds: List<Long>,
         from: LocalDate,

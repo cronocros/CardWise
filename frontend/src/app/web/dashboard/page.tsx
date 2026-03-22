@@ -73,7 +73,7 @@ export default function WebDashboard() {
                     {tx.icon || '💰'}
                   </div>
                   <div>
-                    <p className="font-black text-[17px] text-slate-900 group-hover:text-rose-500 transition-colors">{tx.merchant}</p>
+                    <p className="font-black text-[17px] text-slate-900 group-hover:text-rose-500 transition-colors">{tx.name}</p>
                     <p className="text-[13px] font-bold text-slate-400 uppercase tracking-wider">{tx.category} • {new Date(tx.date).toLocaleDateString()}</p>
                   </div>
                 </div>
@@ -105,7 +105,7 @@ export default function WebDashboard() {
                 <div className="relative z-10">
                   <div className="flex items-center justify-between mb-12">
                      <div>
-                        <p className="text-[12px] font-bold opacity-50 uppercase tracking-[0.2em] mb-1">{card.provider}</p>
+                        <p className="text-[12px] font-bold opacity-50 uppercase tracking-[0.2em] mb-1">{card.issuer}</p>
                         <p className="text-[22px] font-black tracking-tight">{card.name}</p>
                      </div>
                      <div className="w-16 h-10 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 flex items-center justify-center">
@@ -114,7 +114,7 @@ export default function WebDashboard() {
                   </div>
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-[32px] font-black tracking-tighter mb-1">₩{card.balance.toLocaleString()}</p>
+                      <p className="text-[32px] font-black tracking-tighter mb-1">₩{card.current.toLocaleString()}</p>
                       <p className="text-[14px] font-bold opacity-60">Status: High Utility</p>
                     </div>
                     <div className="text-right">
@@ -123,7 +123,7 @@ export default function WebDashboard() {
                   </div>
                   <div className="mt-8 h-2 bg-white/10 rounded-full overflow-hidden">
                     <div className="h-full bg-white rounded-full shadow-[0_0_15px_rgba(255,255,255,0.5)]" 
-                      style={{ width: `${(card.balance / card.limit) * 100}%` }} />
+                      style={{ width: `${(card.current / card.target) * 100}%` }} />
                   </div>
                 </div>
                 {/* Decorative gradients */}

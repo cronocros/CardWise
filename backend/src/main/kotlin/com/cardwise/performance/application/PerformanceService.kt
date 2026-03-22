@@ -1,34 +1,25 @@
 package com.cardwise.performance.application
 
-import com.cardwise.performance.api.AnnualPeriod
-import com.cardwise.performance.api.AnnualSummary
-import com.cardwise.performance.api.BenefitQualification
-import com.cardwise.performance.api.CurrentMonth
-import com.cardwise.performance.api.GracePeriod
-import com.cardwise.performance.api.MonthlyBreakdownItem
-import com.cardwise.performance.api.PerformanceData
-import com.cardwise.performance.api.PerformanceResponse
-import com.cardwise.performance.api.SpecialPeriod
-import com.cardwise.performance.api.TierSummary
-import com.cardwise.performance.api.VoucherUnlockSummary
+import com.cardwise.performance.api.*
 import com.cardwise.performance.domain.AnnualPerfBasis
 import com.cardwise.performance.domain.BenefitPeriodLag
 import com.cardwise.voucher.domain.VoucherUnlockSupport
-import com.cardwise.performance.infrastructure.CardVoucherEntity
-import com.cardwise.performance.infrastructure.CardVoucherRepository
+import com.cardwise.voucher.adapter.out.persistence.entity.CardVoucherEntity
+import com.cardwise.voucher.adapter.out.persistence.repository.CardVoucherRepository
 import com.cardwise.performance.infrastructure.CardBenefitRepository
-import com.cardwise.performance.infrastructure.CardEntity
-import com.cardwise.performance.infrastructure.CardRepository
+import com.cardwise.card.adapter.out.persistence.entity.CardEntity
+import com.cardwise.card.adapter.out.persistence.repository.CardRepository
 import com.cardwise.performance.infrastructure.PerformanceTierEntity
 import com.cardwise.performance.infrastructure.PerformanceTierRepository
-import com.cardwise.performance.infrastructure.SpecialPerformancePeriodEntity
-import com.cardwise.performance.infrastructure.SpecialPerformancePeriodRepository
-import com.cardwise.performance.infrastructure.UserCardEntity
-import com.cardwise.performance.infrastructure.UserCardRepository
-import com.cardwise.performance.infrastructure.UserVoucherEntity
-import com.cardwise.performance.infrastructure.UserVoucherRepository
+import com.cardwise.card.adapter.out.persistence.entity.SpecialPerformancePeriodEntity
+import com.cardwise.card.adapter.out.persistence.repository.SpecialPerformancePeriodRepository
+import com.cardwise.card.adapter.out.persistence.entity.UserCardEntity
+import com.cardwise.card.adapter.out.persistence.repository.UserCardRepository
+import com.cardwise.voucher.adapter.out.persistence.entity.UserVoucherEntity
+import com.cardwise.voucher.adapter.out.persistence.repository.UserVoucherRepository
 import com.cardwise.performance.infrastructure.UserPerformanceEntity
 import com.cardwise.performance.infrastructure.UserPerformanceRepository
+import com.cardwise.performance.application.port.`in`.PerformanceQueryUseCase
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.http.HttpStatus
@@ -41,6 +32,7 @@ import java.time.Clock
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.temporal.ChronoUnit
+import java.util.UUID
 
 private val LAG_LABELS = mapOf(
     BenefitPeriodLag.CURRENT_MONTH to "당월 실적 기준",
@@ -61,14 +53,14 @@ class PerformanceService(
     private val userVoucherRepository: UserVoucherRepository,
     private val objectMapper: ObjectMapper,
     private val clock: Clock
-) {
-    fun getPerformance(userCardId: Long, accountId: java.util.UUID): PerformanceResponse {
+) : PerformanceQueryUseCase {
+    override fun getPerformance(userCardId: Long, accountId: UUID): PerformanceResponse {
         val userCard = userCardRepository.findByUserCardIdAndAccountIdAndIsActiveTrue(userCardId, accountId)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User card not found")
 
-        val cardId = requireNotNull(userCard.cardId) { "User card is missing card id" }
+        val cardId = userCard.cardId ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Card template not found")
         val card = cardRepository.findByCardIdAndIsActiveTrue(cardId)
-            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Card not found")
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Template card not found")
 
         val today = LocalDate.now(clock)
         val annualPeriod = buildAnnualPeriod(card, userCard.issuedAt)
@@ -104,7 +96,7 @@ class PerformanceService(
         val nextTier = resolveNextTier(tiers, annualAccumulated)
         val lag = resolveCommonLag(cardId)
         val referenceMonth = resolveReferenceMonth(reportingMonth, lag)
-        val referenceMonthSpent = monthlyStats.firstOrNull { it.yearMonth == referenceMonth }?.spent
+        val referenceMonthSpent = monthlyStats.find { it.yearMonth == referenceMonth }?.spent
             ?: performanceRows[referenceMonth]?.monthlySpent
             ?: 0L
         val referenceTier = resolveTierForAmount(tiers, referenceMonthSpent)
@@ -188,6 +180,12 @@ class PerformanceService(
                     endLabel = end.toString()
                 )
             }
+            else -> {
+                 // Fallback for safety
+                val start = issuedAt.withDayOfMonth(1)
+                val end = start.plusMonths(12).minusDays(1)
+                AnnualPeriodWindow(start, end, YearMonth.from(start).toString(), YearMonth.from(end).toString())
+            }
         }
     }
 
@@ -228,7 +226,7 @@ class PerformanceService(
         tiers: List<PerformanceTierEntity>,
         annualAccumulated: Long
     ): TierSummary? {
-        val tier = tiers.firstOrNull { it.minAmount > annualAccumulated } ?: return null
+        val tier = tiers.find { it.minAmount > annualAccumulated } ?: return null
         return tier.toSummary(
             achievedAt = null,
             remainingAmount = (tier.minAmount - annualAccumulated).coerceAtLeast(0L)
@@ -302,13 +300,6 @@ class PerformanceService(
             BenefitPeriodLag.PREV_PREV_MONTH -> reportingMonth.minusMonths(2)
         }
     }
-
-    private data class GracePeriodConfig(
-        val active: Boolean,
-        val expiresAt: String?,
-        val remainingDays: Long?,
-        val minSpendPerMonth: Long
-    )
 
     private fun resolveGracePeriod(
         card: CardEntity,

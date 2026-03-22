@@ -34,7 +34,7 @@ export default function OnboardingPage() {
     if (current < steps.length - 1) {
       setCurrent(current + 1);
     } else {
-      router.push('/mobile/login');
+      router.push('/login');
     }
   };
 
@@ -43,7 +43,7 @@ export default function OnboardingPage() {
       {/* Top Skip Button */}
       <div className="flex justify-end p-6 pt-12">
         <button 
-          onClick={() => router.push('/mobile/login')}
+          onClick={() => router.push('/login')}
           className="text-[14px] font-black text-var(--text-soft) uppercase tracking-widest active:scale-90 transition-transform"
         >
           Skip

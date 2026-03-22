@@ -20,7 +20,7 @@ export function BottomNavigation({ activeTab, onTabChange }: BottomNavProps) {
     },
     { 
       id: 'cards', 
-      label: '카드', 
+      label: '내카드관리', 
       icon: (
         <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
           <rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/>
@@ -86,7 +86,7 @@ export function BottomNavigation({ activeTab, onTabChange }: BottomNavProps) {
               <span className={`text-[10px] ${isActive ? 'font-bold' : 'font-medium'}`}>
                 {tab.label}
               </span>
-              {isActive && <div className="w-1 h-1 rounded-full bg-var(--primary-400) mt-px animate-pulse" />}
+              {isActive && <div className="w-1 h-1 rounded-full bg-var(--primary-400) mt-px" />}
             </button>
           );
         })}
